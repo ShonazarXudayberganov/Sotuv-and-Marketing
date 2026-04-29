@@ -1,12 +1,16 @@
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
+    api_keys,
     auth,
     departments,
     health,
+    notifications,
     onboarding,
     roles,
+    tasks,
     tenant,
+    twofa,
     users,
 )
 
@@ -18,3 +22,7 @@ api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(roles.router, prefix="/roles", tags=["roles"])
 api_router.include_router(departments.router, prefix="/departments", tags=["departments"])
 api_router.include_router(onboarding.router, prefix="/onboarding", tags=["onboarding"])
+api_router.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
+api_router.include_router(twofa.router, prefix="/2fa", tags=["2fa"])
+api_router.include_router(api_keys.router, prefix="/api-keys", tags=["api-keys"])
+api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])

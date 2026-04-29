@@ -101,6 +101,16 @@ Sprint 1 tugashi uchun quyidagilar ishlashi kerak:
 **Smoke test:** docker compose, alembic upgrade, uvicorn, /health 200, /auth/register 201
 **Test natijasi:** 26 passed, 82.57% coverage, ruff toza, mypy toza
 
+## 📈 Sprint 4 progress (2026-04-29)
+
+**Backend:** Tasks model + DDL (status, priority, assignee, due dates, polymorphic related_to), CRUD endpoints with status/assignee filters, auto-notification on assign. **2FA** (TOTP via pyotp) — setup → QR data URL → backup codes → verify-and-enable → disable. **API keys** — generate `nxa_…` token, hash store, scopes, rate limit, revoke. **Notifications** — DB persist + in-process pub/sub broker + WebSocket `/api/v1/notifications/ws?token=...` + REST list/mark-all-read. **40 tests passed, 85.05% coverage.**
+
+**Frontend:** `/tasks` Kanban (5 status columns) + List view with create form, status dropdown per card, delete on hover. `<Header>` notification bell with unread badge + dropdown + mark-all-read. WebSocket toast on incoming notifications (auto-reconnect). `/settings/security` — full 2FA setup flow with QR display + backup codes. `/settings/api-keys` — create/list/revoke with one-time plaintext display + clipboard copy. **20 routes pre-rendered, lint + type-check + build green.**
+
+**Note:** Email Jinja2 templates va OAuth (Google + Telegram) Sprint 5 ga ko'chirildi — credentials kelganda yoqamiz.
+
+---
+
 ## 📈 Sprint 3 progress (2026-04-29)
 
 **Backend:** Tenant-scoped models (Department, Role, UserMembership, Notification, AuditLog, ApiKey), schema-per-tenant DDL bootstrap on register, 5 standard roles seeded, Owner membership auto-attached, RBAC permission registry (40+ permissions), `require_permission` FastAPI dep, endpoints for `/tenant`, `/users`, `/roles`, `/departments`, `/onboarding`, audit log writer. **34 tests passed, 87.05% coverage.**

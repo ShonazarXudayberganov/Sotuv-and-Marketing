@@ -115,6 +115,43 @@ TENANT_DDL: tuple[str, ...] = (
     """
     CREATE INDEX IF NOT EXISTS ix_api_keys_prefix ON api_keys(key_prefix)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS tasks (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        title           varchar(200) NOT NULL,
+        description     text,
+        status          varchar(20) NOT NULL DEFAULT 'new',
+        priority        varchar(20) NOT NULL DEFAULT 'medium',
+        assignee_id     uuid,
+        department_id   uuid REFERENCES departments(id) ON DELETE SET NULL,
+        related_type    varchar(30),
+        related_id      varchar(64),
+        starts_at       timestamptz,
+        due_at          timestamptz,
+        estimated_hours integer,
+        created_by      uuid NOT NULL,
+        completed_at    timestamptz,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_tasks_status ON tasks(status)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_tasks_assignee_id ON tasks(assignee_id)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS two_factor_secrets (
+        id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id            uuid NOT NULL UNIQUE,
+        secret             varchar(64) NOT NULL,
+        backup_codes_hash  jsonb NOT NULL DEFAULT '[]'::jsonb,
+        enabled_at         timestamptz,
+        created_at         timestamptz NOT NULL DEFAULT now(),
+        updated_at         timestamptz NOT NULL DEFAULT now()
+    )
+    """,
 )
 
 

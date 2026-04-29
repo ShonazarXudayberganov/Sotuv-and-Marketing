@@ -118,11 +118,11 @@ async def db_session() -> AsyncIterator[AsyncSession]:
     finally:
         try:
             await session.close()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
         try:
             await engine.dispose()
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
 

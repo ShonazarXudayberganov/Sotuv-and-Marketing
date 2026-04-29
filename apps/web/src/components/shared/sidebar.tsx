@@ -2,10 +2,11 @@
 
 import {
   BarChart3,
+  CheckSquare,
   HelpCircle,
   LayoutDashboard,
-  MessageSquare,
   Megaphone,
+  MessageSquare,
   PenSquare,
   Plug,
   Settings,
@@ -26,6 +27,7 @@ interface NavItem {
 
 const MODULES: NavItem[] = [
   { href: "/dashboard", label: "Bosh sahifa", icon: LayoutDashboard, enabled: true },
+  { href: "/tasks", label: "Vazifalar", icon: CheckSquare, enabled: true },
   { href: "/crm", label: "CRM", icon: Users, enabled: false },
   { href: "/smm", label: "SMM", icon: PenSquare, enabled: false },
   { href: "/ads", label: "Reklama", icon: Megaphone, enabled: false },

@@ -6,6 +6,8 @@ from app.models.tenant_scoped import (
     Department,
     Notification,
     Role,
+    Task,
+    TwoFactorSecret,
     UserMembership,
 )
 from app.models.user import User, VerificationCode
@@ -17,8 +19,10 @@ __all__ = [
     "Department",
     "Notification",
     "Role",
+    "Task",
     "Tenant",
     "TimestampMixin",
+    "TwoFactorSecret",
     "UUIDPKMixin",
     "User",
     "UserMembership",

@@ -101,11 +101,44 @@ class ApiKey(Base, UUIDPKMixin, TimestampMixin):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class Task(Base, UUIDPKMixin, TimestampMixin):
+    __tablename__ = "tasks"
+
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="new", nullable=False, index=True)
+    priority: Mapped[str] = mapped_column(String(20), default="medium", nullable=False)
+    assignee_id: Mapped[UUID | None] = mapped_column(index=True)
+    department_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("departments.id", ondelete="SET NULL")
+    )
+    related_type: Mapped[str | None] = mapped_column(String(30))
+    related_id: Mapped[str | None] = mapped_column(String(64))
+    starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    estimated_hours: Mapped[int | None] = mapped_column(Integer)
+    created_by: Mapped[UUID] = mapped_column(nullable=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class TwoFactorSecret(Base, UUIDPKMixin, TimestampMixin):
+    """Per-user TOTP secret (one row per user)."""
+
+    __tablename__ = "two_factor_secrets"
+
+    user_id: Mapped[UUID] = mapped_column(unique=True, nullable=False)
+    secret: Mapped[str] = mapped_column(String(64), nullable=False)
+    backup_codes_hash: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
+    enabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 __all__ = [
     "ApiKey",
     "AuditLog",
     "Department",
     "Notification",
     "Role",
+    "Task",
+    "TwoFactorSecret",
     "UserMembership",
 ]
