@@ -20,6 +20,7 @@ os.environ.setdefault(
 
 import pytest
 import pytest_asyncio
+from fastapi import Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
@@ -32,6 +33,8 @@ from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 from app.core.db import Base, get_db
+from app.core.deps import get_tenant_session
+from app.core.tenancy import validate_schema_name
 from app.main import app
 from app.services.sms import MockSMSProvider
 
@@ -55,25 +58,39 @@ async def engine() -> AsyncIterator[AsyncEngine]:
 
 
 @pytest_asyncio.fixture(loop_scope="session")
-async def session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
-    return async_sessionmaker(bind=engine, expire_on_commit=False)
+async def client(engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
+    """FastAPI test client with per-request fresh sessions and per-test cleanup."""
+    factory = async_sessionmaker(bind=engine, expire_on_commit=False)
 
-
-@pytest_asyncio.fixture(loop_scope="session")
-async def client(
-    engine: AsyncEngine, session_factory: async_sessionmaker[AsyncSession]
-) -> AsyncIterator[AsyncClient]:
     async def override_get_db() -> AsyncIterator[AsyncSession]:
-        async with session_factory() as session:
+        async with factory() as session:
             yield session
 
+    async def override_get_tenant_session(
+        request: Request,
+    ) -> AsyncIterator[AsyncSession]:
+        from fastapi import HTTPException
+
+        state = request.scope.get("state") or {}
+        schema_value = state.get("tenant_schema")
+        if not schema_value:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        schema = validate_schema_name(str(schema_value))
+        async with factory() as session:
+            await session.execute(text(f"SET search_path TO {schema}, public"))
+            try:
+                yield session
+            except Exception:
+                await session.rollback()
+                raise
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_tenant_session] = override_get_tenant_session
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
         yield ac
     app.dependency_overrides.clear()
 
-    # Per-test cleanup: rows + tenant_* schemas
     async with engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
             await conn.execute(table.delete())
@@ -88,12 +105,25 @@ async def client(
 
 
 @pytest_asyncio.fixture(loop_scope="session")
-async def db_session(
-    session_factory: async_sessionmaker[AsyncSession],
-) -> AsyncIterator[AsyncSession]:
-    """Direct DB access fixture for tests that need to inspect/seed without HTTP."""
-    async with session_factory() as session:
+async def db_session() -> AsyncIterator[AsyncSession]:
+    """Direct DB access fixture with its OWN engine — ensures the connection
+    is created and torn down in the same event loop as the test, avoiding the
+    asyncpg cross-loop close error.
+    """
+    engine = create_async_engine(str(settings.DATABASE_URL), poolclass=NullPool)
+    factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    session = factory()
+    try:
         yield session
+    finally:
+        try:
+            await session.close()
+        except Exception:
+            pass
+        try:
+            await engine.dispose()
+        except Exception:
+            pass
 
 
 @pytest.fixture(autouse=True)

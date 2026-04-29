@@ -101,6 +101,16 @@ Sprint 1 tugashi uchun quyidagilar ishlashi kerak:
 **Smoke test:** docker compose, alembic upgrade, uvicorn, /health 200, /auth/register 201
 **Test natijasi:** 26 passed, 82.57% coverage, ruff toza, mypy toza
 
+## 📈 Sprint 3 progress (2026-04-29)
+
+**Backend:** Tenant-scoped models (Department, Role, UserMembership, Notification, AuditLog, ApiKey), schema-per-tenant DDL bootstrap on register, 5 standard roles seeded, Owner membership auto-attached, RBAC permission registry (40+ permissions), `require_permission` FastAPI dep, endpoints for `/tenant`, `/users`, `/roles`, `/departments`, `/onboarding`, audit log writer. **34 tests passed, 87.05% coverage.**
+
+**Frontend:** Onboarding wizard (7 qadam: welcome → company → departments → users → modules → plan → done), Settings shell with 10 sub-pages (`/settings/profile`, `/settings/company`, `/settings/departments`, `/settings/users`, plus 6 placeholders), `<Can permission>` component with `usePermissions` hook (React Query backed), full department CRUD UI (list, create, delete), tenant company name/industry edit. **18 sahifa pre-rendered, lint + type-check + 8 tests yashil.**
+
+**Note:** OAuth (Google + Telegram) `/auth/oauth/*` endpointlari Sprint 4 ga ko'chirildi — credentials kelganda yoqamiz.
+
+---
+
 ## 📈 Sprint 2 progress (2026-04-29)
 
 **Frontend:** ✅ F1-F6 — Next.js 16, Tailwind v4, luxury theme, auth flow, layout, API client

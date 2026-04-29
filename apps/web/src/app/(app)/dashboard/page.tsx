@@ -39,11 +39,25 @@ export default function DashboardPage() {
       </div>
 
       <div className="bg-charcoal text-cream rounded-lg p-8">
-        <h2 className="font-display text-2xl">Sprint 2 yakunlandi</h2>
+        <h2 className="font-display text-2xl">Sprint 3 yakunlandi</h2>
         <p className="text-cream/70 mt-2 text-sm">
-          Auth oqimi va asosiy layout tayyor. Sprint 3 da onboarding wizard, sozlamalar va RBAC
-          qo&apos;shiladi.
+          Onboarding wizard, sozlamalar (10 sahifa), RBAC va bo&apos;limlar tayyor. Sprint 4 da
+          vazifalar moduli, real-time bildirishnomalar va 2FA qo&apos;shiladi.
         </p>
+        <div className="mt-4 flex gap-2">
+          <a
+            href="/onboarding"
+            className="bg-gold text-charcoal hover:bg-gold-deep inline-flex items-center rounded-md px-4 py-2 text-sm font-medium"
+          >
+            Onboarding wizard
+          </a>
+          <a
+            href="/settings"
+            className="border-cream/30 text-cream hover:bg-cream/10 inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium"
+          >
+            Sozlamalar
+          </a>
+        </div>
       </div>
     </div>
   );

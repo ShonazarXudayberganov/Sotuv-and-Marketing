@@ -16,7 +16,11 @@ from app.models.tenant import Tenant
 from app.models.user import User, VerificationCode
 from app.schemas.auth import AuthBundle, RegisterRequest, TenantOut, UserOut
 from app.services.sms import generate_verification_code, get_sms_provider
-from app.services.tenant_service import create_tenant_schema, generate_unique_schema_name
+from app.services.tenant_service import (
+    attach_owner_membership,
+    create_tenant_schema,
+    generate_unique_schema_name,
+)
 
 VERIFICATION_TTL_MINUTES = 5
 MAX_VERIFICATION_ATTEMPTS = 5
@@ -125,6 +129,7 @@ async def verify_phone_and_register(
     await session.refresh(user)
 
     await create_tenant_schema(session, tenant)
+    await attach_owner_membership(session, tenant, user.id)
 
     return _issue_auth_bundle(user, tenant)
 
