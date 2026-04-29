@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* ─────────── NEXUS AI luxury palette ─────────── */
+:root {
+  --background: #f8f4ed; /* cream */
+  --foreground: #1a1a1a; /* charcoal */
+
+  --gold: #c9a876;
+  --gold-soft: #d4b890;
+  --gold-deep: #a88a5e;
+
+  --charcoal: #1a1a1a;
+  --charcoal-soft: #2a2a2a;
+
+  --cream: #f8f4ed;
+  --cream-100: #f1ead9;
+  --cream-200: #e6dcc4;
+
+  --border: #e6dcc4;
+  --muted: #6b6b6b;
+
+  --primary: var(--gold);
+  --primary-foreground: var(--charcoal);
+
+  --destructive: #c0392b;
+  --success: #5b8a4f;
+  --warning: #d49a2c;
+
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-deep: var(--gold-deep);
+  --color-charcoal: var(--charcoal);
+  --color-charcoal-soft: var(--charcoal-soft);
+  --color-cream: var(--cream);
+  --color-cream-100: var(--cream-100);
+  --color-cream-200: var(--cream-200);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-accent: var(--font-cormorant), Georgia, serif;
+}
+
+[data-theme="dark"] {
+  --background: #1a1a1a;
+  --foreground: #f1ead9;
+  --border: #2a2a2a;
+  --muted: #999999;
+  --cream: #2a2a2a;
+  --cream-100: #333333;
+  --cream-200: #3d3d3d;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: var(--gold-soft);
+  color: var(--charcoal);
+}

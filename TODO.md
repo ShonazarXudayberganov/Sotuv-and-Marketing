@@ -28,51 +28,20 @@
 
 ### Frontend (apps/web/)
 
-- [ ] **F1.** Next.js initialize
-  ```bash
-  npx create-next-app@latest --typescript --tailwind --app --src-dir
-  ```
-
-- [ ] **F2.** Loyiha tuzilishi
-  ```
-  apps/web/
-  ├── src/
-  │   ├── app/         # Next.js App Router
-  │   ├── components/  # UI komponentlar
-  │   ├── lib/         # utils, api client
-  │   ├── hooks/       # custom hooks
-  │   └── styles/      # global CSS
-  ├── public/
-  └── package.json
-  ```
-
-- [ ] **F3.** shadcn/ui o'rnatish
-  - `npx shadcn-ui@latest init`
-  - Luxury theme override (oltin + ko'mir + krem)
-
-- [ ] **F4.** Asosiy layout
-  - Sidebar component (kontent yo'q, faqat skeleton)
-  - Header component
-  - Main layout wrapper
-
-- [ ] **F5.** Auth sahifalari
-  - `/login` page
-  - `/register` page
-  - Auth context (React Query + Zustand)
-  - Protected route HOC
-
-- [ ] **F6.** API client
-  - axios yoki fetch wrapper
-  - Auth interceptor (JWT)
-  - Error handler
+- [x] **F1.** Next.js 16 init (TypeScript, Tailwind v4, App Router, src/) ✅ 2026-04-29
+- [x] **F2.** Loyiha tuzilishi (app, components/{ui,shared,auth}, lib, hooks, stores) ✅ 2026-04-29
+- [x] **F3.** Luxury theme (gold/charcoal/cream) + custom UI primitives (Button, Input, Card, FormField, Label) ✅ 2026-04-29
+- [x] **F4.** Asosiy layout — Sidebar (modul ro'yxati skeleti) + Header + ProtectedRoute HOC ✅ 2026-04-29
+- [x] **F5.** Auth sahifalari: /, /login, /register, /verify-phone (Suspense bilan), /forgot-password ✅ 2026-04-29
+- [x] **F6.** API client (axios + JWT interceptor + 401→refresh→retry, Zustand persist store, React Query) ✅ 2026-04-29
 
 ### DevOps (infra/)
 
 - [x] **D1.** docker-compose.yml (postgres pgvector, redis, api, pgadmin) ✅ 2026-04-29
-- [x] **D2.** Dockerfile.api (multi-stage) ✅ 2026-04-29 — Dockerfile.web Sprint 2 da
-- [x] **D3.** .env.example ✅ 2026-04-29
-- [x] **D4.** Pre-commit hooks (ruff, conventional commits) ✅ 2026-04-29 — eslint Sprint 2 da
-- [x] **D5.** GitHub Actions CI (lint, mypy, test, conventional commits) ✅ 2026-04-29
+- [x] **D2.** Dockerfile.api + Dockerfile.web (multi-stage, standalone Next.js) ✅ 2026-04-29
+- [x] **D3.** .env.example (root + apps/web/.env.example) ✅ 2026-04-29
+- [x] **D4.** Pre-commit hooks (ruff, prettier, conventional commits) ✅ 2026-04-29
+- [x] **D5.** GitHub Actions CI: api job + web job (lint, type-check, test, build) ✅ 2026-04-29
 
 ### Hujjatlar (docs/)
 
@@ -127,18 +96,30 @@ Sprint 1 tugashi uchun quyidagilar ishlashi kerak:
 
 ## 📈 Sprint 1 progress (2026-04-29)
 
-**Backend:** ✅ B1-B6 tugadi
-**DevOps:** ✅ D1, D3, D4, D5 tugadi (D2: Dockerfile.web Sprint 2 da)
-**Hujjatlar:** ⏳ H1-H3 Sprint 2 da
-
-**Smoke test:**
-- `docker compose up -d postgres redis` → ✓
-- `alembic upgrade head` → ✓
-- `uvicorn app.main:app` → ✓
-- `GET /health` → `{"status":"ok","db":"ok"}` ✓
-- `POST /api/v1/auth/register` → 201 + verification_id ✓
-
+**Backend:** ✅ B1-B6
+**DevOps:** ✅ D1, D3, D4, D5 (D2 Dockerfile.api)
+**Smoke test:** docker compose, alembic upgrade, uvicorn, /health 200, /auth/register 201
 **Test natijasi:** 26 passed, 82.57% coverage, ruff toza, mypy toza
+
+## 📈 Sprint 2 progress (2026-04-29)
+
+**Frontend:** ✅ F1-F6 — Next.js 16, Tailwind v4, luxury theme, auth flow, layout, API client
+**DevOps:** ✅ Dockerfile.web (standalone), web service in compose, frontend CI job
+
+**Build natijasi:**
+- `pnpm lint` → ✓
+- `pnpm type-check` → ✓
+- `pnpm test` → 8 passed (utils)
+- `pnpm build` → ✓ 9 sahifa pre-rendered (`/`, `/login`, `/register`, `/verify-phone`, `/forgot-password`, `/dashboard`)
+- `pnpm format:check` → ✓
+
+**Sahifalar:**
+- `/` — landing (NEXUS AI brending, CTA tugmalar)
+- `/login` — email yoki telefon + parol
+- `/register` — kompaniya nomi, soha, telefon (+998), email, parol, shartnoma
+- `/verify-phone` — 6 raqamli SMS kod, 5 daqiqa taymer
+- `/forgot-password` — placeholder Sprint 3 uchun
+- `/dashboard` — protected, ProtectedRoute HOC bilan
 
 ---
 

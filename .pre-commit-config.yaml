@@ -22,6 +22,15 @@ repos:
       - id: ruff-format
         files: ^apps/api/
 
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        files: ^apps/web/.*\.(ts|tsx|css|md|json)$
+        additional_dependencies:
+          - prettier@3.8.3
+          - prettier-plugin-tailwindcss@0.8.0
+
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v3.6.0
     hooks:
