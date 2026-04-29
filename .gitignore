@@ -1,0 +1,125 @@
+# ─────────── macOS ───────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# ─────────── Editors / IDEs ───────────
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
+
+# ─────────── Environment / Secrets ───────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+.envrc
+
+# ─────────── Python (apps/api) ───────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Poetry
+.poetry/
+poetry.lock.bak
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+coverage.xml
+*.cover
+.mypy_cache/
+.ruff_cache/
+
+# Alembic
+# (migrations themselves are committed, but auto-generated backups aren't)
+*.alembic.bak
+
+# ─────────── Node / Next.js (apps/web) ───────────
+node_modules/
+.pnpm-store/
+.next/
+out/
+.turbo/
+.swc/
+
+# Build artifacts
+build/
+dist/
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Coverage
+coverage/
+.nyc_output/
+
+# ESLint cache
+.eslintcache
+
+# ─────────── Docker / Infra ───────────
+*.pid
+*.seed
+*.pid.lock
+.docker/
+
+# ─────────── Logs ───────────
+logs/
+*.log
+
+# ─────────── Temp / OS ───────────
+tmp/
+temp/
+.cache/
