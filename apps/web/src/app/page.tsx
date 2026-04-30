@@ -149,13 +149,13 @@ export default function Home() {
             </Link>
             <ThemeToggle size="sm" />
             <Link href="/register">
-              <Button size="sm">Bepul boshlash</Button>
+              <Button size="sm" className="btn-luxury">Bepul boshlash</Button>
             </Link>
           </nav>
           <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle size="sm" />
             <Link href="/register">
-              <Button size="sm">Boshlash</Button>
+              <Button size="sm" className="btn-luxury">Boshlash</Button>
             </Link>
           </div>
         </div>
@@ -187,13 +187,13 @@ export default function Home() {
 
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/register">
-              <Button size="lg" className="min-w-[200px]">
+              <Button size="lg" className="btn-luxury min-w-[200px]">
                 7 kunlik bepul sinov
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <a href="#modullar">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" className="btn-luxury-outline">
                 Modullarni ko&apos;rish
               </Button>
             </a>
@@ -259,38 +259,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─────────── Why NEXUS — always-dark luxury accent block ─────────── */}
+      {/* ─────────── Why NEXUS — emerald accent block ─────────── */}
       <section
         id="nima-uchun"
-        className="relative overflow-hidden px-6 py-24 md:py-32"
-        style={{ background: "#0A0805", color: "#F2E5C2" }}
+        className="relative overflow-hidden bg-[var(--bg-subtle)] px-6 py-24 md:py-32"
       >
-        <div
-          className="absolute inset-0 opacity-50"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(220,187,106,0.15) 0%, transparent 60%)",
-          }}
-        />
+        <div className="hero-glow absolute inset-0 opacity-70" />
         <div className="relative mx-auto max-w-7xl">
           <div className="mx-auto mb-16 max-w-2xl text-center">
-            <p className="font-accent mb-3 text-lg italic" style={{ color: "#DCBB6A" }}>
+            <p className="font-accent mb-3 text-lg text-[var(--primary)] italic">
               Nima uchun NEXUS AI
             </p>
-            <h2 className="font-display text-5xl font-black tracking-tight md:text-6xl">
-              Boshqalardan{" "}
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #B89548 0%, #DCBB6A 50%, #F5D98C 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                farqi
-              </span>
+            <h2 className="font-display text-5xl font-black tracking-tight text-[var(--fg)] md:text-6xl">
+              Boshqalardan <span className="gold-gradient">farqi</span>
             </h2>
-            <p className="mt-5 text-lg" style={{ color: "rgba(242,229,194,0.75)" }}>
+            <p className="mt-5 text-lg text-[var(--fg-muted)]">
               Biz AI&apos;ni qo&apos;shimcha xususiyat sifatida emas, tizim yadrosi sifatida
               quramiz.
             </p>
@@ -301,20 +284,13 @@ export default function Home() {
               const Icon = d.icon;
               return (
                 <div key={d.title} className="text-center">
-                  <div
-                    className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full"
-                    style={{
-                      background: "rgba(220,187,106,0.12)",
-                      color: "#DCBB6A",
-                      border: "1px solid rgba(220,187,106,0.3)",
-                    }}
-                  >
+                  <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-[color-mix(in_oklab,var(--primary)_35%,transparent)] bg-[var(--primary-soft)] text-[var(--primary-soft-fg)]">
                     <Icon className="h-7 w-7" />
                   </div>
-                  <h3 className="font-display mb-3 text-2xl font-bold">{d.title}</h3>
-                  <p className="leading-relaxed" style={{ color: "rgba(242,229,194,0.75)" }}>
-                    {d.text}
-                  </p>
+                  <h3 className="font-display mb-3 text-2xl font-bold text-[var(--fg)]">
+                    {d.title}
+                  </h3>
+                  <p className="leading-relaxed text-[var(--fg-muted)]">{d.text}</p>
                 </div>
               );
             })}
@@ -341,65 +317,35 @@ export default function Home() {
                 key={plan.key}
                 className={
                   plan.recommended
-                    ? "border-gold relative rounded-2xl border-2 p-8 shadow-[0_25px_60px_-15px_rgba(176,131,61,0.4)]"
-                    : "border-cream-200 bg-surface relative rounded-2xl border p-8"
-                }
-                style={
-                  plan.recommended ? { background: "#0A0805", color: "#F2E5C2" } : undefined
+                    ? "relative rounded-2xl border-2 border-[var(--primary)] bg-[var(--surface)] p-8 shadow-[var(--shadow-lg)]"
+                    : "relative rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8"
                 }
               >
                 {plan.recommended ? (
-                  <span
-                    className="absolute -top-3 right-6 rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase"
-                    style={{ background: "#DCBB6A", color: "#0A0805" }}
-                  >
+                  <span className="absolute -top-3 right-6 rounded-full bg-[var(--primary)] px-3 py-1 text-xs font-bold tracking-wider text-[var(--primary-fg)] uppercase">
                     ★ Tavsiya
                   </span>
                 ) : null}
-                <h3
-                  className="font-display text-4xl font-black"
-                  style={plan.recommended ? { color: "#F2E5C2" } : undefined}
-                >
+                <h3 className="font-display text-4xl font-black text-[var(--fg)]">
                   {plan.label}
                 </h3>
-                <p
-                  className={plan.recommended ? "mt-1 text-sm" : "text-muted mt-1 text-sm"}
-                  style={plan.recommended ? { color: "rgba(242,229,194,0.65)" } : undefined}
-                >
-                  {plan.audience}
-                </p>
+                <p className="mt-1 text-sm text-[var(--fg-muted)]">{plan.audience}</p>
                 <div className="my-7 flex items-baseline gap-2">
                   <span
-                    className="font-display text-6xl font-black"
-                    style={
+                    className={
                       plan.recommended
-                        ? {
-                            background:
-                              "linear-gradient(135deg, #B89548 0%, #DCBB6A 50%, #F5D98C 100%)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            backgroundClip: "text",
-                          }
-                        : undefined
+                        ? "gold-gradient font-display text-6xl font-black"
+                        : "font-display text-6xl font-black text-[var(--fg)]"
                     }
                   >
                     {plan.price}
                   </span>
-                  <span
-                    className={plan.recommended ? "text-sm" : "text-muted text-sm"}
-                    style={plan.recommended ? { color: "rgba(242,229,194,0.65)" } : undefined}
-                  >
-                    so&apos;m/oy
-                  </span>
+                  <span className="text-sm text-[var(--fg-muted)]">so&apos;m/oy</span>
                 </div>
                 <ul className="space-y-3 text-sm">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex gap-2.5">
-                      <Check
-                        className="mt-0.5 h-4 w-4 shrink-0"
-                        style={plan.recommended ? { color: "#DCBB6A" } : undefined}
-                        color={plan.recommended ? undefined : "var(--gold-deep)"}
-                      />
+                    <li key={f} className="flex gap-2.5 text-[var(--fg)]">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
                       <span>{f}</span>
                     </li>
                   ))}
@@ -407,7 +353,7 @@ export default function Home() {
                 <Link href="/register" className="mt-8 block">
                   <Button
                     size="lg"
-                    className="w-full"
+                    className={`w-full ${plan.recommended ? "btn-luxury" : "btn-luxury-outline"}`}
                     variant={plan.recommended ? "primary" : "outline"}
                   >
                     Boshlash
@@ -442,13 +388,13 @@ export default function Home() {
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/register">
-              <Button size="lg" className="min-w-[220px]">
+              <Button size="lg" className="btn-luxury min-w-[220px]">
                 Bepul akkaunt yaratish
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <a href="#modullar">
-              <Button variant="ghost" size="lg">
+              <Button variant="ghost" size="lg" className="btn-luxury-outline">
                 Yana bilish
               </Button>
             </a>

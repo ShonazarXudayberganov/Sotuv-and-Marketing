@@ -123,8 +123,8 @@
 
   --success: oklch(72% 0.16 155);
   --success-soft: oklch(28% 0.06 155);
-  --warning: oklch(80% 0.16 80);
-  --warning-soft: oklch(28% 0.06 80);
+  --warning: oklch(75% 0.18 50); /* amber, not gold-yellow — avoid clashing with luxury landing */
+  --warning-soft: oklch(28% 0.07 50);
   --danger: oklch(68% 0.2 25);
   --danger-soft: oklch(28% 0.08 25);
   --info: oklch(72% 0.16 240);
@@ -374,11 +374,78 @@ h6 {
   color: transparent;
 }
 
-/* Hero glow for landing */
+/* Hero glow for landing — emerald wash, matches system primary */
 .hero-glow {
   background-image: radial-gradient(
     ellipse 60% 50% at 50% 0%,
-    color-mix(in oklab, var(--primary) 12%, transparent) 0%,
+    color-mix(in oklab, var(--primary) 14%, transparent) 0%,
     transparent 60%
   );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Strip every legacy gold-* utility back to the system emerald primary.
+   Applies in BOTH light and dark, on landing AND inside the app, killing
+   any residual #DCBB6A leak. */
+.bg-gold,
+[class*="bg-gold/"] {
+  background-color: var(--primary) !important;
+}
+.text-gold,
+.text-gold-deep,
+.text-gold-soft,
+.text-gold-glow {
+  color: var(--primary) !important;
+}
+.border-gold,
+[class*="border-gold/"] {
+  border-color: var(--primary) !important;
+}
+/* The legacy text-gradient utility — recolor with primary, not gold. */
+.gold-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--primary-hover) 0%,
+    var(--primary) 100%
+  ) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+/* Landing CTAs — emerald primary, no luxury gold. */
+.btn-luxury,
+.btn-luxury:focus-visible {
+  background-color: var(--primary) !important;
+  background-image: none !important;
+  color: var(--primary-fg) !important;
+  border: 1px solid var(--primary) !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+.btn-luxury:hover {
+  background-color: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.btn-luxury:active {
+  transform: scale(0.98);
+}
+.btn-luxury-outline,
+.btn-luxury-outline:focus-visible {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--primary) !important;
+  border: 1px solid color-mix(in oklab, var(--primary) 45%, transparent) !important;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.btn-luxury-outline:hover {
+  background-color: var(--primary-soft) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary-soft-fg) !important;
 }

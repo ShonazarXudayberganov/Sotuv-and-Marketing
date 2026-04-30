@@ -35,7 +35,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   return (
     <div className="grid gap-6 md:grid-cols-[240px_1fr]">
-      <nav className="border-cream-200 bg-cream-100/40 h-fit space-y-1 rounded-lg border p-2">
+      <nav className="h-fit space-y-1 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-2">
         {NAV.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
@@ -46,8 +46,8 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
               className={cn(
                 "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
                 active
-                  ? "bg-gold text-charcoal"
-                  : "text-charcoal/70 hover:bg-cream-200/60 hover:text-charcoal",
+                  ? "bg-[var(--primary-soft)] text-[var(--primary-soft-fg)] font-medium"
+                  : "text-[var(--fg-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--fg)]",
               )}
             >
               <Icon className="h-4 w-4" />
