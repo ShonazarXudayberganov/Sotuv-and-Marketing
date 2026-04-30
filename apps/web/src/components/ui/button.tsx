@@ -1,27 +1,44 @@
 "use client";
 
+import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
+  [
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium",
+    "rounded-lg select-none cursor-pointer",
+    "transition-[background-color,color,border-color,box-shadow,transform] duration-150",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
+    "disabled:pointer-events-none disabled:opacity-50",
+    "active:scale-[0.97]",
+    "[&_svg]:size-4 [&_svg]:shrink-0",
+  ],
   {
     variants: {
       variant: {
-        primary: "bg-gold text-charcoal hover:bg-gold-deep shadow-sm hover:shadow-md",
-        secondary: "bg-charcoal text-cream hover:bg-charcoal-soft shadow-sm",
-        outline: "border border-gold/40 bg-transparent text-charcoal hover:bg-cream-100",
-        ghost: "bg-transparent text-charcoal hover:bg-cream-100",
-        link: "text-gold-deep underline-offset-4 hover:underline px-0 h-auto",
-        destructive: "bg-destructive text-cream hover:bg-destructive/90 shadow-sm",
+        primary:
+          "bg-[var(--primary)] text-[var(--primary-fg)] hover:bg-[var(--primary-hover)] shadow-[var(--shadow-sm)]",
+        secondary:
+          "bg-[var(--surface)] text-[var(--fg)] border border-[var(--border)] hover:bg-[var(--surface-hover)] hover:border-[var(--border-strong)] shadow-[var(--shadow-xs)]",
+        outline:
+          "bg-transparent text-[var(--fg)] border border-[var(--border-strong)] hover:bg-[var(--surface-hover)]",
+        ghost: "bg-transparent text-[var(--fg)] hover:bg-[var(--surface-hover)]",
+        link: "bg-transparent text-[var(--primary)] hover:underline underline-offset-4 px-0 h-auto",
+        destructive:
+          "bg-[var(--danger)] text-white hover:opacity-90 shadow-[var(--shadow-sm)]",
+        soft: "bg-[var(--primary-soft)] text-[var(--primary-soft-fg)] hover:bg-[color-mix(in_oklab,var(--primary-soft),var(--primary)_15%)]",
       },
       size: {
-        default: "h-10 px-5 text-sm",
-        sm: "h-8 px-3 text-sm",
-        lg: "h-12 px-7 text-base",
-        icon: "h-10 w-10",
+        sm: "h-8 px-3 text-[13px]",
+        default: "h-9 px-4 text-sm",
+        lg: "h-11 px-6 text-[15px]",
+        xl: "h-12 px-7 text-base",
+        icon: "h-9 w-9 p-0",
+        "icon-sm": "h-8 w-8 p-0",
       },
     },
     defaultVariants: {
@@ -33,39 +50,29 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
   loading?: boolean;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading, disabled, children, ...props }, ref) => {
+  (
+    { className, variant, size, asChild = false, loading, disabled, children, ...props },
+    ref,
+  ) => {
+    const Comp = asChild ? Slot : "button";
     return (
-      <button
+      <Comp
         ref={ref}
         className={cn(buttonVariants({ variant, size, className }))}
         disabled={loading || disabled}
         {...props}
       >
-        {loading ? <Spinner /> : null}
+        {loading ? <Loader2 className="animate-spin" /> : null}
         {children}
-      </button>
+      </Comp>
     );
   },
 );
 Button.displayName = "Button";
-
-function Spinner() {
-  return (
-    <svg
-      className="h-4 w-4 animate-spin"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <circle className="opacity-25" cx="12" cy="12" r="10" />
-      <path className="opacity-75" d="M22 12a10 10 0 0 1-10 10" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 export { buttonVariants };

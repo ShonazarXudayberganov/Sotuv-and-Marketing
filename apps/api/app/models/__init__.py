@@ -1,5 +1,6 @@
 from app.models.base import Base, TimestampMixin, UUIDPKMixin
 from app.models.billing import AiUsage, Invoice, Plan, Subscription
+from app.models.smm import Brand, BrandMembership, TenantIntegration
 from app.models.tenant import Tenant
 from app.models.tenant_scoped import (
     ApiKey,
@@ -18,6 +19,8 @@ __all__ = [
     "ApiKey",
     "AuditLog",
     "Base",
+    "Brand",
+    "BrandMembership",
     "Department",
     "Invoice",
     "Notification",
@@ -26,6 +29,7 @@ __all__ = [
     "Subscription",
     "Task",
     "Tenant",
+    "TenantIntegration",
     "TimestampMixin",
     "TwoFactorSecret",
     "UUIDPKMixin",

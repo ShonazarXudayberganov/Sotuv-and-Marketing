@@ -4,8 +4,10 @@ from app.api.v1.endpoints import (
     api_keys,
     auth,
     billing,
+    brands,
     departments,
     health,
+    integrations,
     notifications,
     onboarding,
     roles,
@@ -28,3 +30,5 @@ api_router.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
 api_router.include_router(twofa.router, prefix="/2fa", tags=["2fa"])
 api_router.include_router(api_keys.router, prefix="/api-keys", tags=["api-keys"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
+api_router.include_router(brands.router, prefix="/brands", tags=["smm"])
+api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])

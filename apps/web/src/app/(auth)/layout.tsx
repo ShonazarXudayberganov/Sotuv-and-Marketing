@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { ThemeToggle } from "@/components/shared/theme-toggle";
+
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="bg-cream flex min-h-screen flex-col">
@@ -9,6 +11,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <Link href="/" className="font-display text-charcoal text-2xl tracking-tight">
             NEXUS <span className="text-gold-deep">AI</span>
           </Link>
+          <ThemeToggle size="sm" />
         </div>
       </header>
 

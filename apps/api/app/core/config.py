@@ -42,6 +42,13 @@ class Settings(BaseSettings):
 
     BCRYPT_ROUNDS: int = 12
 
+    # ─────────── Tenant integration credentials encryption ───────────
+    # Fernet key (urlsafe base64 32 bytes). Generate with:
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    INTEGRATIONS_ENCRYPTION_KEY: SecretStr = Field(
+        default=SecretStr("dGVzdF9rZXlfcGxlYXNlX2NoYW5nZV9pbl9wcm9kdWN0aW9uPT0=")
+    )
+
     # ─────────── SMS (Eskiz.uz) ───────────
     ESKIZ_EMAIL: str = ""
     ESKIZ_PASSWORD: SecretStr = Field(default=SecretStr(""))

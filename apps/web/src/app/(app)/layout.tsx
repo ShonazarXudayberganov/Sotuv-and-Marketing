@@ -1,20 +1,20 @@
 import type { ReactNode } from "react";
 
+import { Navbar } from "@/components/layout/Navbar";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { GraceBanner } from "@/components/shared/grace-banner";
-import { Header } from "@/components/shared/header";
 import { ProtectedRoute } from "@/components/shared/protected-route";
-import { Sidebar } from "@/components/shared/sidebar";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <ProtectedRoute>
-      <div className="bg-cream flex min-h-screen">
+      <div className="flex min-h-screen bg-[var(--bg)]">
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Header />
+          <Navbar />
           <GraceBanner />
           <main className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-7xl p-6 md:p-8">{children}</div>
+            <div className="w-full px-4 py-6 md:px-8 md:py-8 2xl:px-12">{children}</div>
           </main>
         </div>
       </div>

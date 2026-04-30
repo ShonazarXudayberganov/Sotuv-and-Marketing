@@ -5,6 +5,7 @@ import { Bell, LogOut, Search, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLogout } from "@/hooks/use-auth";
@@ -46,6 +47,8 @@ export function Header() {
           ⌘K
         </kbd>
       </div>
+
+      <ThemeToggle size="sm" />
 
       <div className="relative">
         <Button

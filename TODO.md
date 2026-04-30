@@ -101,6 +101,16 @@ Sprint 1 tugashi uchun quyidagilar ishlashi kerak:
 **Smoke test:** docker compose, alembic upgrade, uvicorn, /health 200, /auth/register 201
 **Test natijasi:** 26 passed, 82.57% coverage, ruff toza, mypy toza
 
+## 📈 Sprint 1.1 progress (2026-04-30) — Bosqich 1 boshlandi
+
+**Backend:** Brand + BrandMembership + TenantIntegration modellari, har tenant schema'ga DDL avtomatik bootstrap, Fernet (AES) bilan shifrlangan creditallar saqlash, 9 ta provider katalogi (anthropic/openai/telegram/meta/youtube/google_oauth/eskiz/sendgrid), `smm.read|write|publish` + `integrations.write` permissions, brands CRUD + set-default endpoint, integrations connect/disconnect endpoint, audit log integratsiyasi. **8 ta yangi test (brands lifecycle + integrations) yashil.**
+
+**Frontend:** Types + `smm-api` + `integrations-api` clientlar, `/smm` dashboard sahifasi (brendlar listi, ulanishlar holati, yo'l xaritasi), `/smm/brands` to-liq CRUD UI (rang tanlash, til, ovoz va uslub, asosiy brend belgisi), `/settings/integrations` provayder kartochkalari + connect modal (eye/eye-off password toggle, masked qiymatlar, kategoriya bo'yicha guruhlash). Sidebar'da SMM va Integratsiyalar yoqilgan. **22 sahifa pre-rendered.**
+
+**Arxitektura qarori:** Foydalanuvchi tokenlari `/settings/integrations` orqali UI'dan kiritiladi. Tizim mock providerlar bilan to'liq ishlay oladi — real API kalitlar Sprint davomida bosqichma-bosqich ulanadi. Tashqi xizmat creditallari hech qachon `.env`ga yozilmaydi (multi-tenant SaaS standart).
+
+---
+
 ## 🎉 Bosqich 0 yakunlandi (2026-04-30)
 
 Sprint 1–5 tugadi. Tizim production'ga deploy qilishga tayyor (server creditallar so'ng).

@@ -199,6 +199,63 @@ TENANT_DDL: tuple[str, ...] = (
         updated_at   timestamptz NOT NULL DEFAULT now()
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS brands (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name            varchar(100) NOT NULL,
+        slug            varchar(80) NOT NULL UNIQUE,
+        description     varchar(1000),
+        industry        varchar(50),
+        logo_url        varchar(500),
+        primary_color   varchar(20),
+        voice_tone      varchar(500),
+        target_audience text,
+        languages       jsonb NOT NULL DEFAULT '[]'::jsonb,
+        is_default      boolean NOT NULL DEFAULT false,
+        is_active       boolean NOT NULL DEFAULT true,
+        created_by      uuid NOT NULL,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_brands_slug ON brands(slug)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS brand_memberships (
+        id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        brand_id    uuid NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+        user_id     uuid NOT NULL,
+        role        varchar(30) NOT NULL DEFAULT 'manager',
+        created_at  timestamptz NOT NULL DEFAULT now(),
+        updated_at  timestamptz NOT NULL DEFAULT now(),
+        CONSTRAINT uq_brand_user UNIQUE (brand_id, user_id)
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_brand_memberships_brand ON brand_memberships(brand_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_brand_memberships_user ON brand_memberships(user_id)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS tenant_integrations (
+        id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        provider              varchar(50) NOT NULL UNIQUE,
+        label                 varchar(100),
+        credentials_encrypted text NOT NULL,
+        is_active             boolean NOT NULL DEFAULT true,
+        last_verified_at      timestamptz,
+        last_error            varchar(500),
+        metadata              jsonb,
+        created_by            uuid NOT NULL,
+        created_at            timestamptz NOT NULL DEFAULT now(),
+        updated_at            timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_tenant_integrations_provider ON tenant_integrations(provider)
+    """,
 )
 
 

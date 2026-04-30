@@ -45,11 +45,12 @@ PERMISSIONS: Final[list[str]] = [
     # Billing (Sprint 5)
     "billing.read",
     "billing.update",
-    # Phase 1+ modules — placeholders so role templates know they exist
+    # Phase 1+ modules
     "crm.read",
     "crm.write",
     "smm.read",
     "smm.write",
+    "smm.publish",
     "ads.read",
     "ads.write",
     "inbox.read",
@@ -57,6 +58,7 @@ PERMISSIONS: Final[list[str]] = [
     "reports.read",
     "integrations.read",
     "integrations.write",
+    "integrations.connect",
     # AI
     "ai.use",
 ]

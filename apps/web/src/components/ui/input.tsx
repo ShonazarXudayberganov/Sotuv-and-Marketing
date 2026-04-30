@@ -9,24 +9,23 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, invalid, ...props }, ref) => {
-    return (
-      <input
-        ref={ref}
-        className={cn(
-          "bg-cream flex h-11 w-full rounded-md border px-3 py-2 text-sm",
-          "placeholder:text-muted file:border-0 file:bg-transparent file:font-medium",
-          "focus-visible:ring-gold/60 focus-visible:border-gold focus-visible:ring-2 focus-visible:outline-none",
-          "disabled:cursor-not-allowed disabled:opacity-50",
-          "transition-colors",
-          invalid
-            ? "border-destructive focus-visible:ring-destructive/40"
-            : "border-cream-200",
-          className,
-        )}
-        {...props}
-      />
-    );
-  },
+  ({ className, invalid, ...props }, ref) => (
+    <input
+      ref={ref}
+      className={cn(
+        "flex h-9 w-full rounded-lg border bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)]",
+        "placeholder:text-[var(--fg-subtle)]",
+        "transition-[border-color,box-shadow] duration-150",
+        "focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none",
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        "shadow-[var(--shadow-xs)]",
+        invalid
+          ? "border-[var(--danger)] focus-visible:ring-[color-mix(in_oklab,var(--danger),transparent_60%)]"
+          : "border-[var(--border)]",
+        className,
+      )}
+      {...props}
+    />
+  ),
 );
 Input.displayName = "Input";
