@@ -1,5 +1,6 @@
 from app.models.base import Base, TimestampMixin, UUIDPKMixin
 from app.models.billing import AiUsage, Invoice, Plan, Subscription
+from app.models.knowledge import EMBEDDING_DIM, KnowledgeChunk, KnowledgeDocument
 from app.models.smm import Brand, BrandMembership, TenantIntegration
 from app.models.tenant import Tenant
 from app.models.tenant_scoped import (
@@ -15,6 +16,7 @@ from app.models.tenant_scoped import (
 from app.models.user import User, VerificationCode
 
 __all__ = [
+    "EMBEDDING_DIM",
     "AiUsage",
     "ApiKey",
     "AuditLog",
@@ -23,6 +25,8 @@ __all__ = [
     "BrandMembership",
     "Department",
     "Invoice",
+    "KnowledgeChunk",
+    "KnowledgeDocument",
     "Notification",
     "Plan",
     "Role",

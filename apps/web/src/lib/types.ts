@@ -1,0 +1,344 @@
+export type Industry =
+  | "savdo"
+  | "restoran"
+  | "salon-klinika"
+  | "talim"
+  | "xizmat"
+  | "it"
+  | "boshqa";
+
+export interface User {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: string;
+}
+
+export interface Tenant {
+  id: string;
+  name: string;
+  schema_name: string;
+  industry: string | null;
+}
+
+export interface AuthBundle {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  user: User;
+  tenant: Tenant;
+}
+
+export interface RegisterPayload {
+  company_name: string;
+  industry: Industry;
+  phone: string;
+  email: string;
+  password: string;
+  accept_terms: boolean;
+}
+
+export interface RegisterResponse {
+  verification_id: string;
+  phone_masked: string;
+  expires_in_seconds: number;
+}
+
+export interface VerifyPhonePayload {
+  verification_id: string;
+  code: string;
+}
+
+export interface LoginPayload {
+  email_or_phone: string;
+  password: string;
+  remember_me?: boolean;
+}
+
+export interface ApiError {
+  detail: string | { msg: string; loc?: string[] }[];
+}
+
+export interface Department {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  head_user_id: string | null;
+  description: string | null;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export interface DepartmentCreate {
+  name: string;
+  parent_id?: string | null;
+  description?: string | null;
+  sort_order?: number;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  is_system: boolean;
+  permissions: string[];
+}
+
+export interface OnboardingState {
+  step: number;
+  completed: boolean;
+  company?: Record<string, unknown>;
+  departments?: string[];
+  invited_users?: string[];
+  selected_modules?: string[];
+  selected_plan?: string | null;
+}
+
+export const MODULES = [
+  { key: "crm", label: "CRM", price: { start: 290_000, pro: 690_000, business: 1_400_000 } },
+  { key: "smm", label: "SMM", price: { start: 390_000, pro: 890_000, business: 1_800_000 } },
+  {
+    key: "ads",
+    label: "Reklama",
+    price: { start: 290_000, pro: 690_000, business: 1_400_000 },
+  },
+  {
+    key: "inbox",
+    label: "Inbox",
+    price: { start: 390_000, pro: 890_000, business: 1_800_000 },
+  },
+  {
+    key: "reports",
+    label: "Hisobotlar",
+    price: { start: 190_000, pro: 490_000, business: 990_000 },
+  },
+  {
+    key: "integrations",
+    label: "Integratsiyalar",
+    price: { start: 190_000, pro: 490_000, business: 990_000 },
+  },
+] as const;
+
+export type ModuleKey = (typeof MODULES)[number]["key"];
+
+export const PLANS = [
+  { key: "start", label: "Start", priceTotal: 690_000 },
+  { key: "pro", label: "Pro", priceTotal: 1_500_000, recommended: true },
+  { key: "business", label: "Business", priceTotal: 3_000_000 },
+] as const;
+
+export type TaskStatus = "new" | "in_progress" | "review" | "done" | "cancelled";
+export type TaskPriority = "low" | "medium" | "high" | "critical";
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  priority: TaskPriority;
+  assignee_id: string | null;
+  department_id: string | null;
+  related_type: string | null;
+  related_id: string | null;
+  starts_at: string | null;
+  due_at: string | null;
+  estimated_hours: number | null;
+  created_by: string;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskCreate {
+  title: string;
+  description?: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  assignee_id?: string | null;
+  department_id?: string | null;
+  starts_at?: string | null;
+  due_at?: string | null;
+}
+
+export interface ApiKey {
+  id: string;
+  name: string;
+  key_prefix: string;
+  scopes: string[];
+  rate_limit_per_minute: number;
+  expires_at: string | null;
+  last_used_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+}
+
+export interface ApiKeyCreated extends ApiKey {
+  plaintext_key: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  body: string | null;
+  category: string;
+  severity: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface TwoFactorSetup {
+  secret: string;
+  qr_data_url: string;
+  backup_codes: string[];
+}
+
+export interface Subscription {
+  id: string;
+  selected_modules: string[];
+  tier: string;
+  package: string | null;
+  billing_cycle_months: number;
+  price_total: number;
+  discount_percent: number;
+  starts_at: string;
+  expires_at: string;
+  is_trial: boolean;
+  is_active: boolean;
+  cancelled_at: string | null;
+}
+
+export type GraceState = "active" | "banner" | "read_only" | "locked";
+
+export interface BillingStatus {
+  subscription: Subscription | null;
+  grace_state: GraceState;
+  days_until_expiry: number | null;
+  days_past_expiry: number | null;
+}
+
+export interface InvoiceRow {
+  id: string;
+  subscription_id: string;
+  invoice_number: string;
+  amount: number;
+  status: string;
+  payment_method: string;
+  paid_at: string | null;
+  due_at: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface PriceQuote {
+  price_total: number;
+  discount_percent: number;
+  ai_token_cap_monthly: number;
+}
+
+export interface BillingCatalog {
+  modules: { key: string; label: string; prices: Record<string, number> }[];
+  packages: Record<string, { modules: string[]; discount_percent: number; label: string }>;
+  cycle_discounts: Record<string, number>;
+  ai_token_caps: Record<string, number>;
+}
+
+// ─────────── SMM / Sprint 1.1 ───────────
+
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  industry: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+  voice_tone: string | null;
+  target_audience: string | null;
+  languages: string[];
+  is_default: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BrandCreate {
+  name: string;
+  description?: string | null;
+  industry?: string | null;
+  logo_url?: string | null;
+  primary_color?: string | null;
+  voice_tone?: string | null;
+  target_audience?: string | null;
+  languages?: string[];
+  is_default?: boolean;
+}
+
+export type IntegrationCategory = "ai" | "social" | "auth" | "messaging";
+
+export interface IntegrationProvider {
+  provider: string;
+  label: string;
+  category: IntegrationCategory;
+  description: string;
+  secret_fields: string[];
+  display_field: string | null;
+  docs_url: string | null;
+  connected: boolean;
+  is_active: boolean;
+  label_custom: string | null;
+  display_value: string | null;
+  masked_values: Record<string, string>;
+  last_verified_at: string | null;
+  last_error: string | null;
+  updated_at: string | null;
+}
+
+export interface IntegrationConnect {
+  label?: string;
+  credentials: Record<string, string>;
+  metadata?: Record<string, unknown>;
+}
+
+// ─────────── Knowledge Base / Sprint 1.2 ───────────
+
+export interface KnowledgeDocument {
+  id: string;
+  brand_id: string;
+  title: string;
+  source_type: string;
+  source_url: string | null;
+  chunk_count: number;
+  embed_status: "processing" | "ready" | "empty" | "failed" | string;
+  embed_error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KnowledgeStats {
+  documents: number;
+  chunks: number;
+}
+
+export interface KnowledgeSearchHit {
+  chunk_id: string;
+  document_id: string;
+  document_title: string;
+  brand_id: string;
+  position: number;
+  content: string;
+  token_count: number;
+  similarity: number;
+}
+
+export interface KnowledgeSearchResponse {
+  query: string;
+  hits: KnowledgeSearchHit[];
+}
+
+export interface TextDocumentCreate {
+  brand_id: string;
+  title: string;
+  text: string;
+  source_url?: string | null;
+}

@@ -4,13 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
+  BookOpen,
   CalendarDays,
   Megaphone,
   PenSquare,
   Plug,
   Plus,
   Sparkles,
-  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -20,6 +20,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { knowledgeApi } from "@/lib/kb-api";
 import { brandsApi, integrationsApi } from "@/lib/smm-api";
 
 export default function SmmDashboardPage() {
@@ -30,6 +31,10 @@ export default function SmmDashboardPage() {
   const { data: integrations = [] } = useQuery({
     queryKey: ["integrations"],
     queryFn: integrationsApi.list,
+  });
+  const { data: kbStats } = useQuery({
+    queryKey: ["knowledge", "stats", null],
+    queryFn: () => knowledgeApi.stats(null),
   });
 
   const socialIntegrations = integrations.filter((i) => i.category === "social");
@@ -84,10 +89,11 @@ export default function SmmDashboardPage() {
           href="/settings/integrations"
         />
         <SummaryCard
-          icon={TrendingUp}
-          label="Bu hafta postlar"
-          value="—"
-          hint="Sprint 1.7 da"
+          icon={BookOpen}
+          label="Bilim bazasi"
+          value={kbStats?.documents ?? 0}
+          hint={`${kbStats?.chunks ?? 0} bo'lak indekslangan`}
+          href="/smm/knowledge-base"
         />
       </div>
 
@@ -172,7 +178,7 @@ export default function SmmDashboardPage() {
         <CardContent>
           <div className="space-y-2.5">
             <RoadmapItem done label="Brendlar (multi-brand)" sprint="1.1" />
-            <RoadmapItem label="Knowledge base + RAG (pgvector)" sprint="1.2" />
+            <RoadmapItem done label="Knowledge base + RAG (pgvector)" sprint="1.2" />
             <RoadmapItem label="Telegram bot integratsiyasi" sprint="1.3" />
             <RoadmapItem label="Instagram + Facebook" sprint="1.4" />
             <RoadmapItem label="YouTube" sprint="1.5" />

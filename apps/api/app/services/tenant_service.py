@@ -256,6 +256,51 @@ TENANT_DDL: tuple[str, ...] = (
     """
     CREATE INDEX IF NOT EXISTS ix_tenant_integrations_provider ON tenant_integrations(provider)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS knowledge_documents (
+        id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        brand_id      uuid NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+        title         varchar(200) NOT NULL,
+        source_type   varchar(20) NOT NULL,
+        source_url    varchar(500),
+        raw_text      text NOT NULL,
+        chunk_count   integer NOT NULL DEFAULT 0,
+        embed_status  varchar(20) NOT NULL DEFAULT 'pending',
+        embed_error   varchar(500),
+        created_by    uuid NOT NULL,
+        created_at    timestamptz NOT NULL DEFAULT now(),
+        updated_at    timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_knowledge_documents_brand
+        ON knowledge_documents(brand_id)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS knowledge_chunks (
+        id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        document_id  uuid NOT NULL REFERENCES knowledge_documents(id) ON DELETE CASCADE,
+        brand_id     uuid NOT NULL,
+        position     integer NOT NULL,
+        content      text NOT NULL,
+        token_count  integer NOT NULL DEFAULT 0,
+        embedding    vector(1536),
+        created_at   timestamptz NOT NULL DEFAULT now(),
+        updated_at   timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_knowledge_chunks_document
+        ON knowledge_chunks(document_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_knowledge_chunks_brand
+        ON knowledge_chunks(brand_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_knowledge_chunks_embedding
+        ON knowledge_chunks USING hnsw (embedding vector_cosine_ops)
+    """,
 )
 
 
