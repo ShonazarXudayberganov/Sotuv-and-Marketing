@@ -374,3 +374,18 @@ export interface TelegramSendResult {
   sent_text: string;
   mocked: boolean;
 }
+
+export interface MetaPageOption {
+  id: string;
+  name: string;
+  category: string | null;
+  has_instagram: boolean;
+  instagram_username: string | null;
+}
+
+export interface MetaSendResult {
+  post_id: string;
+  sent_text: string;
+  target: "facebook" | "instagram";
+  mocked: boolean;
+}

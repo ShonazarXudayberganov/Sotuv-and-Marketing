@@ -180,7 +180,7 @@ export default function SmmDashboardPage() {
             <RoadmapItem done label="Brendlar (multi-brand)" sprint="1.1" />
             <RoadmapItem done label="Knowledge base + RAG (pgvector)" sprint="1.2" />
             <RoadmapItem done label="Telegram bot integratsiyasi" sprint="1.3" />
-            <RoadmapItem label="Instagram + Facebook" sprint="1.4" />
+            <RoadmapItem done label="Instagram + Facebook" sprint="1.4" />
             <RoadmapItem label="YouTube" sprint="1.5" />
             <RoadmapItem label="AI kontent generatsiya (Claude + GPT)" sprint="1.6" />
             <RoadmapItem label="Postlar workflow (draft → schedule → publish)" sprint="1.7" />

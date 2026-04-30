@@ -1,5 +1,11 @@
 import { apiClient } from "./api-client";
-import type { SocialAccount, TelegramBotInfo, TelegramSendResult } from "./types";
+import type {
+  MetaPageOption,
+  MetaSendResult,
+  SocialAccount,
+  TelegramBotInfo,
+  TelegramSendResult,
+} from "./types";
 
 export const socialApi = {
   async listAccounts(brandId?: string | null, provider?: string): Promise<SocialAccount[]> {
@@ -29,6 +35,34 @@ export const socialApi = {
     const { data } = await apiClient.post<TelegramSendResult>("/social/telegram/test", {
       account_id: accountId,
       text,
+    });
+    return data;
+  },
+  async metaListPages(): Promise<MetaPageOption[]> {
+    const { data } = await apiClient.get<MetaPageOption[]>("/social/meta/pages");
+    return data;
+  },
+  async metaLink(
+    brandId: string,
+    pageId: string,
+    target: "facebook" | "instagram",
+  ): Promise<SocialAccount> {
+    const { data } = await apiClient.post<SocialAccount>("/social/meta/link", {
+      brand_id: brandId,
+      page_id: pageId,
+      target,
+    });
+    return data;
+  },
+  async metaTest(
+    accountId: string,
+    text: string,
+    imageUrl?: string,
+  ): Promise<MetaSendResult> {
+    const { data } = await apiClient.post<MetaSendResult>("/social/meta/test", {
+      account_id: accountId,
+      text,
+      image_url: imageUrl ?? null,
     });
     return data;
   },

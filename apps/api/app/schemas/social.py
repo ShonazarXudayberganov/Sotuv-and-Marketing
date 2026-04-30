@@ -46,3 +46,30 @@ class TelegramBotInfo(BaseModel):
     bot_id: int | None
     can_join_groups: bool | None
     mocked: bool
+
+
+class MetaPageOption(BaseModel):
+    id: str
+    name: str
+    category: str | None
+    has_instagram: bool
+    instagram_username: str | None
+
+
+class MetaLinkRequest(BaseModel):
+    brand_id: UUID
+    page_id: str = Field(min_length=1, max_length=100)
+    target: str = Field(default="facebook", pattern="^(facebook|instagram)$")
+
+
+class MetaTestRequest(BaseModel):
+    account_id: UUID
+    text: str = Field(min_length=1, max_length=2000)
+    image_url: str | None = Field(default=None, max_length=500)
+
+
+class MetaSendResult(BaseModel):
+    post_id: str
+    sent_text: str
+    target: str
+    mocked: bool
