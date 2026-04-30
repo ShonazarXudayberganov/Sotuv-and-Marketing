@@ -11,6 +11,8 @@ from app.services import (
     knowledge_service,
     notification_service,
     sms,
+    social_account_service,
+    telegram_service,
     tenant_service,
     twofa_service,
 )
@@ -28,6 +30,8 @@ __all__ = [
     "knowledge_service",
     "notification_service",
     "sms",
+    "social_account_service",
+    "telegram_service",
     "tenant_service",
     "twofa_service",
 ]

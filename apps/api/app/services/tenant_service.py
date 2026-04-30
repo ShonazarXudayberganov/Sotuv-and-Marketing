@@ -301,6 +301,33 @@ TENANT_DDL: tuple[str, ...] = (
     CREATE INDEX IF NOT EXISTS ix_knowledge_chunks_embedding
         ON knowledge_chunks USING hnsw (embedding vector_cosine_ops)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS brand_social_accounts (
+        id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        brand_id            uuid NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+        provider            varchar(30) NOT NULL,
+        external_id         varchar(100) NOT NULL,
+        external_handle     varchar(100),
+        external_name       varchar(200),
+        chat_type           varchar(30),
+        is_active           boolean NOT NULL DEFAULT true,
+        last_published_at   timestamptz,
+        last_error          varchar(500),
+        metadata            jsonb,
+        created_by          uuid NOT NULL,
+        created_at          timestamptz NOT NULL DEFAULT now(),
+        updated_at          timestamptz NOT NULL DEFAULT now(),
+        CONSTRAINT uq_brand_social UNIQUE (brand_id, provider, external_id)
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_brand_social_accounts_brand
+        ON brand_social_accounts(brand_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_brand_social_accounts_provider
+        ON brand_social_accounts(provider)
+    """,
 )
 
 

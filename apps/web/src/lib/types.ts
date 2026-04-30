@@ -342,3 +342,35 @@ export interface TextDocumentCreate {
   text: string;
   source_url?: string | null;
 }
+
+// ─────────── Social accounts / Sprint 1.3 ───────────
+
+export interface SocialAccount {
+  id: string;
+  brand_id: string;
+  provider: string;
+  external_id: string;
+  external_handle: string | null;
+  external_name: string | null;
+  chat_type: string | null;
+  is_active: boolean;
+  last_published_at: string | null;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TelegramBotInfo {
+  username: string | null;
+  first_name: string | null;
+  bot_id: number | null;
+  can_join_groups: boolean | null;
+  mocked: boolean;
+}
+
+export interface TelegramSendResult {
+  message_id: number;
+  chat_id: number | string;
+  sent_text: string;
+  mocked: boolean;
+}

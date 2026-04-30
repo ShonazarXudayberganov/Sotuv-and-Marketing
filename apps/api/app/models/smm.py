@@ -65,4 +65,28 @@ class TenantIntegration(Base, UUIDPKMixin, TimestampMixin):
     created_by: Mapped[UUID] = mapped_column(nullable=False)
 
 
-__all__ = ["Brand", "BrandMembership", "TenantIntegration"]
+class BrandSocialAccount(Base, UUIDPKMixin, TimestampMixin):
+    """A linked external account (channel/page/profile) on a social platform.
+
+    Brand-scoped — each brand can link multiple Telegram channels, IG profiles, etc.
+    The bot/app credentials live in ``tenant_integrations`` (one per tenant).
+    """
+
+    __tablename__ = "brand_social_accounts"
+
+    brand_id: Mapped[UUID] = mapped_column(
+        ForeignKey("brands.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    provider: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    external_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    external_handle: Mapped[str | None] = mapped_column(String(100))
+    external_name: Mapped[str | None] = mapped_column(String(200))
+    chat_type: Mapped[str | None] = mapped_column(String(30))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    last_published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error: Mapped[str | None] = mapped_column(String(500))
+    metadata_: Mapped[dict[str, object] | None] = mapped_column("metadata", JSON)
+    created_by: Mapped[UUID] = mapped_column(nullable=False)
+
+
+__all__ = ["Brand", "BrandMembership", "BrandSocialAccount", "TenantIntegration"]
