@@ -152,6 +152,53 @@ TENANT_DDL: tuple[str, ...] = (
         updated_at         timestamptz NOT NULL DEFAULT now()
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS subscriptions (
+        id                     uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        selected_modules       jsonb NOT NULL DEFAULT '[]'::jsonb,
+        tier                   varchar(20) NOT NULL DEFAULT 'start',
+        package                varchar(30),
+        billing_cycle_months   integer NOT NULL DEFAULT 1,
+        price_total            integer NOT NULL DEFAULT 0,
+        discount_percent       integer NOT NULL DEFAULT 0,
+        starts_at              timestamptz NOT NULL DEFAULT now(),
+        expires_at             timestamptz NOT NULL,
+        is_trial               boolean NOT NULL DEFAULT true,
+        is_active              boolean NOT NULL DEFAULT true,
+        cancelled_at           timestamptz,
+        created_at             timestamptz NOT NULL DEFAULT now(),
+        updated_at             timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS invoices (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        subscription_id uuid NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+        invoice_number  varchar(30) NOT NULL UNIQUE,
+        amount          integer NOT NULL,
+        status          varchar(20) NOT NULL DEFAULT 'pending',
+        payment_method  varchar(20) NOT NULL DEFAULT 'bank_transfer',
+        paid_at         timestamptz,
+        paid_by_user_id uuid,
+        due_at          timestamptz NOT NULL,
+        notes           varchar(1000),
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_invoices_status ON invoices(status)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS ai_usage (
+        id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        period       varchar(7) NOT NULL UNIQUE,
+        tokens_used  numeric NOT NULL DEFAULT 0,
+        tokens_cap   numeric NOT NULL DEFAULT 0,
+        created_at   timestamptz NOT NULL DEFAULT now(),
+        updated_at   timestamptz NOT NULL DEFAULT now()
+    )
+    """,
 )
 
 

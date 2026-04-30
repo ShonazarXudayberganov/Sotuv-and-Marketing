@@ -101,6 +101,37 @@ Sprint 1 tugashi uchun quyidagilar ishlashi kerak:
 **Smoke test:** docker compose, alembic upgrade, uvicorn, /health 200, /auth/register 201
 **Test natijasi:** 26 passed, 82.57% coverage, ruff toza, mypy toza
 
+## 🎉 Bosqich 0 yakunlandi (2026-04-30)
+
+Sprint 1–5 tugadi. Tizim production'ga deploy qilishga tayyor (server creditallar so'ng).
+
+**Yakuniy son raqamlar:**
+- Backend: 61 testlar (unit + integration), 86.34% coverage, ruff + mypy strict toza
+- Frontend: 8 unit testlar, 20 sahifa pre-rendered, lint/type-check/build toza
+- DB: 14 jadval (public + tenant template), schema-per-tenant DDL bootstrap
+- Endpointlar: 9 router (auth, tenant, users, roles, departments, onboarding, tasks, 2fa, api-keys, notifications, billing)
+- 5 standart rol + 40+ permissions
+- WebSocket bildirishnomalar, JWT + 2FA, API kalit tizimi
+- Billing: 18 narx + 4 paket, PDF Invoice, grace period state machine
+
+**Kelgusi (Bosqich 1):** SMM MVP — brendlar, knowledge_base (pgvector), ijtimoiy akkauntlar, AI kontent generatsiya
+
+---
+
+## 📈 Sprint 5 progress (2026-04-30)
+
+**Backend:** Plan/Subscription/Invoice/AiUsage modellari + DDL har tenant schema'da; pricing modul (6 modul × 3 tarif × paketlar × yillik chegirma); billing_service (start_trial, change_subscription, mark_paid) + grace period state machine (active/banner/read_only/locked); reportlab orqali PDF Invoice generatsiya; Jinja2 + mock email provider; full billing endpoints (catalog, status, quote, subscribe, invoices, pdf, mark-paid). 61 tests passed (21 yangi: 5 pricing, 5 grace state, 8 billing integration), 86.34% coverage.
+
+**Frontend:** `/settings/billing` to'liq sahifa — joriy tarif kartochkasi + paket/modul/tarif/davr tanlovi + jonli quote (chegirma + AI cap) + invoice tarixi (PDF download + mark-paid), trial start tugmasi. `<GraceBanner>` komponenti app layout'ga qo'shildi — 4 holat (active yashirin, banner sariq ogohlantirish, read_only kuchaytirilgan, locked qizil bloklash) bilan to'lovga yo'naltiruvchi CTA. 20 sahifa pre-rendered.
+
+**DevOps:** `infra/docker-compose.prod.yml` (postgres, redis password-protected, api+web GHCR'dan, nginx); `infra/nginx.conf` (TLS 1.2/1.3, HSTS, WebSocket upgrade, /api proxy); `.github/workflows/deploy.yml` (build → GHCR push → SSH staging/production rollout, manual production approval).
+
+**Hujjatlar:** README to'liq qayta yozildi — quick start, project structure, tech stack, **production deploy guide** (UzCloud + Cloudflare + Sentry + Let's Encrypt), Sprint 5 yangiliklari, Bosqich 1 keyingi qadamlar.
+
+**Note:** Real SMTP/SendGrid, OAuth (Google + Telegram) Bosqich 1 ga ko'chirildi — kerakli credentials kelganda yoqamiz.
+
+---
+
 ## 📈 Sprint 4 progress (2026-04-29)
 
 **Backend:** Tasks model + DDL (status, priority, assignee, due dates, polymorphic related_to), CRUD endpoints with status/assignee filters, auto-notification on assign. **2FA** (TOTP via pyotp) — setup → QR data URL → backup codes → verify-and-enable → disable. **API keys** — generate `nxa_…` token, hash store, scopes, rate limit, revoke. **Notifications** — DB persist + in-process pub/sub broker + WebSocket `/api/v1/notifications/ws?token=...` + REST list/mark-all-read. **40 tests passed, 85.05% coverage.**

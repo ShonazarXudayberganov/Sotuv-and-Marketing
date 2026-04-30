@@ -14,6 +14,7 @@ from app.core.tenancy import validate_schema_name
 PUBLIC_PREFIXES = (
     "/api/v1/auth/",
     "/api/v1/health",
+    "/api/v1/billing/catalog",
     "/health",
     "/docs",
     "/redoc",
