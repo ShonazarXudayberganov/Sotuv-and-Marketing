@@ -689,3 +689,85 @@ export interface ActivityCreateRequest {
   duration_seconds?: number | null;
   occurred_at?: string | null;
 }
+
+// ─────────── Deals + Pipelines / Sprint 2.2 ───────────
+
+export type DealStatus = "open" | "won" | "lost";
+
+export interface PipelineStage {
+  id: string;
+  pipeline_id: string;
+  name: string;
+  slug: string;
+  sort_order: number;
+  default_probability: number;
+  is_won: boolean;
+  is_lost: boolean;
+  color: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Pipeline {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  is_default: boolean;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  stages: PipelineStage[];
+}
+
+export interface Deal {
+  id: string;
+  title: string;
+  contact_id: string | null;
+  pipeline_id: string;
+  stage_id: string;
+  amount: number;
+  currency: string;
+  probability: number;
+  status: DealStatus | string;
+  is_won: boolean;
+  expected_close_at: string | null;
+  closed_at: string | null;
+  department_id: string | null;
+  assignee_id: string | null;
+  notes: string | null;
+  tags: string[] | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DealCreateRequest {
+  title: string;
+  contact_id?: string | null;
+  pipeline_id?: string | null;
+  stage_id?: string | null;
+  amount?: number;
+  currency?: string;
+  expected_close_at?: string | null;
+  assignee_id?: string | null;
+  department_id?: string | null;
+  notes?: string | null;
+  tags?: string[] | null;
+}
+
+export interface DealForecast {
+  open_count: number;
+  open_amount: number;
+  weighted_amount: number;
+  by_stage: Record<string, { count: number; amount: number }>;
+}
+
+export interface DealStats {
+  total: number;
+  by_status: Record<string, number>;
+  won_amount: number;
+  lost_amount: number;
+  win_rate: number;
+}

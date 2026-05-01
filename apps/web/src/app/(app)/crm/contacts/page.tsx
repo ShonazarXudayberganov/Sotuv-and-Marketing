@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   AtSign,
+  Briefcase,
+  DollarSign,
   Mail,
   MessageSquare,
   Phone,
@@ -15,6 +17,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -285,6 +288,10 @@ function ContactDrawer({
     queryKey: ["crm", "activities", contact.id],
     queryFn: () => crmApi.listActivities(contact.id, 50),
   });
+  const { data: deals = [] } = useQuery({
+    queryKey: ["crm", "contacts", contact.id, "deals"],
+    queryFn: () => crmApi.contactDeals(contact.id),
+  });
 
   const addActivity = useMutation({
     mutationFn: (payload: ActivityCreateRequest) =>
@@ -450,6 +457,65 @@ function ContactDrawer({
               value={`@${contact.telegram_username} (TG)`}
             />
           ) : null}
+        </div>
+
+        {/* Deals */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[10px] font-semibold tracking-wider text-[var(--fg-subtle)] uppercase">
+              Bitimlar ({deals.length})
+            </p>
+            <Can permission="crm.write">
+              <Link
+                href="/crm/deals"
+                className="text-[11px] font-medium text-[var(--primary)] hover:underline"
+              >
+                Yangi bitim →
+              </Link>
+            </Can>
+          </div>
+          {deals.length === 0 ? (
+            <p className="text-[12px] text-[var(--fg-muted)]">
+              Hozircha bitim yo&apos;q.
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {deals.slice(0, 5).map((d) => (
+                <div
+                  key={d.id}
+                  className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] p-2.5"
+                >
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--primary-soft)] text-[var(--primary-soft-fg)]">
+                    {d.status === "won" ? (
+                      <DollarSign className="h-3.5 w-3.5" />
+                    ) : (
+                      <Briefcase className="h-3.5 w-3.5" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12px] font-medium text-[var(--fg)]">
+                      {d.title}
+                    </p>
+                    <p className="truncate text-[10px] text-[var(--fg-subtle)]">
+                      {d.amount.toLocaleString("uz-UZ")} {d.currency} ·{" "}
+                      {d.probability}%
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      d.status === "won"
+                        ? "success"
+                        : d.status === "lost"
+                          ? "danger"
+                          : "info"
+                    }
+                  >
+                    {d.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Timeline */}

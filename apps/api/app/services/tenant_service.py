@@ -503,6 +503,76 @@ TENANT_DDL: tuple[str, ...] = (
     CREATE INDEX IF NOT EXISTS ix_contact_activities_occurred
         ON contact_activities(occurred_at)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS pipelines (
+        id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name        varchar(100) NOT NULL,
+        slug        varchar(80) NOT NULL UNIQUE,
+        description varchar(500),
+        is_default  boolean NOT NULL DEFAULT false,
+        is_active   boolean NOT NULL DEFAULT true,
+        sort_order  integer NOT NULL DEFAULT 0,
+        created_by  uuid,
+        created_at  timestamptz NOT NULL DEFAULT now(),
+        updated_at  timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS pipeline_stages (
+        id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        pipeline_id           uuid NOT NULL REFERENCES pipelines(id) ON DELETE CASCADE,
+        name                  varchar(80) NOT NULL,
+        slug                  varchar(80) NOT NULL,
+        sort_order            integer NOT NULL DEFAULT 0,
+        default_probability   integer NOT NULL DEFAULT 0,
+        is_won                boolean NOT NULL DEFAULT false,
+        is_lost               boolean NOT NULL DEFAULT false,
+        color                 varchar(20),
+        created_at            timestamptz NOT NULL DEFAULT now(),
+        updated_at            timestamptz NOT NULL DEFAULT now(),
+        CONSTRAINT uq_pipeline_stage_slug UNIQUE (pipeline_id, slug)
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_pipeline_stages_pipeline
+        ON pipeline_stages(pipeline_id)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS deals (
+        id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        title               varchar(200) NOT NULL,
+        contact_id          uuid REFERENCES contacts(id) ON DELETE SET NULL,
+        pipeline_id         uuid NOT NULL REFERENCES pipelines(id) ON DELETE CASCADE,
+        stage_id            uuid NOT NULL REFERENCES pipeline_stages(id) ON DELETE RESTRICT,
+        amount              integer NOT NULL DEFAULT 0,
+        currency            varchar(3) NOT NULL DEFAULT 'UZS',
+        probability         integer NOT NULL DEFAULT 0,
+        status              varchar(20) NOT NULL DEFAULT 'open',
+        is_won              boolean NOT NULL DEFAULT false,
+        expected_close_at   timestamptz,
+        closed_at           timestamptz,
+        department_id       uuid REFERENCES departments(id) ON DELETE SET NULL,
+        assignee_id         uuid,
+        notes               text,
+        tags                jsonb,
+        sort_order          integer NOT NULL DEFAULT 0,
+        created_by          uuid NOT NULL,
+        created_at          timestamptz NOT NULL DEFAULT now(),
+        updated_at          timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_deals_contact ON deals(contact_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_deals_pipeline ON deals(pipeline_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_deals_stage ON deals(stage_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_deals_status ON deals(status)
+    """,
 )
 
 
@@ -555,6 +625,9 @@ async def create_tenant_schema(session: AsyncSession, tenant: Tenant) -> None:
             )
         )
 
+    # Seed default CRM pipeline + 7 standard stages
+    await _seed_default_pipeline(session)
+
     await session.commit()
     # Reset search_path for the rest of the session (we're inside the public-DB flow)
     await session.execute(text("SET search_path TO public"))
@@ -585,6 +658,55 @@ async def attach_owner_membership(session: AsyncSession, tenant: Tenant, user_id
         )
     await session.commit()
     await session.execute(text("SET search_path TO public"))
+
+
+DEFAULT_PIPELINE_STAGES: tuple[dict[str, object], ...] = (
+    {"slug": "new", "name": "Yangi lead", "probability": 10, "color": "#94a3b8"},
+    {"slug": "contacted", "name": "Bog'lanildi", "probability": 25, "color": "#60a5fa"},
+    {"slug": "negotiation", "name": "Muzokara", "probability": 40, "color": "#a78bfa"},
+    {"slug": "proposal", "name": "Taklif yuborildi", "probability": 60, "color": "#f59e0b"},
+    {"slug": "agreed", "name": "Kelishildi", "probability": 80, "color": "#fb923c"},
+    {"slug": "won", "name": "Sotildi", "probability": 100, "color": "#22c55e", "is_won": True},
+    {"slug": "lost", "name": "Yo'qotildi", "probability": 0, "color": "#ef4444", "is_lost": True},
+)
+
+
+async def _seed_default_pipeline(session: AsyncSession) -> None:
+    """Insert the default CRM pipeline + 7 stages once per tenant."""
+    existing = await session.execute(text("SELECT id FROM pipelines LIMIT 1"))
+    if existing.first() is not None:
+        return
+    pipeline_row = await session.execute(
+        text(
+            """
+            INSERT INTO pipelines (name, slug, description, is_default, sort_order)
+            VALUES ('Asosiy sotuv', 'main', 'Standart sotuv voronkasi', true, 0)
+            RETURNING id
+            """
+        )
+    )
+    pipeline_id = pipeline_row.scalar_one()
+    for idx, stage in enumerate(DEFAULT_PIPELINE_STAGES):
+        await session.execute(
+            text(
+                """
+                INSERT INTO pipeline_stages
+                  (pipeline_id, name, slug, sort_order, default_probability,
+                   is_won, is_lost, color)
+                VALUES (:pid, :name, :slug, :sort, :prob, :won, :lost, :color)
+                """
+            ),
+            {
+                "pid": pipeline_id,
+                "name": stage["name"],
+                "slug": stage["slug"],
+                "sort": idx,
+                "prob": stage["probability"],
+                "won": bool(stage.get("is_won")),
+                "lost": bool(stage.get("is_lost")),
+                "color": stage["color"],
+            },
+        )
 
 
 async def drop_tenant_schema(session: AsyncSession, schema_name: str) -> None:

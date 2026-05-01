@@ -339,7 +339,9 @@ async def test_calendar_groups_posts_by_day(
     brand_id = await _make_brand(client, headers)
     account_id = await _link_telegram(client, headers, brand_id)
 
-    base = datetime.now(UTC).replace(microsecond=0)
+    # Anchor at UTC midnight so day-of-week math is independent of wall-clock hour
+    today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    base = today
     # Two posts on day+1, one on day+3, one outside the window (+30 days)
     targets = [base + timedelta(days=1, hours=2), base + timedelta(days=1, hours=10),
                base + timedelta(days=3, hours=5), base + timedelta(days=30)]

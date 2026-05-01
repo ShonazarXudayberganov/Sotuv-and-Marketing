@@ -67,4 +67,69 @@ class ContactActivity(Base, UUIDPKMixin, TimestampMixin):
     created_by: Mapped[UUID | None] = mapped_column()
 
 
-__all__ = ["Contact", "ContactActivity"]
+class Pipeline(Base, UUIDPKMixin, TimestampMixin):
+    """A named sales pipeline (Asosiy sotuv, VIP, Servis xizmati…)."""
+
+    __tablename__ = "pipelines"
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    slug: Mapped[str] = mapped_column(String(80), nullable=False, unique=True, index=True)
+    description: Mapped[str | None] = mapped_column(String(500))
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_by: Mapped[UUID | None] = mapped_column()
+
+
+class PipelineStage(Base, UUIDPKMixin, TimestampMixin):
+    """A stage inside a pipeline (Yangi → Bog'lanildi → Muzokara → …)."""
+
+    __tablename__ = "pipeline_stages"
+
+    pipeline_id: Mapped[UUID] = mapped_column(
+        ForeignKey("pipelines.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(80), nullable=False)
+    slug: Mapped[str] = mapped_column(String(80), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    default_probability: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    is_won: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_lost: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    color: Mapped[str | None] = mapped_column(String(20))
+
+
+class Deal(Base, UUIDPKMixin, TimestampMixin):
+    """A sales opportunity tied to a contact and a pipeline stage."""
+
+    __tablename__ = "deals"
+
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    contact_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("contacts.id", ondelete="SET NULL"), index=True
+    )
+    pipeline_id: Mapped[UUID] = mapped_column(
+        ForeignKey("pipelines.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    stage_id: Mapped[UUID] = mapped_column(
+        ForeignKey("pipeline_stages.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    amount: Mapped[int] = mapped_column(Integer, default=0, nullable=False)  # minor units
+    currency: Mapped[str] = mapped_column(String(3), default="UZS", nullable=False)
+    probability: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="open", index=True
+    )  # open, won, lost
+    is_won: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    expected_close_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    department_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("departments.id", ondelete="SET NULL")
+    )
+    assignee_id: Mapped[UUID | None] = mapped_column()
+    notes: Mapped[str | None] = mapped_column(Text)
+    tags: Mapped[list[str] | None] = mapped_column(JSON)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_by: Mapped[UUID] = mapped_column(nullable=False)
+
+
+__all__ = ["Contact", "ContactActivity", "Deal", "Pipeline", "PipelineStage"]

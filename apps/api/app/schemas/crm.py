@@ -118,3 +118,108 @@ class ContactStats(BaseModel):
 class AiScoreOut(BaseModel):
     score: int
     reason: str
+
+
+# ─────────── Deals / Pipelines ───────────
+
+
+class StageOut(BaseModel):
+    id: UUID
+    pipeline_id: UUID
+    name: str
+    slug: str
+    sort_order: int
+    default_probability: int
+    is_won: bool
+    is_lost: bool
+    color: str | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PipelineOut(BaseModel):
+    id: UUID
+    name: str
+    slug: str
+    description: str | None
+    is_default: bool
+    is_active: bool
+    sort_order: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PipelineWithStages(PipelineOut):
+    stages: list[StageOut]
+
+
+class DealOut(BaseModel):
+    id: UUID
+    title: str
+    contact_id: UUID | None
+    pipeline_id: UUID
+    stage_id: UUID
+    amount: int
+    currency: str
+    probability: int
+    status: str
+    is_won: bool
+    expected_close_at: datetime | None
+    closed_at: datetime | None
+    department_id: UUID | None
+    assignee_id: UUID | None
+    notes: str | None
+    tags: list[str] | None
+    sort_order: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DealCreate(BaseModel):
+    title: str = Field(min_length=2, max_length=200)
+    contact_id: UUID | None = None
+    pipeline_id: UUID | None = None
+    stage_id: UUID | None = None
+    amount: int = Field(default=0, ge=0)
+    currency: str = Field(default="UZS", min_length=3, max_length=3)
+    expected_close_at: datetime | None = None
+    assignee_id: UUID | None = None
+    department_id: UUID | None = None
+    notes: str | None = None
+    tags: list[str] | None = None
+
+
+class DealPatch(BaseModel):
+    title: str | None = Field(default=None, min_length=2, max_length=200)
+    contact_id: UUID | None = None
+    stage_id: UUID | None = None
+    amount: int | None = Field(default=None, ge=0)
+    currency: str | None = Field(default=None, min_length=3, max_length=3)
+    probability: int | None = Field(default=None, ge=0, le=100)
+    expected_close_at: datetime | None = None
+    assignee_id: UUID | None = None
+    department_id: UUID | None = None
+    notes: str | None = None
+    tags: list[str] | None = None
+    sort_order: int | None = None
+
+
+class ForecastOut(BaseModel):
+    open_count: int
+    open_amount: int
+    weighted_amount: int
+    by_stage: dict[str, dict[str, int]]
+
+
+class DealStats(BaseModel):
+    total: int
+    by_status: dict[str, int]
+    won_amount: int
+    lost_amount: int
+    win_rate: float

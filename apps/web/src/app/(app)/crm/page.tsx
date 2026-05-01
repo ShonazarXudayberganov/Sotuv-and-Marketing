@@ -5,10 +5,12 @@ import { motion } from "framer-motion";
 import {
   ArrowUpRight,
   Briefcase,
+  DollarSign,
   Flame,
   PhoneCall,
   Plus,
   Sparkles,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -29,6 +31,14 @@ export default function CRMDashboardPage() {
     queryKey: ["crm", "top"],
     queryFn: () => crmApi.list({ limit: 5 }),
   });
+  const { data: forecast } = useQuery({
+    queryKey: ["crm", "deals", "forecast", null],
+    queryFn: () => crmApi.forecast(null),
+  });
+  const { data: dealStats } = useQuery({
+    queryKey: ["crm", "deals", "stats"],
+    queryFn: crmApi.dealStats,
+  });
 
   return (
     <motion.div
@@ -42,42 +52,68 @@ export default function CRMDashboardPage() {
         title="CRM"
         description="Mijozlar, AI scoring, faoliyat tarixi va bitimlar"
         actions={
-          <Can permission="crm.write">
-            <Button asChild>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="secondary">
               <Link href="/crm/contacts">
                 <Users /> Mijozlar
               </Link>
             </Button>
-          </Can>
+            <Button asChild>
+              <Link href="/crm/deals">
+                <DollarSign /> Bitimlar
+              </Link>
+            </Button>
+          </div>
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <SummaryTile
           icon={Users}
-          label="Jami mijozlar"
+          label="Mijozlar"
           value={stats?.total ?? 0}
-          hint="Hamma statuslarda"
+          hint="Hamma"
         />
         <SummaryTile
           icon={Flame}
           label="Issiq lead'lar"
           value={stats?.hot_leads ?? 0}
-          hint="AI score ≥ 75"
+          hint="AI ≥ 75"
           tone="warning"
         />
         <SummaryTile
           icon={Sparkles}
-          label="Bu hafta yangilari"
+          label="Bu hafta"
           value={stats?.new_last_week ?? 0}
-          hint="So'nggi 7 kun"
+          hint="Yangi mijozlar"
+          tone="primary"
+        />
+        <SummaryTile
+          icon={TrendingUp}
+          label="Forecast"
+          value={
+            forecast?.weighted_amount
+              ? `${(forecast.weighted_amount / 1_000_000).toFixed(1)}M`
+              : 0
+          }
+          hint="P×$ ochiq"
           tone="primary"
         />
         <SummaryTile
           icon={Briefcase}
-          label="Mijozlar"
-          value={stats?.by_status?.customer ?? 0}
-          hint="Status: customer"
+          label="Ochiq bitim"
+          value={forecast?.open_count ?? 0}
+          hint={`${dealStats?.by_status?.won ?? 0} won`}
+        />
+        <SummaryTile
+          icon={DollarSign}
+          label="Yopildi"
+          value={
+            dealStats?.won_amount
+              ? `${(dealStats.won_amount / 1_000_000).toFixed(1)}M`
+              : 0
+          }
+          hint={`Win rate ${((dealStats?.win_rate ?? 0) * 100).toFixed(0)}%`}
           tone="success"
         />
       </div>
@@ -143,7 +179,7 @@ export default function CRMDashboardPage() {
         <CardContent>
           <div className="space-y-2.5">
             <Phase done label="Mijozlar + AI scoring + faoliyat tarixi" sprint="2.1" />
-            <Phase label="Bitimlar va voronka (multi-pipeline, drag&drop)" sprint="2.2" />
+            <Phase done label="Bitimlar va voronka (multi-pipeline, drag&drop)" sprint="2.2" />
             <Phase label="Inbox: omnichannel xabarlar va auto-javob" sprint="2.3" />
             <Phase label="Avtomatlash: trigger → shart → harakat" sprint="2.4" />
           </div>
@@ -162,7 +198,7 @@ function SummaryTile({
 }: {
   icon: typeof Users;
   label: string;
-  value: number;
+  value: number | string;
   hint: string;
   tone?: "primary" | "success" | "warning";
 }) {
