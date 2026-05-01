@@ -412,6 +412,34 @@ TENANT_DDL: tuple[str, ...] = (
     CREATE INDEX IF NOT EXISTS ix_post_publications_status
         ON post_publications(status)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS post_metrics (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        publication_id  uuid NOT NULL REFERENCES post_publications(id) ON DELETE CASCADE,
+        brand_id        uuid NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+        provider        varchar(30) NOT NULL,
+        sampled_at      timestamptz NOT NULL,
+        views           integer NOT NULL DEFAULT 0,
+        likes           integer NOT NULL DEFAULT 0,
+        comments        integer NOT NULL DEFAULT 0,
+        shares          integer NOT NULL DEFAULT 0,
+        reach           integer NOT NULL DEFAULT 0,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_post_metrics_publication
+        ON post_metrics(publication_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_post_metrics_brand
+        ON post_metrics(brand_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_post_metrics_sampled
+        ON post_metrics(sampled_at)
+    """,
 )
 
 

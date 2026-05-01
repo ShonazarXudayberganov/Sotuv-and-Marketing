@@ -7,6 +7,7 @@ from app.models.smm import (
     BrandSocialAccount,
     ContentDraft,
     Post,
+    PostMetrics,
     PostPublication,
     TenantIntegration,
 )
@@ -34,6 +35,7 @@ __all__ = [
     "BrandSocialAccount",
     "ContentDraft",
     "Post",
+    "PostMetrics",
     "PostPublication",
     "Department",
     "Invoice",

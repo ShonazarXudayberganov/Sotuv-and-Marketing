@@ -168,12 +168,41 @@ class PostPublication(Base, UUIDPKMixin, TimestampMixin):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class PostMetrics(Base, UUIDPKMixin, TimestampMixin):
+    """Snapshot of engagement metrics for a published post.
+
+    One row per (publication, sampled_at). The analytics service typically
+    keeps the latest snapshot but stores history for trend charts.
+    """
+
+    __tablename__ = "post_metrics"
+
+    publication_id: Mapped[UUID] = mapped_column(
+        ForeignKey("post_publications.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    brand_id: Mapped[UUID] = mapped_column(
+        ForeignKey("brands.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    provider: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    sampled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    views: Mapped[int] = mapped_column(default=0, nullable=False)
+    likes: Mapped[int] = mapped_column(default=0, nullable=False)
+    comments: Mapped[int] = mapped_column(default=0, nullable=False)
+    shares: Mapped[int] = mapped_column(default=0, nullable=False)
+    reach: Mapped[int] = mapped_column(default=0, nullable=False)
+
+
 __all__ = [
     "Brand",
     "BrandMembership",
     "BrandSocialAccount",
     "ContentDraft",
     "Post",
+    "PostMetrics",
     "PostPublication",
     "TenantIntegration",
 ]

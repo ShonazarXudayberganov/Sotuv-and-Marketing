@@ -538,3 +538,67 @@ export interface CalendarResponse {
   end: string;
   days: CalendarDay[];
 }
+
+// ─────────── Analytics / Sprint 1.9 ───────────
+
+export interface AnalyticsPlatformBucket {
+  posts: number;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+}
+
+export interface AnalyticsOverview {
+  total_posts: number;
+  total_views: number;
+  total_likes: number;
+  total_comments: number;
+  total_shares: number;
+  engagement_rate: number;
+  by_platform: Record<string, AnalyticsPlatformBucket>;
+}
+
+export interface AnalyticsTimePoint {
+  date: string;
+  posts: number;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+}
+
+export interface TopPost {
+  post_id: string;
+  publication_id: string;
+  provider: string;
+  title: string;
+  external_post_id: string | null;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  engagement: number;
+  published_at: string | null;
+}
+
+export interface OptimalCell {
+  weekday: number;
+  hour: number;
+  posts: number;
+  avg_engagement: number;
+  views: number;
+}
+
+export interface OptimalTimes {
+  cells: OptimalCell[];
+  best: OptimalCell[];
+}
+
+export interface AnalyticsInsights {
+  summary: string;
+  recommendations: string[];
+  snapshot: AnalyticsOverview;
+  optimal: OptimalTimes;
+  top_posts: TopPost[];
+}

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
+  BarChart3,
   BookOpen,
   CalendarDays,
   Megaphone,
@@ -60,6 +61,11 @@ export default function SmmDashboardPage() {
               <Button size="default" variant="secondary" asChild>
                 <Link href="/smm/calendar">
                   <CalendarDays /> Kalendar
+                </Link>
+              </Button>
+              <Button size="default" variant="secondary" asChild>
+                <Link href="/smm/analytics">
+                  <BarChart3 /> Analytics
                 </Link>
               </Button>
               <Button size="default" variant="secondary" asChild>
@@ -197,7 +203,7 @@ export default function SmmDashboardPage() {
             <RoadmapItem done label="AI kontent generatsiya (Claude + GPT)" sprint="1.6" />
             <RoadmapItem done label="Postlar workflow (draft → schedule → publish)" sprint="1.7" />
             <RoadmapItem done label="Kontent reja kalendar" sprint="1.8" icon={CalendarDays} />
-            <RoadmapItem label="SMM analytics" sprint="1.9" />
+            <RoadmapItem done label="SMM analytics" sprint="1.9" />
           </div>
         </CardContent>
       </Card>

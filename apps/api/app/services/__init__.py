@@ -1,5 +1,6 @@
 from app.services import (
     ai_service,
+    analytics_service,
     api_key_service,
     audit_service,
     auth_service,
@@ -25,6 +26,7 @@ from app.services import (
 
 __all__ = [
     "ai_service",
+    "analytics_service",
     "api_key_service",
     "audit_service",
     "auth_service",
