@@ -4,19 +4,24 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
+  BarChart3,
   Camera,
   CheckCircle2,
+  Eye,
   Hash,
   Link2,
   Megaphone,
+  Play,
   Plus,
   Send,
+  ThumbsUp,
   Trash2,
   X,
 } from "lucide-react";
 
 const Facebook = Megaphone;
 const Instagram = Camera;
+const Youtube = Play;
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -32,16 +37,22 @@ import { Input } from "@/components/ui/input";
 import { extractApiError } from "@/lib/api-client";
 import { brandsApi, integrationsApi } from "@/lib/smm-api";
 import { socialApi } from "@/lib/social-api";
-import type { Brand, MetaPageOption, SocialAccount } from "@/lib/types";
+import type {
+  Brand,
+  MetaPageOption,
+  SocialAccount,
+  YouTubeStats,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type LinkMode = null | "telegram" | "meta";
+type LinkMode = null | "telegram" | "meta" | "youtube";
 
 export default function SocialAccountsPage() {
   const qc = useQueryClient();
   const [brandFilter, setBrandFilter] = useState<string | "all">("all");
   const [linking, setLinking] = useState<LinkMode>(null);
   const [testing, setTesting] = useState<SocialAccount | null>(null);
+  const [statsAccount, setStatsAccount] = useState<SocialAccount | null>(null);
 
   const { data: brands = [] } = useQuery({
     queryKey: ["brands"],
@@ -53,8 +64,10 @@ export default function SocialAccountsPage() {
   });
   const telegramIntegration = integrations.find((i) => i.provider === "telegram_bot");
   const metaIntegration = integrations.find((i) => i.provider === "meta_app");
+  const youtubeIntegration = integrations.find((i) => i.provider === "youtube");
   const telegramConnected = telegramIntegration?.connected ?? false;
   const metaConnected = metaIntegration?.connected ?? false;
+  const youtubeConnected = youtubeIntegration?.connected ?? false;
 
   const { data: botInfo } = useQuery({
     queryKey: ["telegram", "bot-info"],
@@ -85,6 +98,17 @@ export default function SocialAccountsPage() {
       socialApi.metaLink(args.brandId, args.pageId, args.target),
     onSuccess: () => {
       toast.success("Meta akkaunt ulandi");
+      qc.invalidateQueries({ queryKey: ["social"] });
+      setLinking(null);
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  const linkYoutube = useMutation({
+    mutationFn: (args: { brandId: string; handle?: string; channelId?: string }) =>
+      socialApi.youtubeLink(args.brandId, args.handle, args.channelId),
+    onSuccess: () => {
+      toast.success("YouTube kanal ulandi");
       qc.invalidateQueries({ queryKey: ["social"] });
       setLinking(null);
     },
@@ -150,13 +174,21 @@ export default function SocialAccountsPage() {
               >
                 <Plus /> Facebook / Instagram
               </Button>
+              <Button
+                variant="secondary"
+                size="default"
+                onClick={() => setLinking("youtube")}
+                disabled={!youtubeConnected || brands.length === 0}
+              >
+                <Youtube /> YouTube
+              </Button>
             </div>
           </Can>
         }
       />
 
       {/* Provider status row */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <ProviderStatus
           provider="telegram"
           connected={telegramConnected}
@@ -173,6 +205,12 @@ export default function SocialAccountsPage() {
           connected={metaConnected}
           title="Meta (Facebook + Instagram)"
           subtitle={metaConnected ? "App ulangan" : "App tokeni o'rnatilmagan"}
+        />
+        <ProviderStatus
+          provider="youtube"
+          connected={youtubeConnected}
+          title="YouTube Data API"
+          subtitle={youtubeConnected ? "API key ulangan" : "API key o'rnatilmagan"}
         />
       </div>
 
@@ -194,6 +232,23 @@ export default function SocialAccountsPage() {
           onCancel={() => setLinking(null)}
           onSubmit={(args) => linkMeta.mutate(args)}
           loading={linkMeta.isPending}
+        />
+      ) : null}
+
+      {linking === "youtube" ? (
+        <YouTubeLinkForm
+          brands={brands}
+          defaultBrandId={brands.find((b) => b.is_default)?.id ?? brands[0]?.id ?? ""}
+          onCancel={() => setLinking(null)}
+          onSubmit={(args) => linkYoutube.mutate(args)}
+          loading={linkYoutube.isPending}
+        />
+      ) : null}
+
+      {statsAccount ? (
+        <YouTubeStatsCard
+          account={statsAccount}
+          onClose={() => setStatsAccount(null)}
         />
       ) : null}
 
@@ -284,6 +339,9 @@ export default function SocialAccountsPage() {
                   account={acc}
                   brand={brands.find((b) => b.id === acc.brand_id)}
                   onTest={() => setTesting(acc)}
+                  onStats={
+                    acc.provider === "youtube" ? () => setStatsAccount(acc) : undefined
+                  }
                   onDelete={() => remove.mutate(acc.id)}
                 />
               ))}
@@ -302,13 +360,14 @@ function ProviderStatus({
   subtitle,
   mocked,
 }: {
-  provider: "telegram" | "meta";
+  provider: "telegram" | "meta" | "youtube";
   connected: boolean;
   title: string;
   subtitle: string;
   mocked?: boolean;
 }) {
-  const Icon = provider === "telegram" ? Send : Facebook;
+  const Icon =
+    provider === "telegram" ? Send : provider === "youtube" ? Youtube : Facebook;
   if (!connected) {
     return (
       <div className="flex items-start gap-3 rounded-lg border border-[var(--warning)] bg-[var(--warning-soft)] p-4">
@@ -346,11 +405,13 @@ function AccountRow({
   account,
   brand,
   onTest,
+  onStats,
   onDelete,
 }: {
   account: SocialAccount;
   brand?: Brand;
   onTest: () => void;
+  onStats?: () => void;
   onDelete: () => void;
 }) {
   const Icon =
@@ -358,7 +419,10 @@ function AccountRow({
       ? Send
       : account.provider === "instagram"
         ? Instagram
-        : Facebook;
+        : account.provider === "youtube"
+          ? Youtube
+          : Facebook;
+  const isYouTube = account.provider === "youtube";
   return (
     <div className="group flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-3 transition-colors hover:border-[var(--primary)]">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary-soft-fg)]">
@@ -393,9 +457,15 @@ function AccountRow({
       </div>
       <Can permission="smm.write">
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={onTest}>
-            <Send /> Test
-          </Button>
+          {isYouTube && onStats ? (
+            <Button variant="ghost" size="sm" onClick={onStats}>
+              <BarChart3 /> Stats
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={onTest}>
+              <Send /> Test
+            </Button>
+          )}
           <button
             type="button"
             onClick={onDelete}
@@ -558,6 +628,159 @@ function MetaLinkForm({
         cta="Ulash"
       />
     </FormCard>
+  );
+}
+
+function YouTubeLinkForm({
+  brands,
+  defaultBrandId,
+  onCancel,
+  onSubmit,
+  loading,
+}: {
+  brands: Brand[];
+  defaultBrandId: string;
+  onCancel: () => void;
+  onSubmit: (args: { brandId: string; handle?: string; channelId?: string }) => void;
+  loading: boolean;
+}) {
+  const [brandId, setBrandId] = useState(defaultBrandId);
+  const [input, setInput] = useState("");
+
+  const trimmed = input.trim();
+  const looksLikeChannelId = trimmed.startsWith("UC") && trimmed.length >= 20;
+
+  return (
+    <FormCard title="YouTube kanal ulash" onCancel={onCancel}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField label="Brend" required>
+          <BrandSelect value={brandId} onChange={setBrandId} brands={brands} />
+        </FormField>
+        <FormField
+          label="Handle yoki Channel ID"
+          required
+          hint="@nexus_uz yoki UCxxxx... formatida"
+        >
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="@nexus_uz"
+          />
+        </FormField>
+      </div>
+      <div className="rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] p-3 text-[12px] text-[var(--fg-muted)]">
+        Sprint 1.5 da YouTube faqat o&apos;qish (statistika va video ro&apos;yxati) uchun. Video
+        upload keyingi bosqichda (OAuth refresh token + resumable upload).
+      </div>
+      <FormActions
+        onCancel={onCancel}
+        onSubmit={() => {
+          if (!brandId || !trimmed) return;
+          onSubmit(
+            looksLikeChannelId
+              ? { brandId, channelId: trimmed }
+              : { brandId, handle: trimmed.startsWith("@") ? trimmed : `@${trimmed}` },
+          );
+        }}
+        loading={loading}
+        disabled={!brandId || !trimmed}
+        cta="Ulash"
+      />
+    </FormCard>
+  );
+}
+
+function YouTubeStatsCard({
+  account,
+  onClose,
+}: {
+  account: SocialAccount;
+  onClose: () => void;
+}) {
+  const { data: stats, isLoading } = useQuery<YouTubeStats>({
+    queryKey: ["youtube", "stats", account.id],
+    queryFn: () => socialApi.youtubeStats(account.id, 5),
+  });
+
+  return (
+    <FormCard
+      title={`YouTube statistikasi — ${account.external_name ?? account.external_id}`}
+      onCancel={onClose}
+    >
+      {isLoading || !stats ? (
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-20 animate-pulse rounded-lg border border-[var(--border)] bg-[var(--surface)]"
+            />
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <StatTile label="Obunachilar" value={stats.subscribers.toLocaleString("uz-UZ")} />
+            <StatTile label="Jami ko'rishlar" value={stats.views.toLocaleString("uz-UZ")} />
+            <StatTile label="Videolar" value={stats.videos.toLocaleString("uz-UZ")} />
+          </div>
+          <div>
+            <p className="mb-2 text-[12px] font-semibold tracking-wider text-[var(--fg-subtle)] uppercase">
+              So&apos;nggi videolar
+            </p>
+            {stats.recent.length === 0 ? (
+              <p className="text-[12px] text-[var(--fg-muted)]">Videolar topilmadi.</p>
+            ) : (
+              <div className="space-y-2">
+                {stats.recent.map((v) => (
+                  <div
+                    key={v.id}
+                    className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-3"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[var(--primary-soft)] text-[var(--primary-soft-fg)]">
+                      <Play className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-medium text-[var(--fg)]">
+                        {v.title}
+                      </p>
+                      <p className="truncate text-[11px] text-[var(--fg-subtle)]">
+                        {v.published_at
+                          ? new Date(v.published_at).toLocaleDateString("uz-UZ")
+                          : "—"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 text-[11px] text-[var(--fg-muted)]">
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" /> {v.view_count.toLocaleString("uz-UZ")}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <ThumbsUp className="h-3 w-3" /> {v.like_count.toLocaleString("uz-UZ")}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {stats.mocked ? (
+            <p className="text-[11px] text-[var(--fg-subtle)]">
+              MOCK rejimi — haqiqiy YouTube ma&apos;lumoti emas.
+            </p>
+          ) : null}
+        </>
+      )}
+    </FormCard>
+  );
+}
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-xs)]">
+      <p className="text-[11px] font-medium tracking-wider text-[var(--fg-muted)] uppercase">
+        {label}
+      </p>
+      <p className="mt-1.5 text-[22px] font-semibold tracking-tight text-[var(--fg)]">{value}</p>
+    </div>
   );
 }
 

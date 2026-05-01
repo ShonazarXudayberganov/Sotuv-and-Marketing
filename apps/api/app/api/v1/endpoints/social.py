@@ -24,15 +24,21 @@ from app.schemas.social import (
     TelegramLinkRequest,
     TelegramSendResult,
     TelegramTestRequest,
+    YouTubeChannelInfo,
+    YouTubeLinkRequest,
+    YouTubeStats,
+    YouTubeVideoOut,
 )
 from app.services import (
     audit_service,
     meta_service,
     social_account_service,
     telegram_service,
+    youtube_service,
 )
 from app.services.meta_service import MetaError
 from app.services.telegram_service import TelegramError
+from app.services.youtube_service import YouTubeError
 
 router = APIRouter()
 
@@ -43,6 +49,10 @@ def _is_telegram_mock() -> bool:
 
 def _is_meta_mock() -> bool:
     return os.getenv("META_MOCK", "false").lower() in {"1", "true", "yes"}
+
+
+def _is_youtube_mock() -> bool:
+    return os.getenv("YOUTUBE_MOCK", "false").lower() in {"1", "true", "yes"}
 
 
 @router.get("/accounts", response_model=list[SocialAccountOut])
@@ -358,4 +368,153 @@ async def meta_send_test(
         sent_text=payload.text,
         target=rec.provider,
         mocked=_is_meta_mock(),
+    )
+
+
+# ─────────── YouTube ───────────
+
+
+@router.get("/youtube/lookup", response_model=YouTubeChannelInfo)
+async def youtube_lookup(
+    handle: str | None = None,
+    channel_id: str | None = None,
+    _: CurrentUser = Depends(require_permission("smm.read")),
+    db: AsyncSession = Depends(get_tenant_session),
+) -> YouTubeChannelInfo:
+    if not handle and not channel_id:
+        raise HTTPException(status_code=400, detail="handle or channel_id is required")
+    try:
+        ch = await youtube_service.get_channel(db, handle=handle, channel_id=channel_id)
+    except YouTubeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    snippet = ch.get("snippet") or {}
+    stats = ch.get("statistics") or {}
+    thumb = (snippet.get("thumbnails") or {}).get("default", {}).get("url")
+    return YouTubeChannelInfo(
+        id=str(ch.get("id") or ""),
+        title=str(snippet.get("title") or "—"),
+        handle=snippet.get("customUrl"),
+        description=snippet.get("description"),
+        thumbnail_url=thumb,
+        subscribers=int(stats.get("subscriberCount") or 0),
+        views=int(stats.get("viewCount") or 0),
+        videos=int(stats.get("videoCount") or 0),
+        mocked=_is_youtube_mock(),
+    )
+
+
+@router.post("/youtube/link", response_model=SocialAccountOut, status_code=201)
+async def youtube_link_channel(
+    payload: YouTubeLinkRequest,
+    request: Request,
+    current: CurrentUser = Depends(require_permission("smm.write")),
+    db: AsyncSession = Depends(get_tenant_session),
+) -> BrandSocialAccount:
+    if not payload.handle and not payload.channel_id:
+        raise HTTPException(status_code=400, detail="handle or channel_id is required")
+    try:
+        ch = await youtube_service.get_channel(
+            db, handle=payload.handle, channel_id=payload.channel_id
+        )
+    except YouTubeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    snippet = ch.get("snippet") or {}
+    stats = ch.get("statistics") or {}
+
+    try:
+        rec = await social_account_service.upsert(
+            db,
+            brand_id=payload.brand_id,
+            provider="youtube",
+            external_id=str(ch.get("id") or ""),
+            external_handle=(snippet.get("customUrl") or "").lstrip("@") or None,
+            external_name=snippet.get("title"),
+            chat_type="channel",
+            metadata={
+                "subscribers": int(stats.get("subscriberCount") or 0),
+                "views": int(stats.get("viewCount") or 0),
+                "videos": int(stats.get("videoCount") or 0),
+                "thumbnail_url": (snippet.get("thumbnails") or {})
+                .get("default", {})
+                .get("url"),
+            },
+            user_id=current.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    await audit_service.record(
+        db,
+        user_id=current.id,
+        action="social.link",
+        resource_type="social_account",
+        resource_id=str(rec.id),
+        metadata={
+            "provider": "youtube",
+            "brand_id": str(payload.brand_id),
+            "channel_id": ch.get("id"),
+        },
+        request=request,
+    )
+    rec_id = rec.id
+    await db.commit()
+    fresh = await db.get(BrandSocialAccount, rec_id)
+    if fresh is None:
+        raise HTTPException(status_code=500, detail="Account vanished after commit")
+    return fresh
+
+
+@router.get("/youtube/{account_id}/stats", response_model=YouTubeStats)
+async def youtube_stats(
+    account_id: UUID,
+    limit: int = 5,
+    _: CurrentUser = Depends(require_permission("smm.read")),
+    db: AsyncSession = Depends(get_tenant_session),
+) -> YouTubeStats:
+    rec = await social_account_service.get(db, account_id)
+    if rec is None or rec.provider != "youtube":
+        raise HTTPException(status_code=404, detail="YouTube account not found")
+    if limit < 1 or limit > 25:
+        raise HTTPException(status_code=400, detail="limit must be 1..25")
+
+    try:
+        agg = await youtube_service.aggregate_stats(db, channel_id=rec.external_id)
+        videos = await youtube_service.list_recent_videos(
+            db, channel_id=rec.external_id, limit=limit
+        )
+    except YouTubeError as exc:
+        await social_account_service.mark_published(db, rec.id, error=str(exc))
+        await db.commit()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    # Refresh metadata snapshot
+    rec.metadata_ = {
+        **(rec.metadata_ or {}),
+        "subscribers": int(agg["subscribers"]),
+        "views": int(agg["views"]),
+        "videos": int(agg["videos"]),
+    }
+    await social_account_service.mark_published(db, rec.id)
+    await db.commit()
+
+    return YouTubeStats(
+        account_id=rec.id,
+        subscribers=int(agg["subscribers"]),
+        views=int(agg["views"]),
+        videos=int(agg["videos"]),
+        recent=[
+            YouTubeVideoOut(
+                id=str(v["id"]),
+                title=str(v["title"]),
+                published_at=v.get("published_at"),
+                view_count=int(v.get("view_count") or 0),
+                like_count=int(v.get("like_count") or 0),
+                comment_count=int(v.get("comment_count") or 0),
+                thumbnail_url=v.get("thumbnail_url"),
+            )
+            for v in videos
+        ],
+        mocked=_is_youtube_mock(),
     )

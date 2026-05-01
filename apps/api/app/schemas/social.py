@@ -73,3 +73,40 @@ class MetaSendResult(BaseModel):
     sent_text: str
     target: str
     mocked: bool
+
+
+class YouTubeChannelInfo(BaseModel):
+    id: str
+    title: str
+    handle: str | None
+    description: str | None
+    thumbnail_url: str | None
+    subscribers: int
+    views: int
+    videos: int
+    mocked: bool
+
+
+class YouTubeLinkRequest(BaseModel):
+    brand_id: UUID
+    handle: str | None = Field(default=None, max_length=100)
+    channel_id: str | None = Field(default=None, max_length=64)
+
+
+class YouTubeVideoOut(BaseModel):
+    id: str
+    title: str
+    published_at: str | None
+    view_count: int
+    like_count: int
+    comment_count: int
+    thumbnail_url: str | None
+
+
+class YouTubeStats(BaseModel):
+    account_id: UUID
+    subscribers: int
+    views: int
+    videos: int
+    recent: list[YouTubeVideoOut]
+    mocked: bool

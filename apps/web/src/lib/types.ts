@@ -389,3 +389,34 @@ export interface MetaSendResult {
   target: "facebook" | "instagram";
   mocked: boolean;
 }
+
+export interface YouTubeChannelInfo {
+  id: string;
+  title: string;
+  handle: string | null;
+  description: string | null;
+  thumbnail_url: string | null;
+  subscribers: number;
+  views: number;
+  videos: number;
+  mocked: boolean;
+}
+
+export interface YouTubeVideo {
+  id: string;
+  title: string;
+  published_at: string | null;
+  view_count: number;
+  like_count: number;
+  comment_count: number;
+  thumbnail_url: string | null;
+}
+
+export interface YouTubeStats {
+  account_id: string;
+  subscribers: number;
+  views: number;
+  videos: number;
+  recent: YouTubeVideo[];
+  mocked: boolean;
+}

@@ -5,6 +5,8 @@ import type {
   SocialAccount,
   TelegramBotInfo,
   TelegramSendResult,
+  YouTubeChannelInfo,
+  YouTubeStats,
 } from "./types";
 
 export const socialApi = {
@@ -64,6 +66,34 @@ export const socialApi = {
       text,
       image_url: imageUrl ?? null,
     });
+    return data;
+  },
+  async youtubeLookup(handle?: string, channelId?: string): Promise<YouTubeChannelInfo> {
+    const params: Record<string, string> = {};
+    if (handle) params.handle = handle;
+    if (channelId) params.channel_id = channelId;
+    const { data } = await apiClient.get<YouTubeChannelInfo>("/social/youtube/lookup", {
+      params,
+    });
+    return data;
+  },
+  async youtubeLink(
+    brandId: string,
+    handle?: string,
+    channelId?: string,
+  ): Promise<SocialAccount> {
+    const { data } = await apiClient.post<SocialAccount>("/social/youtube/link", {
+      brand_id: brandId,
+      handle: handle ?? null,
+      channel_id: channelId ?? null,
+    });
+    return data;
+  },
+  async youtubeStats(accountId: string, limit = 5): Promise<YouTubeStats> {
+    const { data } = await apiClient.get<YouTubeStats>(
+      `/social/youtube/${accountId}/stats`,
+      { params: { limit } },
+    );
     return data;
   },
 };

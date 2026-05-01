@@ -16,6 +16,7 @@ from app.services import (
     telegram_service,
     tenant_service,
     twofa_service,
+    youtube_service,
 )
 
 __all__ = [
@@ -36,4 +37,5 @@ __all__ = [
     "telegram_service",
     "tenant_service",
     "twofa_service",
+    "youtube_service",
 ]
