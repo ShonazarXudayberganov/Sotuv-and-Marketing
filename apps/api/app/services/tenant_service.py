@@ -356,6 +356,62 @@ TENANT_DDL: tuple[str, ...] = (
     CREATE INDEX IF NOT EXISTS ix_content_drafts_cache_key
         ON content_drafts(cache_key)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS posts (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        brand_id        uuid NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+        draft_id        uuid REFERENCES content_drafts(id) ON DELETE SET NULL,
+        title           varchar(200),
+        body            text NOT NULL,
+        media_urls      jsonb,
+        status          varchar(20) NOT NULL DEFAULT 'draft',
+        scheduled_at    timestamptz,
+        published_at    timestamptz,
+        last_error      varchar(1000),
+        created_by      uuid NOT NULL,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_posts_brand ON posts(brand_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_posts_status ON posts(status)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_posts_scheduled_at
+        ON posts(scheduled_at) WHERE status = 'scheduled'
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS post_publications (
+        id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        post_id             uuid NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+        social_account_id   uuid NOT NULL REFERENCES brand_social_accounts(id)
+                                ON DELETE CASCADE,
+        provider            varchar(30) NOT NULL,
+        status              varchar(20) NOT NULL DEFAULT 'pending',
+        attempts            integer NOT NULL DEFAULT 0,
+        next_retry_at       timestamptz,
+        external_post_id    varchar(120),
+        last_error          varchar(1000),
+        completed_at        timestamptz,
+        created_at          timestamptz NOT NULL DEFAULT now(),
+        updated_at          timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_post_publications_post
+        ON post_publications(post_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_post_publications_account
+        ON post_publications(social_account_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_post_publications_status
+        ON post_publications(status)
+    """,
 )
 
 

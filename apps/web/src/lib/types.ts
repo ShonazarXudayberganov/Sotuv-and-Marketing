@@ -467,3 +467,63 @@ export interface ContentStats {
   drafts_starred: number;
   by_platform: Record<string, number>;
 }
+
+// ─────────── Posts / Sprint 1.7 ───────────
+
+export type PostStatus =
+  | "draft"
+  | "scheduled"
+  | "publishing"
+  | "published"
+  | "partial"
+  | "failed"
+  | "cancelled";
+
+export interface PostPublication {
+  id: string;
+  post_id: string;
+  social_account_id: string;
+  provider: string;
+  status: string;
+  attempts: number;
+  next_retry_at: string | null;
+  external_post_id: string | null;
+  last_error: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Post {
+  id: string;
+  brand_id: string;
+  draft_id: string | null;
+  title: string | null;
+  body: string;
+  media_urls: string[] | null;
+  status: PostStatus | string;
+  scheduled_at: string | null;
+  published_at: string | null;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PostDetail extends Post {
+  publications: PostPublication[];
+}
+
+export interface PostCreateRequest {
+  brand_id: string;
+  body: string;
+  title?: string | null;
+  media_urls?: string[] | null;
+  social_account_ids: string[];
+  scheduled_at?: string | null;
+  draft_id?: string | null;
+}
+
+export interface PostStats {
+  total: number;
+  by_status: Record<string, number>;
+}

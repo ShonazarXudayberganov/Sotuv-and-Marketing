@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     knowledge,
     notifications,
     onboarding,
+    posts,
     roles,
     social,
     tasks,
@@ -37,4 +38,5 @@ api_router.include_router(brands.router, prefix="/brands", tags=["smm"])
 api_router.include_router(knowledge.router, prefix="/knowledge", tags=["smm"])
 api_router.include_router(social.router, prefix="/social", tags=["smm"])
 api_router.include_router(content.router, prefix="/ai", tags=["smm"])
+api_router.include_router(posts.router, prefix="/posts", tags=["smm"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])

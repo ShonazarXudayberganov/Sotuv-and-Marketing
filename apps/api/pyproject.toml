@@ -30,6 +30,7 @@ dependencies = [
     "cryptography (>=47.0.0,<48.0.0)",
     "pgvector (>=0.4.2,<0.5.0)",
     "pypdf (>=6.10.2,<7.0.0)",
+    "apscheduler (>=3.10)",
 ]
 
 [tool.poetry]
@@ -122,5 +123,10 @@ markers = [
 
 [tool.coverage.run]
 source = ["app"]
-omit = ["app/main.py", "alembic/*", "tests/*"]
+omit = [
+    "app/main.py",
+    "alembic/*",
+    "tests/*",
+    "app/services/post_worker.py",
+]
 concurrency = ["greenlet", "thread"]

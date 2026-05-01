@@ -6,6 +6,8 @@ from app.models.smm import (
     BrandMembership,
     BrandSocialAccount,
     ContentDraft,
+    Post,
+    PostPublication,
     TenantIntegration,
 )
 from app.models.tenant import Tenant
@@ -31,6 +33,8 @@ __all__ = [
     "BrandMembership",
     "BrandSocialAccount",
     "ContentDraft",
+    "Post",
+    "PostPublication",
     "Department",
     "Invoice",
     "KnowledgeChunk",

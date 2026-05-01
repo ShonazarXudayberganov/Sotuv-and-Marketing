@@ -8,11 +8,14 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.db import dispose_engine, healthcheck
 from app.middleware.tenant import TenantContextMiddleware
+from app.services.post_worker import start_scheduler, stop_scheduler
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> Any:
+    start_scheduler()
     yield
+    stop_scheduler()
     await dispose_engine()
 
 
