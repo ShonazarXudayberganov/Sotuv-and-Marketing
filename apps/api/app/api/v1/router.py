@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     crm,
     departments,
     health,
+    inbox,
     integrations,
     knowledge,
     notifications,
@@ -43,4 +44,5 @@ api_router.include_router(content.router, prefix="/ai", tags=["smm"])
 api_router.include_router(posts.router, prefix="/posts", tags=["smm"])
 api_router.include_router(analytics.router, prefix="/analytics", tags=["smm"])
 api_router.include_router(crm.router, prefix="/crm", tags=["crm"])
+api_router.include_router(inbox.router, prefix="/inbox", tags=["inbox"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])

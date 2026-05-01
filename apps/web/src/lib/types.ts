@@ -771,3 +771,74 @@ export interface DealStats {
   lost_amount: number;
   win_rate: number;
 }
+
+// ─────────── Inbox / Sprint 2.3 ───────────
+
+export type InboxChannel =
+  | "telegram"
+  | "instagram"
+  | "facebook"
+  | "email"
+  | "web_widget";
+
+export type ConversationStatus = "open" | "snoozed" | "closed";
+
+export interface Conversation {
+  id: string;
+  channel: InboxChannel | string;
+  external_id: string;
+  contact_id: string | null;
+  brand_id: string | null;
+  title: string | null;
+  snippet: string | null;
+  status: ConversationStatus | string;
+  assignee_id: string | null;
+  unread_count: number;
+  last_message_at: string | null;
+  last_inbound_at: string | null;
+  last_outbound_at: string | null;
+  tags: string[] | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InboxMessage {
+  id: string;
+  conversation_id: string;
+  direction: "in" | "out" | string;
+  body: string;
+  channel: string;
+  external_id: string | null;
+  sent_by: "user" | "ai" | "contact" | string;
+  sent_by_user_id: string | null;
+  is_auto_reply: boolean;
+  confidence: number | null;
+  occurred_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InboxStats {
+  total: number;
+  by_status: Record<string, number>;
+  by_channel: Record<string, number>;
+  unread: number;
+  last_message_at: string | null;
+}
+
+export interface AutoReplyConfig {
+  is_enabled: boolean;
+  confidence_threshold: number;
+  quiet_hours_start: number | null;
+  quiet_hours_end: number | null;
+  default_brand_id: string | null;
+  fallback_text: string | null;
+  channels_enabled: string[] | null;
+}
+
+export interface AutoReplyDraft {
+  reply: string;
+  confidence: number;
+  mocked: boolean;
+}

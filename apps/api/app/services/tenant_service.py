@@ -573,6 +573,79 @@ TENANT_DDL: tuple[str, ...] = (
     """
     CREATE INDEX IF NOT EXISTS ix_deals_status ON deals(status)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS conversations (
+        id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        channel             varchar(30) NOT NULL,
+        external_id         varchar(120) NOT NULL,
+        contact_id          uuid REFERENCES contacts(id) ON DELETE SET NULL,
+        brand_id            uuid REFERENCES brands(id) ON DELETE SET NULL,
+        title               varchar(200),
+        snippet             varchar(500),
+        status              varchar(20) NOT NULL DEFAULT 'open',
+        assignee_id         uuid,
+        unread_count        integer NOT NULL DEFAULT 0,
+        last_message_at     timestamptz,
+        last_inbound_at     timestamptz,
+        last_outbound_at    timestamptz,
+        metadata            jsonb,
+        tags                jsonb,
+        is_active           boolean NOT NULL DEFAULT true,
+        created_at          timestamptz NOT NULL DEFAULT now(),
+        updated_at          timestamptz NOT NULL DEFAULT now(),
+        CONSTRAINT uq_conversation_channel_external UNIQUE (channel, external_id)
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_conversations_channel ON conversations(channel)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_conversations_status ON conversations(status)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_conversations_last_msg
+        ON conversations(last_message_at DESC)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS messages (
+        id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        conversation_id     uuid NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+        direction           varchar(10) NOT NULL,
+        body                text NOT NULL,
+        channel             varchar(30) NOT NULL,
+        external_id         varchar(120),
+        sent_by             varchar(20) NOT NULL DEFAULT 'user',
+        sent_by_user_id     uuid,
+        is_auto_reply       boolean NOT NULL DEFAULT false,
+        confidence          integer,
+        occurred_at         timestamptz NOT NULL,
+        metadata            jsonb,
+        created_at          timestamptz NOT NULL DEFAULT now(),
+        updated_at          timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_messages_conversation
+        ON messages(conversation_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_messages_occurred
+        ON messages(occurred_at DESC)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS auto_reply_configs (
+        id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        is_enabled              boolean NOT NULL DEFAULT false,
+        confidence_threshold    integer NOT NULL DEFAULT 90,
+        quiet_hours_start       integer,
+        quiet_hours_end         integer,
+        default_brand_id        uuid REFERENCES brands(id) ON DELETE SET NULL,
+        fallback_text           varchar(500),
+        channels_enabled        jsonb,
+        created_at              timestamptz NOT NULL DEFAULT now(),
+        updated_at              timestamptz NOT NULL DEFAULT now()
+    )
+    """,
 )
 
 

@@ -1,6 +1,7 @@
 from app.models.base import Base, TimestampMixin, UUIDPKMixin
 from app.models.billing import AiUsage, Invoice, Plan, Subscription
 from app.models.crm import Contact, ContactActivity, Deal, Pipeline, PipelineStage
+from app.models.inbox import AutoReplyConfig, Conversation, Message
 from app.models.knowledge import EMBEDDING_DIM, KnowledgeChunk, KnowledgeDocument
 from app.models.smm import (
     Brand,
@@ -30,6 +31,7 @@ __all__ = [
     "AiUsage",
     "ApiKey",
     "AuditLog",
+    "AutoReplyConfig",
     "Base",
     "Brand",
     "BrandMembership",
@@ -37,8 +39,10 @@ __all__ = [
     "Contact",
     "ContactActivity",
     "ContentDraft",
+    "Conversation",
     "Deal",
     "Department",
+    "Message",
     "Pipeline",
     "PipelineStage",
     "Post",
