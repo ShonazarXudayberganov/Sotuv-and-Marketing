@@ -440,6 +440,69 @@ TENANT_DDL: tuple[str, ...] = (
     CREATE INDEX IF NOT EXISTS ix_post_metrics_sampled
         ON post_metrics(sampled_at)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS contacts (
+        id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        full_name             varchar(200) NOT NULL,
+        company_name          varchar(200),
+        phone                 varchar(30),
+        email                 varchar(160),
+        telegram_username     varchar(80),
+        instagram_username    varchar(80),
+        industry              varchar(50),
+        source                varchar(50),
+        status                varchar(30) NOT NULL DEFAULT 'lead',
+        department_id         uuid REFERENCES departments(id) ON DELETE SET NULL,
+        assignee_id           uuid,
+        ai_score              integer NOT NULL DEFAULT 0,
+        ai_score_reason       varchar(500),
+        ai_score_updated_at   timestamptz,
+        notes                 text,
+        custom_fields         jsonb,
+        tags                  jsonb,
+        is_active             boolean NOT NULL DEFAULT true,
+        created_by            uuid NOT NULL,
+        created_at            timestamptz NOT NULL DEFAULT now(),
+        updated_at            timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_contacts_phone ON contacts(phone)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_contacts_email ON contacts(email)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_contacts_status ON contacts(status)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_contacts_score ON contacts(ai_score)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS contact_activities (
+        id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        contact_id        uuid NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,
+        kind              varchar(30) NOT NULL,
+        title             varchar(200),
+        body              text,
+        direction         varchar(10),
+        channel           varchar(30),
+        duration_seconds  integer,
+        metadata          jsonb,
+        occurred_at       timestamptz NOT NULL,
+        created_by        uuid,
+        created_at        timestamptz NOT NULL DEFAULT now(),
+        updated_at        timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_contact_activities_contact
+        ON contact_activities(contact_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_contact_activities_occurred
+        ON contact_activities(occurred_at)
+    """,
 )
 
 

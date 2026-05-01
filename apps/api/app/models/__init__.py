@@ -1,5 +1,6 @@
 from app.models.base import Base, TimestampMixin, UUIDPKMixin
 from app.models.billing import AiUsage, Invoice, Plan, Subscription
+from app.models.crm import Contact, ContactActivity
 from app.models.knowledge import EMBEDDING_DIM, KnowledgeChunk, KnowledgeDocument
 from app.models.smm import (
     Brand,
@@ -33,11 +34,13 @@ __all__ = [
     "Brand",
     "BrandMembership",
     "BrandSocialAccount",
+    "Contact",
+    "ContactActivity",
     "ContentDraft",
+    "Department",
     "Post",
     "PostMetrics",
     "PostPublication",
-    "Department",
     "Invoice",
     "KnowledgeChunk",
     "KnowledgeDocument",

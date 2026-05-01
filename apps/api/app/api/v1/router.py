@@ -7,6 +7,7 @@ from app.api.v1.endpoints import (
     billing,
     brands,
     content,
+    crm,
     departments,
     health,
     integrations,
@@ -41,4 +42,5 @@ api_router.include_router(social.router, prefix="/social", tags=["smm"])
 api_router.include_router(content.router, prefix="/ai", tags=["smm"])
 api_router.include_router(posts.router, prefix="/posts", tags=["smm"])
 api_router.include_router(analytics.router, prefix="/analytics", tags=["smm"])
+api_router.include_router(crm.router, prefix="/crm", tags=["crm"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])

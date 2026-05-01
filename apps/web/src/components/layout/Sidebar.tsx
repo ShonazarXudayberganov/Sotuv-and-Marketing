@@ -38,7 +38,7 @@ const PRIMARY: NavItem[] = [
 ];
 
 const MODULES: NavItem[] = [
-  { href: "/crm", label: "CRM", icon: Users, badge: "Tez orada" },
+  { href: "/crm", label: "CRM", icon: Users, enabled: true },
   { href: "/smm", label: "SMM", icon: PenSquare, enabled: true },
   { href: "/ads", label: "Reklama", icon: Megaphone, badge: "Tez orada" },
   { href: "/inbox", label: "Inbox", icon: MessageSquare, badge: "Tez orada" },

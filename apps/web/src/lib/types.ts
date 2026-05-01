@@ -602,3 +602,90 @@ export interface AnalyticsInsights {
   optimal: OptimalTimes;
   top_posts: TopPost[];
 }
+
+// ─────────── CRM / Sprint 2.1 ───────────
+
+export type ContactStatus = "lead" | "active" | "customer" | "lost" | "archived";
+
+export type ContactActivityKind =
+  | "call_in"
+  | "call_out"
+  | "message_in"
+  | "message_out"
+  | "email"
+  | "note"
+  | "task"
+  | "meeting"
+  | "status_change";
+
+export interface Contact {
+  id: string;
+  full_name: string;
+  company_name: string | null;
+  phone: string | null;
+  email: string | null;
+  telegram_username: string | null;
+  instagram_username: string | null;
+  industry: string | null;
+  source: string | null;
+  status: ContactStatus | string;
+  department_id: string | null;
+  assignee_id: string | null;
+  ai_score: number;
+  ai_score_reason: string | null;
+  ai_score_updated_at: string | null;
+  notes: string | null;
+  custom_fields: Record<string, unknown> | null;
+  tags: string[] | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContactActivity {
+  id: string;
+  contact_id: string;
+  kind: ContactActivityKind | string;
+  title: string | null;
+  body: string | null;
+  direction: string | null;
+  channel: string | null;
+  duration_seconds: number | null;
+  occurred_at: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContactStats {
+  total: number;
+  by_status: Record<string, number>;
+  hot_leads: number;
+  new_last_week: number;
+}
+
+export interface ContactCreateRequest {
+  full_name: string;
+  company_name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  telegram_username?: string | null;
+  instagram_username?: string | null;
+  industry?: string | null;
+  source?: string | null;
+  status?: ContactStatus | string;
+  department_id?: string | null;
+  assignee_id?: string | null;
+  notes?: string | null;
+  tags?: string[] | null;
+}
+
+export interface ActivityCreateRequest {
+  kind: ContactActivityKind | string;
+  title?: string | null;
+  body?: string | null;
+  direction?: string | null;
+  channel?: string | null;
+  duration_seconds?: number | null;
+  occurred_at?: string | null;
+}
