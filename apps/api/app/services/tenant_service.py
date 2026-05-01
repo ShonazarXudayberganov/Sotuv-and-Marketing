@@ -328,6 +328,34 @@ TENANT_DDL: tuple[str, ...] = (
     CREATE INDEX IF NOT EXISTS ix_brand_social_accounts_provider
         ON brand_social_accounts(provider)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS content_drafts (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        brand_id        uuid NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+        platform        varchar(30) NOT NULL,
+        title           varchar(200),
+        body            text NOT NULL,
+        user_goal       varchar(2000),
+        language        varchar(10) NOT NULL DEFAULT 'uz',
+        provider        varchar(30),
+        model           varchar(80),
+        tokens_used     integer NOT NULL DEFAULT 0,
+        rag_chunk_ids   jsonb,
+        is_starred      boolean NOT NULL DEFAULT false,
+        cache_key       varchar(80),
+        created_by      uuid NOT NULL,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_content_drafts_brand
+        ON content_drafts(brand_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_content_drafts_cache_key
+        ON content_drafts(cache_key)
+    """,
 )
 
 

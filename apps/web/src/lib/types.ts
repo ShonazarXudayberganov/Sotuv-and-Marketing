@@ -420,3 +420,50 @@ export interface YouTubeStats {
   recent: YouTubeVideo[];
   mocked: boolean;
 }
+
+// ─────────── AI content / Sprint 1.6 ───────────
+
+export type ContentPlatform =
+  | "telegram"
+  | "instagram"
+  | "facebook"
+  | "youtube"
+  | "generic";
+
+export interface ContentDraft {
+  id: string;
+  brand_id: string;
+  platform: ContentPlatform | string;
+  title: string | null;
+  body: string;
+  user_goal: string | null;
+  language: string;
+  provider: string | null;
+  model: string | null;
+  tokens_used: number;
+  rag_chunk_ids: string[] | null;
+  is_starred: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GeneratePostRequest {
+  brand_id: string;
+  platform: ContentPlatform | string;
+  user_goal: string;
+  language?: string;
+  title?: string | null;
+  use_cache?: boolean;
+}
+
+export interface AIUsage {
+  period: string;
+  tokens_used: number;
+  tokens_cap: number;
+}
+
+export interface ContentStats {
+  drafts_total: number;
+  drafts_starred: number;
+  by_platform: Record<string, number>;
+}

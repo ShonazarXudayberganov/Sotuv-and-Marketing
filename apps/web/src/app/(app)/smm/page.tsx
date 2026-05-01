@@ -56,11 +56,18 @@ export default function SmmDashboardPage() {
         description="Brendlar, ijtimoiy akkauntlar, AI kontent generatsiya va kontent reja."
         actions={
           <Can permission="smm.write">
-            <Button size="default" asChild>
-              <Link href="/smm/brands">
-                <PenSquare /> Brendlar
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button size="default" variant="secondary" asChild>
+                <Link href="/smm/brands">
+                  <PenSquare /> Brendlar
+                </Link>
+              </Button>
+              <Button size="default" asChild>
+                <Link href="/smm/ai-studio">
+                  <Sparkles /> AI Studio
+                </Link>
+              </Button>
+            </div>
           </Can>
         }
       />
@@ -182,7 +189,7 @@ export default function SmmDashboardPage() {
             <RoadmapItem done label="Telegram bot integratsiyasi" sprint="1.3" />
             <RoadmapItem done label="Instagram + Facebook" sprint="1.4" />
             <RoadmapItem done label="YouTube" sprint="1.5" />
-            <RoadmapItem label="AI kontent generatsiya (Claude + GPT)" sprint="1.6" />
+            <RoadmapItem done label="AI kontent generatsiya (Claude + GPT)" sprint="1.6" />
             <RoadmapItem label="Postlar workflow (draft → schedule → publish)" sprint="1.7" />
             <RoadmapItem label="Kontent reja kalendar" sprint="1.8" icon={CalendarDays} />
             <RoadmapItem label="SMM analytics" sprint="1.9" />

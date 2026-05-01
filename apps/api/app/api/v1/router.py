@@ -5,6 +5,7 @@ from app.api.v1.endpoints import (
     auth,
     billing,
     brands,
+    content,
     departments,
     health,
     integrations,
@@ -35,4 +36,5 @@ api_router.include_router(notifications.router, prefix="/notifications", tags=["
 api_router.include_router(brands.router, prefix="/brands", tags=["smm"])
 api_router.include_router(knowledge.router, prefix="/knowledge", tags=["smm"])
 api_router.include_router(social.router, prefix="/social", tags=["smm"])
+api_router.include_router(content.router, prefix="/ai", tags=["smm"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])

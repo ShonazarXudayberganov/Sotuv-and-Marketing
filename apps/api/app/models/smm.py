@@ -89,4 +89,36 @@ class BrandSocialAccount(Base, UUIDPKMixin, TimestampMixin):
     created_by: Mapped[UUID] = mapped_column(nullable=False)
 
 
-__all__ = ["Brand", "BrandMembership", "BrandSocialAccount", "TenantIntegration"]
+class ContentDraft(Base, UUIDPKMixin, TimestampMixin):
+    """AI-generated content for a brand — preserved as a draft until scheduled.
+
+    A draft remains editable; once scheduled or published it becomes a Post
+    (Sprint 1.7).
+    """
+
+    __tablename__ = "content_drafts"
+
+    brand_id: Mapped[UUID] = mapped_column(
+        ForeignKey("brands.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    platform: Mapped[str] = mapped_column(String(30), nullable=False)
+    title: Mapped[str | None] = mapped_column(String(200))
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    user_goal: Mapped[str | None] = mapped_column(String(2000))
+    language: Mapped[str] = mapped_column(String(10), default="uz", nullable=False)
+    provider: Mapped[str | None] = mapped_column(String(30))
+    model: Mapped[str | None] = mapped_column(String(80))
+    tokens_used: Mapped[int] = mapped_column(default=0, nullable=False)
+    rag_chunk_ids: Mapped[list[str] | None] = mapped_column(JSON)
+    is_starred: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    cache_key: Mapped[str | None] = mapped_column(String(80), index=True)
+    created_by: Mapped[UUID] = mapped_column(nullable=False)
+
+
+__all__ = [
+    "Brand",
+    "BrandMembership",
+    "BrandSocialAccount",
+    "ContentDraft",
+    "TenantIntegration",
+]

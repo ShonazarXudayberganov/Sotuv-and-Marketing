@@ -1,7 +1,13 @@
 from app.models.base import Base, TimestampMixin, UUIDPKMixin
 from app.models.billing import AiUsage, Invoice, Plan, Subscription
 from app.models.knowledge import EMBEDDING_DIM, KnowledgeChunk, KnowledgeDocument
-from app.models.smm import Brand, BrandMembership, BrandSocialAccount, TenantIntegration
+from app.models.smm import (
+    Brand,
+    BrandMembership,
+    BrandSocialAccount,
+    ContentDraft,
+    TenantIntegration,
+)
 from app.models.tenant import Tenant
 from app.models.tenant_scoped import (
     ApiKey,
@@ -24,6 +30,7 @@ __all__ = [
     "Brand",
     "BrandMembership",
     "BrandSocialAccount",
+    "ContentDraft",
     "Department",
     "Invoice",
     "KnowledgeChunk",
