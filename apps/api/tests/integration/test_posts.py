@@ -331,6 +331,61 @@ async def test_worker_sweep_noop_when_disabled():
     assert result is None
 
 
+async def test_calendar_groups_posts_by_day(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    account_id = await _link_telegram(client, headers, brand_id)
+
+    base = datetime.now(UTC).replace(microsecond=0)
+    # Two posts on day+1, one on day+3, one outside the window (+30 days)
+    targets = [base + timedelta(days=1, hours=2), base + timedelta(days=1, hours=10),
+               base + timedelta(days=3, hours=5), base + timedelta(days=30)]
+    for t in targets:
+        await client.post(
+            "/api/v1/posts",
+            headers=headers,
+            json={
+                "brand_id": brand_id,
+                "body": f"calendar-{t.isoformat()}",
+                "social_account_ids": [account_id],
+                "scheduled_at": t.isoformat(),
+            },
+        )
+
+    cal = await client.get(
+        "/api/v1/posts/calendar",
+        headers=headers,
+        params={"start": base.isoformat(), "end": (base + timedelta(days=14)).isoformat()},
+    )
+    assert cal.status_code == 200, cal.text
+    body = cal.json()
+    # Three posts in window across two days
+    days = {d["date"]: d["posts"] for d in body["days"]}
+    assert len(days) == 2
+    counts = {k: len(v) for k, v in days.items()}
+    assert sorted(counts.values()) == [1, 2]
+
+
+async def test_calendar_rejects_inverted_range(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    base = datetime.now(UTC).replace(microsecond=0)
+    cal = await client.get(
+        "/api/v1/posts/calendar",
+        headers=headers,
+        params={
+            "start": (base + timedelta(days=2)).isoformat(),
+            "end": base.isoformat(),
+        },
+    )
+    assert cal.status_code == 400
+
+
 async def test_stats_groups_by_status(
     client: AsyncClient, sample_register_payload: dict
 ):

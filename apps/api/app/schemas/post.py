@@ -61,3 +61,14 @@ class PostReschedule(BaseModel):
 class PostStats(BaseModel):
     total: int
     by_status: dict[str, int]
+
+
+class CalendarDay(BaseModel):
+    date: str  # YYYY-MM-DD (UTC)
+    posts: list[PostOut]
+
+
+class CalendarOut(BaseModel):
+    start: str
+    end: str
+    days: list[CalendarDay]

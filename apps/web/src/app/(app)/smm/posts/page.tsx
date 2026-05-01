@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import {
   AlertTriangle,
   Calendar,
+  CalendarDays,
   CheckCircle2,
   Clock,
   Loader2,
@@ -125,15 +126,22 @@ export default function PostsPage() {
         title="Postlar"
         description="Draftdan e'longa: rejalashtirish, kuzatish, qayta urinish"
         actions={
-          <Can permission="smm.write">
-            <Button
-              size="default"
-              onClick={() => setScheduling(true)}
-              disabled={brands.length === 0}
-            >
-              <Plus /> Yangi post
+          <div className="flex items-center gap-2">
+            <Button asChild variant="secondary" size="default">
+              <Link href="/smm/calendar">
+                <CalendarDays /> Kalendar
+              </Link>
             </Button>
-          </Can>
+            <Can permission="smm.write">
+              <Button
+                size="default"
+                onClick={() => setScheduling(true)}
+                disabled={brands.length === 0}
+              >
+                <Plus /> Yangi post
+              </Button>
+            </Can>
+          </div>
         }
       />
 

@@ -527,3 +527,14 @@ export interface PostStats {
   total: number;
   by_status: Record<string, number>;
 }
+
+export interface CalendarDay {
+  date: string;
+  posts: Post[];
+}
+
+export interface CalendarResponse {
+  start: string;
+  end: string;
+  days: CalendarDay[];
+}

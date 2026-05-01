@@ -1,5 +1,11 @@
 import { apiClient } from "./api-client";
-import type { Post, PostCreateRequest, PostDetail, PostStats } from "./types";
+import type {
+  CalendarResponse,
+  Post,
+  PostCreateRequest,
+  PostDetail,
+  PostStats,
+} from "./types";
 
 export const postsApi = {
   async list(params?: { brand_id?: string | null; status?: string | null; limit?: number }): Promise<Post[]> {
@@ -42,6 +48,16 @@ export const postsApi = {
   },
   async publishNow(id: string): Promise<PostDetail> {
     const { data } = await apiClient.post<PostDetail>(`/posts/${id}/publish-now`);
+    return data;
+  },
+  async calendar(
+    start: string,
+    end: string,
+    brandId?: string | null,
+  ): Promise<CalendarResponse> {
+    const params: Record<string, string> = { start, end };
+    if (brandId) params.brand_id = brandId;
+    const { data } = await apiClient.get<CalendarResponse>("/posts/calendar", { params });
     return data;
   },
 };

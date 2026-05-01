@@ -278,6 +278,29 @@ async def retry_post(db: AsyncSession, post_id: UUID) -> Post | None:
     return post
 
 
+async def list_in_range(
+    db: AsyncSession,
+    *,
+    start: datetime,
+    end: datetime,
+    brand_id: UUID | None = None,
+) -> list[Post]:
+    """Posts whose scheduled_at OR published_at falls within [start, end)."""
+    stmt = (
+        select(Post)
+        .where(
+            (
+                (Post.scheduled_at >= start) & (Post.scheduled_at < end)
+            )
+            | ((Post.published_at >= start) & (Post.published_at < end))
+        )
+        .order_by(Post.scheduled_at, Post.published_at)
+    )
+    if brand_id is not None:
+        stmt = stmt.where(Post.brand_id == brand_id)
+    return list((await db.execute(stmt)).scalars())
+
+
 async def stats(db: AsyncSession, brand_id: UUID | None = None) -> dict[str, Any]:
     stmt = select(Post)
     if brand_id is not None:
@@ -296,6 +319,7 @@ __all__ = [
     "claim_due_posts",
     "create_post",
     "get_post",
+    "list_in_range",
     "list_posts",
     "list_publications",
     "publish_now",

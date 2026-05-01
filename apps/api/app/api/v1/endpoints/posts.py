@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import CurrentUser, get_tenant_session, require_permission
 from app.models.smm import Post
 from app.schemas.post import (
+    CalendarDay,
+    CalendarOut,
     PostCreateRequest,
     PostDetailOut,
     PostOut,
@@ -50,6 +53,45 @@ async def list_posts(
     if limit < 1 or limit > 200:
         raise HTTPException(status_code=400, detail="limit must be 1..200")
     return await post_service.list_posts(db, brand_id=brand_id, status=status, limit=limit)
+
+
+@router.get("/calendar", response_model=CalendarOut)
+async def post_calendar(
+    start: datetime = Query(..., description="Inclusive UTC start of the window"),
+    end: datetime = Query(..., description="Exclusive UTC end of the window"),
+    brand_id: UUID | None = None,
+    _: CurrentUser = Depends(require_permission("smm.read")),
+    db: AsyncSession = Depends(get_tenant_session),
+) -> CalendarOut:
+    if end <= start:
+        raise HTTPException(status_code=400, detail="end must be after start")
+    if (end - start) > timedelta(days=92):
+        raise HTTPException(status_code=400, detail="window cannot exceed 92 days")
+
+    # Normalise to UTC if the caller provided a naive datetime.
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=UTC)
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=UTC)
+
+    rows = await post_service.list_in_range(db, start=start, end=end, brand_id=brand_id)
+
+    by_day: dict[str, list[PostOut]] = {}
+    for p in rows:
+        anchor = p.scheduled_at or p.published_at
+        if anchor is None:
+            continue
+        day_key = anchor.astimezone(UTC).date().isoformat()
+        by_day.setdefault(day_key, []).append(PostOut.model_validate(p))
+
+    days: list[CalendarDay] = [
+        CalendarDay(date=date_key, posts=posts) for date_key, posts in sorted(by_day.items())
+    ]
+    return CalendarOut(
+        start=start.astimezone(UTC).isoformat(),
+        end=end.astimezone(UTC).isoformat(),
+        days=days,
+    )
 
 
 @router.get("/stats", response_model=PostStats)
