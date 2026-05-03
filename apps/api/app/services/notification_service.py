@@ -12,9 +12,19 @@ from collections import defaultdict
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.tenant_scoped import Notification
+from app.models.tenant_scoped import Notification, NotificationPreference
+
+DEFAULT_PREFERENCES: dict[str, list[str]] = {
+    "tasks": ["in_app", "email"],
+    "billing": ["in_app", "email"],
+    "ai": ["in_app"],
+    "inbox": ["in_app", "telegram"],
+    "social": ["in_app"],
+    "system": ["in_app", "email"],
+}
 
 
 class _Broker:
@@ -86,3 +96,44 @@ async def create_and_push(
         },
     )
     return note
+
+
+async def get_preferences(db: AsyncSession, user_id: UUID) -> NotificationPreference:
+    """Return the user's preferences row, creating it with defaults if absent."""
+    pref = (
+        await db.execute(
+            select(NotificationPreference).where(NotificationPreference.user_id == user_id)
+        )
+    ).scalar_one_or_none()
+    if pref is None:
+        pref = NotificationPreference(
+            user_id=user_id,
+            channels=dict(DEFAULT_PREFERENCES),
+        )
+        db.add(pref)
+        await db.flush()
+    return pref
+
+
+async def update_preferences(
+    db: AsyncSession,
+    user_id: UUID,
+    *,
+    channels: dict[str, list[str]] | None = None,
+    quiet_hours_start: int | None = None,
+    quiet_hours_end: int | None = None,
+    telegram_chat_id: str | None = None,
+    update_quiet: bool = False,
+    update_telegram: bool = False,
+) -> NotificationPreference:
+    pref = await get_preferences(db, user_id)
+    if channels is not None:
+        merged = dict(pref.channels)
+        merged.update(channels)
+        pref.channels = merged
+    if update_quiet:
+        pref.quiet_hours_start = quiet_hours_start
+        pref.quiet_hours_end = quiet_hours_end
+    if update_telegram:
+        pref.telegram_chat_id = telegram_chat_id
+    return pref

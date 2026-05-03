@@ -153,6 +153,34 @@ TENANT_DDL: tuple[str, ...] = (
     )
     """,
     """
+    CREATE TABLE IF NOT EXISTS notification_preferences (
+        id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id            uuid NOT NULL UNIQUE,
+        channels           jsonb NOT NULL DEFAULT '{}'::jsonb,
+        quiet_hours_start  integer,
+        quiet_hours_end    integer,
+        telegram_chat_id   varchar(64),
+        created_at         timestamptz NOT NULL DEFAULT now(),
+        updated_at         timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS user_sessions (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id         uuid NOT NULL,
+        jti             varchar(64) NOT NULL UNIQUE,
+        ip_address      varchar(45),
+        user_agent      varchar(500),
+        last_active_at  timestamptz NOT NULL DEFAULT now(),
+        revoked_at      timestamptz,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_user_sessions_user_id ON user_sessions(user_id)
+    """,
+    """
     CREATE TABLE IF NOT EXISTS subscriptions (
         id                     uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         selected_modules       jsonb NOT NULL DEFAULT '[]'::jsonb,

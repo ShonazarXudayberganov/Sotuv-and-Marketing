@@ -4,6 +4,7 @@ from app.api.v1.endpoints import (
     ads,
     analytics,
     api_keys,
+    audit,
     auth,
     billing,
     brands,
@@ -55,6 +56,7 @@ api_router.include_router(
     tags=["notifications"],
     dependencies=grace_guard,
 )
+api_router.include_router(audit.router, prefix="/audit", tags=["audit"], dependencies=grace_guard)
 api_router.include_router(brands.router, prefix="/brands", tags=["smm"], dependencies=grace_guard)
 api_router.include_router(
     knowledge.router, prefix="/knowledge", tags=["smm"], dependencies=grace_guard

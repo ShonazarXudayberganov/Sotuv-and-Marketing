@@ -132,13 +132,40 @@ class TwoFactorSecret(Base, UUIDPKMixin, TimestampMixin):
     enabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class NotificationPreference(Base, UUIDPKMixin, TimestampMixin):
+    """Per-user notification routing — which categories go to which channels."""
+
+    __tablename__ = "notification_preferences"
+
+    user_id: Mapped[UUID] = mapped_column(unique=True, nullable=False)
+    channels: Mapped[dict[str, list[str]]] = mapped_column(JSON, default=dict, nullable=False)
+    quiet_hours_start: Mapped[int | None] = mapped_column(Integer)
+    quiet_hours_end: Mapped[int | None] = mapped_column(Integer)
+    telegram_chat_id: Mapped[str | None] = mapped_column(String(64))
+
+
+class UserSession(Base, UUIDPKMixin, TimestampMixin):
+    """Refresh-token-backed user session — supports revoke + active sessions UI."""
+
+    __tablename__ = "user_sessions"
+
+    user_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    jti: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45))
+    user_agent: Mapped[str | None] = mapped_column(String(500))
+    last_active_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 __all__ = [
     "ApiKey",
     "AuditLog",
     "Department",
     "Notification",
+    "NotificationPreference",
     "Role",
     "Task",
     "TwoFactorSecret",
     "UserMembership",
+    "UserSession",
 ]

@@ -21,6 +21,9 @@ PUBLIC_PREFIXES = (
     "/openapi.json",
 )
 
+# Paths that share the /auth/ prefix but still require an authenticated caller.
+AUTH_PROTECTED_PATHS = ("/api/v1/auth/sessions",)
+
 
 async def _send_json(send: Send, status_code: int, body: dict[str, str]) -> None:
     payload = json.dumps(body).encode()
@@ -44,7 +47,10 @@ class TenantContextMiddleware:
             return
 
         path: str = scope.get("path", "")
-        if path == "/" or any(path.startswith(p) for p in PUBLIC_PREFIXES):
+        is_protected_auth = any(path.startswith(p) for p in AUTH_PROTECTED_PATHS)
+        if not is_protected_auth and (
+            path == "/" or any(path.startswith(p) for p in PUBLIC_PREFIXES)
+        ):
             await self.app(scope, receive, send)
             return
 

@@ -117,3 +117,22 @@ class AuthBundle(BaseModel):
     token_type: str = "Bearer"
     user: UserOut
     tenant: TenantOut
+
+
+class GoogleOAuthRequest(BaseModel):
+    id_token: str = Field(min_length=1)
+
+
+class TelegramOAuthRequest(BaseModel):
+    id: int | None = None
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    photo_url: str | None = None
+    auth_date: int | None = None
+    hash: str | None = None
+    mock_token: str | None = None  # used when OAUTH_MOCK is true
+
+
+class OAuthBundle(AuthBundle):
+    is_new_user: bool = False

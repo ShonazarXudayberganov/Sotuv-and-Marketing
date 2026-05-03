@@ -8,13 +8,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import hash_password
 from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user, get_tenant_session, require_permission
+from app.core.security import hash_password
 from app.models.tenant_scoped import Role, UserMembership
 from app.models.user import User
 from app.schemas.auth import UserOut
-from app.schemas.tenant import InviteUserRequest, InvitedUserOut, UpdateUserRequest
+from app.schemas.tenant import InvitedUserOut, InviteUserRequest, UpdateUserRequest
 from app.services import audit_service
 
 router = APIRouter()
@@ -63,13 +63,17 @@ async def _role_by_slug(db: AsyncSession, slug: str) -> Role:
 
 async def _primary_membership(db: AsyncSession, user_id: UUID) -> UserMembership | None:
     return (
-        await db.execute(
-            select(UserMembership)
-            .where(UserMembership.user_id == user_id)
-            .order_by(UserMembership.is_primary.desc(), UserMembership.created_at.asc())
-            .limit(1)
+        (
+            await db.execute(
+                select(UserMembership)
+                .where(UserMembership.user_id == user_id)
+                .order_by(UserMembership.is_primary.desc(), UserMembership.created_at.asc())
+                .limit(1)
+            )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
 
 
 @router.post("", response_model=InvitedUserOut, status_code=201)
@@ -82,10 +86,14 @@ async def invite_user(
 ) -> InvitedUserOut:
     role = await _role_by_slug(tenant_db, payload.role_slug)
     existing = (
-        await public_db.execute(
-            select(User).where(or_(User.email == payload.email, User.phone == payload.phone))
+        (
+            await public_db.execute(
+                select(User).where(or_(User.email == payload.email, User.phone == payload.phone))
+            )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     if existing is not None:
         raise HTTPException(status_code=409, detail="User with this email or phone exists")
 

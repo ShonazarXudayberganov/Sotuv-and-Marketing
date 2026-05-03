@@ -1,8 +1,9 @@
+import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from fastapi import HTTPException, status
-from sqlalchemy import or_, select
+from fastapi import HTTPException, Request, status
+from sqlalchemy import or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import (
@@ -12,9 +13,11 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
+from app.core.tenancy import validate_schema_name
 from app.models.tenant import Tenant
 from app.models.user import User, VerificationCode
 from app.schemas.auth import AuthBundle, RegisterRequest, TenantOut, UserOut
+from app.services import session_service
 from app.services.sms import generate_verification_code, get_sms_provider
 from app.services.tenant_service import (
     attach_owner_membership,
@@ -71,7 +74,7 @@ async def start_registration(session: AsyncSession, payload: RegisterRequest) ->
 
 
 async def verify_phone_and_register(
-    session: AsyncSession, verification_id: UUID, code: str
+    session: AsyncSession, verification_id: UUID, code: str, request: Request | None = None
 ) -> AuthBundle:
     record = await session.get(VerificationCode, verification_id)
     if record is None or record.consumed:
@@ -131,10 +134,15 @@ async def verify_phone_and_register(
     await create_tenant_schema(session, tenant)
     await attach_owner_membership(session, tenant, user.id)
 
-    return _issue_auth_bundle(user, tenant)
+    return await _issue_auth_bundle(session, user, tenant, request=request)
 
 
-async def login(session: AsyncSession, email_or_phone: str, password: str) -> AuthBundle:
+async def login(
+    session: AsyncSession,
+    email_or_phone: str,
+    password: str,
+    request: Request | None = None,
+) -> AuthBundle:
     result = await session.execute(
         select(User).where(or_(User.email == email_or_phone, User.phone == email_or_phone))
     )
@@ -150,7 +158,7 @@ async def login(session: AsyncSession, email_or_phone: str, password: str) -> Au
     if tenant is None or not tenant.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant disabled")
 
-    return _issue_auth_bundle(user, tenant)
+    return await _issue_auth_bundle(session, user, tenant, request=request)
 
 
 def _normalize_login_identifier(value: str) -> str:
@@ -272,6 +280,16 @@ async def refresh(session: AsyncSession, refresh_token: str) -> str:
     if tenant is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant not found")
 
+    jti = payload.get("jti")
+    if jti:
+        active = await session_service.is_active_jti(
+            session, schema_name=tenant.schema_name, jti=jti
+        )
+        await session.commit()
+        await session.execute(text("SET search_path TO public"))
+        if not active:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session revoked")
+
     return create_token(
         str(user.id),
         "access",
@@ -283,14 +301,100 @@ async def refresh(session: AsyncSession, refresh_token: str) -> str:
     )
 
 
-def _issue_auth_bundle(user: User, tenant: Tenant) -> AuthBundle:
+async def login_or_create_via_oauth(
+    session: AsyncSession,
+    *,
+    email: str,
+    full_name: str | None,
+    company_seed: str | None = None,
+    request: Request | None = None,
+) -> tuple[AuthBundle, bool]:
+    """Find an existing user by email or provision a brand-new tenant for them."""
+    user = (await session.execute(select(User).where(User.email == email))).scalar_one_or_none()
+    if user is not None:
+        if not user.is_active:
+            raise HTTPException(status_code=403, detail="Account disabled")
+        tenant = await session.get(Tenant, user.tenant_id)
+        if tenant is None or not tenant.is_active:
+            raise HTTPException(status_code=403, detail="Tenant disabled")
+        bundle = await _issue_auth_bundle(session, user, tenant, request=request)
+        return bundle, False
+
+    company_name = company_seed or (full_name or email.split("@")[0])
+    schema_name = await generate_unique_schema_name(session, company_name)
+    tenant = Tenant(
+        name=company_name,
+        schema_name=schema_name,
+        industry=None,
+        phone="",
+    )
+    session.add(tenant)
+    await session.flush()
+
+    user = User(
+        tenant_id=tenant.id,
+        email=email,
+        phone="",
+        password_hash=hash_password(secrets.token_urlsafe(24)),
+        full_name=full_name,
+        role="owner",
+        is_verified=True,
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(tenant)
+    await session.refresh(user)
+
+    await create_tenant_schema(session, tenant)
+    await attach_owner_membership(session, tenant, user.id)
+
+    bundle = await _issue_auth_bundle(session, user, tenant, request=request)
+    return bundle, True
+
+
+async def revoke_refresh(session: AsyncSession, refresh_token: str) -> None:
+    """Revoke a refresh token's session row so subsequent /refresh calls fail."""
+    try:
+        payload = decode_token(refresh_token)
+    except InvalidTokenError:
+        return
+    jti = payload.get("jti")
+    schema = payload.get("tenant_schema")
+    if not jti or not schema:
+        return
+    await session.execute(text(f"SET search_path TO {validate_schema_name(schema)}, public"))
+    await session_service.revoke_jti(session, jti)
+    await session.commit()
+    await session.execute(text("SET search_path TO public"))
+
+
+async def _issue_auth_bundle(
+    session: AsyncSession,
+    user: User,
+    tenant: Tenant,
+    request: Request | None = None,
+) -> AuthBundle:
     extra = {
         "tenant_id": str(tenant.id),
         "tenant_schema": tenant.schema_name,
         "role": user.role,
     }
+    jti = session_service.new_jti()
     access = create_token(str(user.id), "access", extra_claims=extra)
-    refresh_token = create_token(str(user.id), "refresh", extra_claims=extra)
+    refresh_token = create_token(str(user.id), "refresh", extra_claims=extra, jti=jti)
+
+    schema = validate_schema_name(tenant.schema_name)
+    await session.execute(text(f"SET search_path TO {schema}, public"))
+    await session_service.create(
+        session,
+        schema_name=tenant.schema_name,
+        user_id=user.id,
+        jti=jti,
+        request=request,
+    )
+    await session.commit()
+    await session.execute(text("SET search_path TO public"))
+
     return AuthBundle(
         access_token=access,
         refresh_token=refresh_token,

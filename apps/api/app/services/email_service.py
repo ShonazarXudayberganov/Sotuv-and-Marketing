@@ -1,16 +1,21 @@
 """Email service with Jinja2 templates and a mock provider for dev/test.
 
-Sprint 5 ships Jinja2 + a logging mock. Real SMTP / SendGrid / Mailgun adapter
-is a thin swap once credentials are configured.
+Sprint 5 ships Jinja2 + a logging mock. Real SMTP adapter (SMTPEmailProvider) is
+selected automatically when EMAIL_MOCK is false and SMTP_HOST is configured.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import smtplib
+from email.message import EmailMessage
 from pathlib import Path
 from typing import Any, Protocol
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -41,13 +46,38 @@ class MockEmailProvider:
     sent: list[dict[str, str]] = []
 
     async def send(self, *, to: str, subject: str, html: str, text: str | None = None) -> None:
-        self.sent.append({"to": to, "subject": subject, "html": html})
+        self.sent.append({"to": to, "subject": subject, "html": html, "text": text or ""})
         logger.warning("MOCK EMAIL to %s — %s", to, subject)
 
 
+class SMTPEmailProvider:
+    """Synchronous smtplib wrapped in a thread for async compatibility."""
+
+    def _send_sync(self, *, to: str, subject: str, html: str, text: str | None) -> None:
+        msg = EmailMessage()
+        msg["From"] = settings.SMTP_FROM
+        msg["To"] = to
+        msg["Subject"] = subject
+        msg.set_content(text or "")
+        msg.add_alternative(html, subtype="html")
+
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as smtp:
+            smtp.ehlo()
+            if settings.SMTP_TLS:
+                smtp.starttls()
+                smtp.ehlo()
+            if settings.SMTP_USERNAME:
+                smtp.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD.get_secret_value())
+            smtp.send_message(msg)
+
+    async def send(self, *, to: str, subject: str, html: str, text: str | None = None) -> None:
+        await asyncio.to_thread(self._send_sync, to=to, subject=subject, html=html, text=text)
+
+
 def get_email_provider() -> EmailProvider:
-    """Always returns the mock provider until SMTP/SendGrid creds are wired."""
-    return MockEmailProvider()
+    if settings.EMAIL_MOCK or not settings.SMTP_HOST:
+        return MockEmailProvider()
+    return SMTPEmailProvider()
 
 
 async def send_invoice_email(*, to: str, invoice_number: str, amount: int, due_at: str) -> None:

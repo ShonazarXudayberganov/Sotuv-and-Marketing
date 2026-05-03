@@ -34,6 +34,7 @@ def create_token(
     subject: str,
     token_type: TokenType,
     extra_claims: dict[str, Any] | None = None,
+    jti: str | None = None,
 ) -> str:
     now = datetime.now(UTC)
     if token_type == "access":
@@ -47,6 +48,8 @@ def create_token(
         "iat": int(now.timestamp()),
         "exp": int(expires.timestamp()),
     }
+    if jti is not None:
+        payload["jti"] = jti
     if extra_claims:
         payload.update(extra_claims)
 

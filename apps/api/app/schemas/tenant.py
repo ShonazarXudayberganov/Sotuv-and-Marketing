@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.core.permissions import PERMISSIONS
+
+NOTIFICATION_CATEGORIES = {"tasks", "billing", "ai", "inbox", "social", "system"}
+NOTIFICATION_CHANNELS = {"in_app", "email", "telegram"}
 
 
 class TenantOut(BaseModel):
@@ -144,3 +149,58 @@ class OnboardingState(BaseModel):
     invited_users: list[str] | None = None
     selected_modules: list[str] | None = None
     selected_plan: str | None = None
+
+
+class AuditLogOut(BaseModel):
+    id: UUID
+    user_id: UUID | None
+    action: str
+    resource_type: str
+    resource_id: str | None
+    metadata: dict[str, Any] | None = Field(default=None, validation_alias="metadata_")
+    ip_address: str | None
+    user_agent: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True, "populate_by_name": True}
+
+
+class NotificationPreferencesOut(BaseModel):
+    channels: dict[str, list[str]]
+    quiet_hours_start: int | None
+    quiet_hours_end: int | None
+    telegram_chat_id: str | None
+
+    model_config = {"from_attributes": True}
+
+
+class NotificationPreferencesUpdate(BaseModel):
+    channels: dict[str, list[str]] | None = None
+    quiet_hours_start: int | None = Field(default=None, ge=0, le=23)
+    quiet_hours_end: int | None = Field(default=None, ge=0, le=23)
+    telegram_chat_id: str | None = Field(default=None, max_length=64)
+
+    @field_validator("channels")
+    @classmethod
+    def validate_channels(cls, v: dict[str, list[str]] | None) -> dict[str, list[str]] | None:
+        if v is None:
+            return None
+        bad_cats = sorted(set(v.keys()) - NOTIFICATION_CATEGORIES)
+        if bad_cats:
+            raise ValueError(f"Unknown categories: {', '.join(bad_cats)}")
+        for category, channels in v.items():
+            bad_chans = sorted(set(channels) - NOTIFICATION_CHANNELS)
+            if bad_chans:
+                raise ValueError(f"Unknown channels for {category}: {', '.join(bad_chans)}")
+        return v
+
+
+class UserSessionOut(BaseModel):
+    id: UUID
+    ip_address: str | None
+    user_agent: str | None
+    created_at: datetime
+    last_active_at: datetime
+    is_current: bool = False
+
+    model_config = {"from_attributes": True}

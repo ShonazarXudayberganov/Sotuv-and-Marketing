@@ -63,6 +63,16 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: SecretStr = Field(default=SecretStr(""))
     TELEGRAM_BOT_TOKEN: SecretStr = Field(default=SecretStr(""))
+    OAUTH_MOCK: bool = True  # in dev, accept fake tokens to ease E2E
+
+    # ─────────── Email (SMTP) ───────────
+    EMAIL_MOCK: bool = True  # in dev, log instead of sending
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: SecretStr = Field(default=SecretStr(""))
+    SMTP_FROM: str = "NEXUS AI <noreply@nexusai.uz>"
+    SMTP_TLS: bool = True
 
     # ─────────── Rate limiting ───────────
     RATE_LIMIT_PER_MINUTE: int = 100
