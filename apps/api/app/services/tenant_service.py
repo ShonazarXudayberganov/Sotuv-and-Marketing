@@ -724,6 +724,23 @@ TENANT_DDL: tuple[str, ...] = (
     CREATE INDEX IF NOT EXISTS ix_ad_metric_snapshots_sampled
         ON ad_metric_snapshots(sampled_at)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS saved_reports (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name            varchar(200) NOT NULL,
+        description     text,
+        definition      jsonb NOT NULL,
+        is_pinned       boolean NOT NULL DEFAULT false,
+        is_default      boolean NOT NULL DEFAULT false,
+        department_id   uuid REFERENCES departments(id) ON DELETE SET NULL,
+        created_by      uuid NOT NULL,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_saved_reports_pinned ON saved_reports(is_pinned)
+    """,
 )
 
 

@@ -17,6 +17,7 @@ from app.api.v1.endpoints import (
     notifications,
     onboarding,
     posts,
+    reports,
     roles,
     social,
     tasks,
@@ -47,4 +48,5 @@ api_router.include_router(analytics.router, prefix="/analytics", tags=["smm"])
 api_router.include_router(crm.router, prefix="/crm", tags=["crm"])
 api_router.include_router(inbox.router, prefix="/inbox", tags=["inbox"])
 api_router.include_router(ads.router, prefix="/ads", tags=["ads"])
+api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])

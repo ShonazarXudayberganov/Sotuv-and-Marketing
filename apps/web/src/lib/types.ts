@@ -951,3 +951,92 @@ export interface CampaignDraftRequest {
   creative?: Record<string, unknown> | null;
   notes?: string | null;
 }
+
+// ─────────── Reports / Sprint 3.2 ───────────
+
+export interface ReportsCRMSnapshot {
+  contacts_total: number;
+  hot_leads: number;
+  new_last_week: number;
+  by_status: Record<string, number>;
+  deals_open: number;
+  deals_won: number;
+  won_amount: number;
+  win_rate: number;
+  forecast_weighted: number;
+  forecast_open_amount: number;
+}
+
+export interface ReportsSMMSnapshot {
+  posts: number;
+  views: number;
+  likes: number;
+  comments: number;
+  engagement_rate: number;
+  by_platform: Record<string, Record<string, number>>;
+}
+
+export interface ReportsAdsSnapshot {
+  campaigns: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  spend: number;
+  revenue: number;
+  ctr: number;
+  roas: number;
+  by_network: Record<string, Record<string, number>>;
+}
+
+export interface ReportsInboxSnapshot {
+  conversations_total: number;
+  messages_in: number;
+  messages_out: number;
+  auto_replies: number;
+  response_rate: number;
+}
+
+export interface ReportsOverview {
+  period_days: number;
+  crm: ReportsCRMSnapshot;
+  smm: ReportsSMMSnapshot;
+  ads: ReportsAdsSnapshot;
+  inbox: ReportsInboxSnapshot;
+}
+
+export interface ReportsFunnel {
+  contacts: Record<string, number>;
+  deals: Record<string, number>;
+  totals: {
+    contacts: number;
+    deals: number;
+    closed_deals: number;
+    conversion_rate: number;
+  };
+}
+
+export interface ReportsCohortRow {
+  month: string;
+  size: number;
+  customers: number;
+  lost: number;
+}
+
+export interface ReportsInsights {
+  summary: string;
+  recommendations: string[];
+  snapshot: ReportsOverview;
+  funnel: ReportsFunnel;
+}
+
+export interface SavedReport {
+  id: string;
+  name: string;
+  description: string | null;
+  definition: Record<string, unknown>;
+  is_pinned: boolean;
+  is_default: boolean;
+  department_id: string | null;
+  created_at: string;
+  updated_at: string;
+}

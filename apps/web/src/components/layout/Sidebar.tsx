@@ -108,7 +108,7 @@ const MODULES: NavGroupItem[] = [
       { href: "/inbox/settings", label: "Auto-reply", icon: Sparkles },
     ],
   },
-  { href: "/reports", label: "Hisobotlar", icon: BarChart3, badge: "Tez orada" },
+  { href: "/reports", label: "Hisobotlar", icon: BarChart3, enabled: true },
 ];
 
 const SETTINGS: NavGroupItem = {
