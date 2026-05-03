@@ -502,18 +502,20 @@ Har prompt — alohida fayl. Kod ichida emas.
 
 ## Acceptance kriteriylari (Bosqich 1 — MVP)
 
-1. ✅ Brend yaratish wizard (5 qadam) ishlaydi
-2. ✅ Bilimlar bazasi 8 bo'lim, 4 to'ldirish usuli
-3. ✅ AI Studio: 3 variant + AI chat + tezkor tahrir
-4. ✅ Hashtag avto-generatsiya
-5. ✅ AI 30 kunlik reja
-6. ✅ Kontent rejasi (3 ko'rinish)
-7. ✅ Publishing: IG (post+Reels+Story) + TG + FB
-8. ✅ Tasdiqlash workflow (sozlanadigan)
-9. ✅ Asosiy tahlil (post statistikasi, AI o'rganish)
-10. ✅ Brend assets boshqaruvi
-11. ✅ Multi-brand to'g'ri ishlaydi (chegaralash)
-12. ✅ Test coverage ≥ 80%
+2026-05-03 holatiga ko‘ra bu ro‘yxat yakuniy target, quyidagi status bilan:
+
+1. 🟡 Brend yaratish wizard (5 qadam) — Brand CRUD bor, wizard hali yo‘q
+2. 🟡 Bilimlar bazasi 8 bo‘lim, 4 to‘ldirish usuli — text/file + pgvector bor, structured sections/importlar hali yo‘q
+3. 🟡 AI Studio: 3 variant + AI chat + tezkor tahrir — draft generation bor, 3 variant/chat/quick edit hali yo‘q
+4. ⬜ Hashtag avto-generatsiya
+5. ⬜ AI 30 kunlik reja
+6. 🟡 Kontent rejasi (3 ko‘rinish) — posts calendar bor, to‘liq 3-view content plan hali yo‘q
+7. 🟡 Publishing: IG (post+Reels+Story) + TG + FB — Telegram/Meta test/publish flow bor, production OAuth va formatlar tugallanmagan
+8. ⬜ Tasdiqlash workflow (sozlanadigan)
+9. 🟡 Asosiy tahlil (post statistikasi, AI o‘rganish) — analytics bor, AI learning hali yo‘q
+10. ⬜ Brend assets boshqaruvi
+11. 🟡 Multi-brand to‘g‘ri ishlaydi (chegaralash) — brand scope bor, membership/access boundary hardening kerak
+12. ✅ Test coverage ≥ 80% — backend coverage 83%+
 
 ---
 

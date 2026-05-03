@@ -9,6 +9,17 @@
 Marketplace, Public API, Webhooks, White-label, Custom Builder, advanced
 features (trends, competitors, A/B test, image gen).
 
+## Joriy implementatsiya holati (2026-05-03)
+
+Bosqich 4 rasmiy fokus emas, lekin prototip boshlangan:
+- Marketplace catalog endpoint/UI mavjud.
+- Inbound/outbound webhooks, HMAC signature, delivery log va test delivery mavjud.
+- Mock sync adapters: AmoCRM, Bitrix24, Google Sheets, 1C, Zapier.
+- Web UI: `/marketplace`, `/settings/webhooks`.
+
+Hali tugallanmagan: real connectorlar, REST/GraphQL developer portal,
+backup/restore, white-label, custom domain/email, advanced AI va custom automation builder.
+
 ## KPI
 
 - +500 yangi mijoz (jami 1000+)

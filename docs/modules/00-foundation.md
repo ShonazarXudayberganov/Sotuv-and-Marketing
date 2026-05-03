@@ -107,11 +107,11 @@ POST /api/v1/auth/logout
 
 POST /api/v1/auth/forgot-password
   Body: { email_or_phone }
-  Returns: 200
+  Returns: { verification_id, phone_masked, expires_in_seconds }
 
 POST /api/v1/auth/reset-password
-  Body: { reset_token, new_password }
-  Returns: 200
+  Body: { verification_id, code, new_password }
+  Returns: 204
 
 GET  /api/v1/auth/oauth/google
 GET  /api/v1/auth/oauth/google/callback

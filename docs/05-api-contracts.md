@@ -61,6 +61,11 @@ Authorization: Bearer <access_token>
 | POST | `/auth/2fa/disable` | 2FA o'chirish |
 | GET | `/auth/me` | Joriy foydalanuvchi |
 
+`/auth/forgot-password` SMS kod yuboradi va
+`{ verification_id, phone_masked, expires_in_seconds }` qaytaradi.
+`/auth/reset-password` body:
+`{ verification_id, code, new_password }`; muvaffaqiyatli bo‘lsa `204`.
+
 ---
 
 ## Foundation (`/api/v1/*`)

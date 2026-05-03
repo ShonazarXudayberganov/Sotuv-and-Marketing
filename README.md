@@ -7,18 +7,19 @@
 
 ## Loyiha holati
 
-**Joriy bosqich:** Bosqich 0 — Tayyorgarlik (Foundation) ✅ tugadi
-**Keyingi:** Bosqich 1 — SMM MVP
+**Joriy bosqich:** Bosqich 1 — SMM MVP hardening  
+**Foundation:** Bosqich 0 ✅ tugagan  
+**Izoh:** CRM, Inbox, Ads, Reports va Marketplace bo‘yicha prototiplar ham kodda bor, lekin ular hali product-ready scope emas.
 
-| Sprint | Mazmun | Holat |
+| Yo‘nalish | Mazmun | Holat |
 |---|---|---|
-| 1 | Backend skelet + Auth + multi-tenancy | ✅ |
-| 2 | Frontend skelet + auth UI + luxury theme | ✅ |
-| 3 | Onboarding wizard, sozlamalar, RBAC, bo'limlar | ✅ |
-| 4 | Vazifalar, 2FA, API kalitlar, real-time bildirishnomalar | ✅ |
-| 5 | Billing, Invoice PDF, grace period, deploy skeleti | ✅ |
+| Foundation | Auth, tenancy, RBAC, tasks, notifications, billing, deploy skeleti | ✅ |
+| SMM | Brands, knowledge base, AI drafts, social accounts, posts, analytics | In progress |
+| CRM/Inbox | Contacts, deals, conversations, auto-reply prototiplari | Prototype |
+| Ads/Reports | Mock sync, campaign draft, overview/reports prototiplari | Prototype |
+| Marketplace | Catalog, webhooks, mock sync prototipi | Prototype |
 
-**Test natijasi:** 61 backend + 8 frontend, 86%+ coverage.
+**Oxirgi tekshiruv:** 202 backend test + 8 frontend test, backend coverage 83%+.
 
 ---
 
@@ -64,13 +65,15 @@ Brauzerda oching:
 
 ```bash
 # Backend
-cd apps/api && poetry run pytest                  # 61 tests, 86% coverage
+cd apps/api && poetry run pytest                  # 202 tests, 83%+ coverage
 cd apps/api && poetry run ruff check .            # lint
+cd apps/api && poetry run ruff format --check .   # format
 cd apps/api && poetry run mypy app                # types
 
 # Frontend
 cd apps/web && pnpm test                          # 8 tests
 cd apps/web && pnpm lint && pnpm type-check       # lint + types
+cd apps/web && pnpm format:check                  # format
 cd apps/web && pnpm build                         # production build
 ```
 
@@ -225,15 +228,23 @@ GitHub environment "production" protection rules orqali manual approve so'raydi.
 
 ---
 
-## Bosqich 1 (Keyingi)
+## Bosqich 1 (Joriy)
 
-Sprint 1.1 — SMM MVP:
+SMM MVP bo‘yicha quyidagilar allaqachon boshlangan:
 - Brendlar (multi-brand)
 - Bilimlar bazasi (knowledge_base + pgvector)
-- Ijtimoiy akkauntlar (Telegram, Instagram, Facebook, YouTube)
-- AI kontent generatsiya (Claude Sonnet 4)
-- Postlar (draft → schedule → publish)
-- Kontent reja (oylik kalendar)
+- Ijtimoiy akkauntlar (Telegram, Instagram, Facebook, YouTube read/test flows)
+- AI kontent draft generatsiya
+- Postlar (draft → schedule → publish-now)
+- Kontent kalendar va analytics sahifalari
+
+Hali yakunlanadigan SMM MVP ishlari:
+- 5-step brand wizard
+- 8 bo‘limli structured knowledge base
+- Website/Instagram/AI chat import
+- 3 variantli AI Studio, hashtag, reels script, 30 kunlik reja
+- Approval workflow va brand assets
+- Real provider credentials/OAuth bilan production publishing
 
 To'liq plan: [docs/roadmap/phase-1.md](docs/roadmap/phase-1.md)
 

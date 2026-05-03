@@ -9,6 +9,18 @@
 Reklama (Meta, Google, Telegram), AI Optimizer, True ROI, Landing builder,
 Hisobotlar (Executive Dashboard, AI Sherik, anomaliya, OKR, prognoz).
 
+## Joriy implementatsiya holati (2026-05-03)
+
+Bosqich 3 rasmiy fokus emas, lekin prototip boshlangan:
+- Ads accounts/campaigns/metrics mock sync va campaign draft mavjud.
+- Ads overview, timeseries va insights endpoint/UI mavjud.
+- Reports overview, funnel, cohorts, saved reports va CSV export mavjud.
+- Web UI: `/ads`, `/ads/campaigns`, `/reports`.
+
+Hali tugallanmagan: real Meta/Google/Telegram Ads integratsiyasi, smart wizard,
+lead form builder, landing builder, AI Optimizer, True ROI, anomaly detector,
+AI Sherik, OKR va forecasting.
+
 ## KPI
 
 - +250 yangi mijoz (jami 450-500)

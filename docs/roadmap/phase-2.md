@@ -9,6 +9,16 @@
 CRM (mijozlar, bitimlar, AI Score, automation, OnlinePBX) va Inbox
 (omnikanal, 3 AI engine, sayt widget alohida server).
 
+## Joriy implementatsiya holati (2026-05-03)
+
+Bosqich 2 rasmiy fokus emas, lekin prototip boshlangan:
+- CRM contacts, activities, AI score, deals, default pipeline/stages va forecast mavjud.
+- Inbox conversations, messages, manual ingest, draft reply va auto-reply config mavjud.
+- Web UI: `/crm`, `/crm/contacts`, `/crm/deals`, `/inbox`, `/inbox/settings`.
+
+Hali tugallanmagan: products catalog, automation builder, OnlinePBX, AmoCRM import wizard,
+real channel webhooks, site widget alohida server, templates, SLA va team collaboration.
+
 ## KPI
 
 - +150 yangi mijoz (jami 200-250)

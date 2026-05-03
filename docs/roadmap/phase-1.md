@@ -47,6 +47,28 @@ kontent rejasi, IG/FB/TG publishing, asosiy tahlil.
 - Brand assets
 - Multi-brand testing
 
+## Joriy implementatsiya holati (2026-05-03)
+
+Kodda Bosqich 1 allaqachon boshlangan:
+- Brand CRUD, default brand va integration credentials encryption mavjud.
+- Knowledge base text/file ingest, chunking, pgvector embedding/search mavjud.
+- AI draft generation RAG context bilan ishlaydi; token usage tracking bor.
+- Telegram, Meta va YouTube social account link/test/read flows mavjud.
+- Posts draft/schedule/publish-now/retry/cancel lifecycle mavjud.
+- SMM analytics overview, timeseries, top posts va insights mavjud.
+- Web UI sahifalari: `/smm`, `/smm/brands`, `/smm/knowledge-base`,
+  `/smm/ai-studio`, `/smm/social`, `/smm/posts`, `/smm/calendar`,
+  `/smm/analytics`.
+
+Hali Bosqich 1 MVP tugadi deb hisoblash uchun kerak:
+- 5-step brand wizard.
+- Knowledge Base 8 bo‘limli struktura va progress tracking.
+- Website parse, Instagram import va AI chat orqali knowledge ingest.
+- AI Studio 3 variant, tezkor tahrir, AI chat, hashtag, reels script.
+- 30 kunlik AI content plan.
+- Approval workflow va brand assets.
+- Real provider credential/OAuth bilan production publishing.
+
 ## Deliverable
 
 To'liq SMM moduli, mijozlar foydalanyapti.

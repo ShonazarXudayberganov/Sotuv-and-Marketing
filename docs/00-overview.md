@@ -45,12 +45,17 @@ NEXUS AI — bu bo'shliqni to'ldiradi.
 ## Roadmap qisqacha
 
 ```
-Bosqich 0 — Tayyorgarlik         [1-2 oy]   ← Hozir
-Bosqich 1 — SMM MVP              [3-4 oy]   → 50-100 mijoz
-Bosqich 2 — CRM + Inbox          [3-4 oy]   → +150 mijoz
-Bosqich 3 — Reklama + Hisobotlar [3-4 oy]   → +250 mijoz
-Bosqich 4 — Integratsiyalar      [3-6 oy]   → 500+ mijoz
+Bosqich 0 — Tayyorgarlik         [1-2 oy]   ✅ Tugagan
+Bosqich 1 — SMM MVP              [3-4 oy]   ← Hozir: hardening
+Bosqich 2 — CRM + Inbox          [3-4 oy]   Prototype boshlangan
+Bosqich 3 — Reklama + Hisobotlar [3-4 oy]   Prototype boshlangan
+Bosqich 4 — Integratsiyalar      [3-6 oy]   Prototype boshlangan
 ```
+
+2026-05-03 holatiga ko‘ra kod roadmapdan oldinga ketgan: Bosqich 2-4 modullari
+uchun dastlabki modellar, endpointlar, UI sahifalar va testlar bor. Ular hali
+commercial-ready deb hisoblanmaydi; joriy fokus Bosqich 1 SMM MVP ni yakunlash
+va Foundation qarzlarini yopish.
 
 ## Texnologiyalar (qisqacha)
 
