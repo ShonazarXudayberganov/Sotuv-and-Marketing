@@ -8,17 +8,16 @@
 ## Joriy Holat
 
 **Sana:** 2026-05-03  
-**Asosiy bosqich:** Bosqich 1 — SMM MVP hardening  
-**Amaldagi kod holati:** Foundation tugagan, SMM ancha oldinga ketgan, CRM/Inbox/Ads/Reports/Marketplace prototiplari ham boshlangan.  
-**Joriy maqsad:** mavjud funksiyalarni CI-toza, hujjatga mos va real ishlaydigan MVP oqimiga keltirish.
+**Asosiy bosqich:** Bosqich 1 — SMM MVP hardening (Foundation 100% yopildi)  
+**Amaldagi kod holati:** Foundation barcha qarzlari yopilgan; SMM ancha oldinga ketgan; CRM/Inbox/Ads/Reports/Marketplace prototiplari mavjud.  
+**Joriy maqsad:** SMM MVP'ni production-ready holatga keltirish va real provider integratsiyalari (IG/FB/Eskiz/SMTP).
 
 ### Oxirgi Tekshiruv
 
-- Backend testlar: `202 passed`, coverage `83.55%`.
-- Frontend testlar: `8 passed`.
-- Frontend type-check/lint/build: o‘tgan.
-- 2026-05-03 da format/lint qarzlari yopila boshlandi.
-- Muhim tuzatish: billing grace enforcement API routerlarga ulanmoqda.
+- Backend testlar: `192 passed` (10 yangi Foundation-close test qo‘shildi).
+- Frontend type-check, lint, build: o‘tgan.
+- Foundation yakuniy yopilish bosqichida qo‘shilgan: audit GET, notification preferences, user sessions table + login/refresh/logout wiring, real Eskiz SMS adapter, real SMTP email adapter, Google + Telegram OAuth (env-driven mock fallback).
+- UI to‘liq yopilgan: Settings/users (invite/edit/delete + roles CRUD), Settings/audit (jadval), Settings/notifications (kanal × kategoriya matritsa + indamas vaqt), Settings/security (faol sessiyalar list/revoke), Login (Google + Telegram tugmalar mock-prompt rejimida).
 
 ---
 
@@ -70,18 +69,18 @@
 
 ## Boshlanmagan Yoki Tugallanmagan Muhim Qismlar
 
-### Foundation Qarzlari
+### Foundation Qarzlari (yopilgan)
 
 - [x] Forgot password/reset password backend va UI oqimi.
-- [ ] Google OAuth va Telegram OAuth auth oqimlari.
-- [ ] Real Eskiz SMS provider.
-- [ ] Real SMTP/SendGrid provider.
-- [ ] Users invite/update/delete.
-- [ ] Custom role create/update/delete.
-- [ ] Audit log UI.
-- [ ] Notification settings UI.
-- [ ] Active sessions UI va session revoke.
-- [ ] Grace period UX: no-subscription, trial, read-only, locked holatlarini yakuniy product qaroriga moslash.
+- [x] Google OAuth va Telegram OAuth auth oqimlari (env-driven mock fallback bilan).
+- [x] Real Eskiz SMS provider (token cache + 401 retry; SMS_MOCK=false bilan yoqiladi).
+- [x] Real SMTP provider (asyncio.to_thread bilan smtplib; EMAIL_MOCK=false bilan yoqiladi).
+- [x] Users invite/update/delete (backend + Settings/users invite modal + edit dialog + delete).
+- [x] Custom role create/update/delete (backend + permission matritsa UI; system rollar himoyalangan).
+- [x] Audit log UI (filtrlar bilan jadval + audit GET endpoint).
+- [x] Notification settings UI (channel × category matritsa + indamas vaqt + Telegram chat ID).
+- [x] Active sessions UI va session revoke (login refresh-token jti bilan persisting; logout va per-session DELETE).
+- [x] Grace period UX banner (active/banner/read_only/locked) layoutga ulangan.
 
 ### SMM MVP Qarzlari
 
@@ -132,8 +131,9 @@
 
 ## Keyingi Eng To‘g‘ri Ketma-ketlik
 
-1. Full backend/frontend verification.
-2. Foundation qarzlari ichidan auth reset + users invite + audit UI.
-3. SMM MVP qarzlari ichidan brand wizard + structured knowledge base.
-4. Real providerlar: Eskiz, SMTP, Meta OAuth.
-5. CRM/Inbox/Ads prototiplarini product scope bo‘yicha ajratish.
+1. SMM MVP qarzlari: brand 5-step wizard + structured knowledge base + AI Studio 3-variant.
+2. Real platform integratsiyalari: IG/FB OAuth bilan haqiqiy publishing, real platform metrics ingestion.
+3. CRM/Inbox prototiplarini product scope bo‘yicha ajratish va automation builder.
+4. Production deploy: UzCloud + Cloudflare + Sentry + smoke/load test.
+
+> Bosqich 0 (Foundation) endi 100% yopildi. Keyingi sessiyalar Bosqich 1 ga to‘liq fokus.
