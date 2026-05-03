@@ -33,6 +33,11 @@ async def enforce_grace(request: Request, db: AsyncSession = Depends(get_tenant_
         return
 
     sub = await billing_service.current_subscription(db)
+    if sub is None:
+        # Newly registered tenants can finish onboarding before choosing a plan.
+        # Billing/status still reports "locked" so the UI can steer them to billing.
+        return
+
     state = billing_service.evaluate_grace(sub)
 
     if state == GraceState.LOCKED:
