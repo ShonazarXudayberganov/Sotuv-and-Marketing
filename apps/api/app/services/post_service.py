@@ -251,6 +251,19 @@ async def publish_now(db: AsyncSession, post: Post) -> Post:
         post.last_error = None
 
     await db.flush()
+    if post.status == "published":
+        from app.services import webhook_service
+
+        await webhook_service.fire_event(
+            db,
+            event="post.published",
+            payload={
+                "id": str(post.id),
+                "title": post.title,
+                "brand_id": str(post.brand_id),
+                "platforms": [p.provider for p in pubs],
+            },
+        )
     return post
 
 

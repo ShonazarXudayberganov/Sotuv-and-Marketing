@@ -254,11 +254,27 @@ async def list_deliveries(
     return list((await db.execute(stmt)).scalars())
 
 
+async def fire_event(
+    db: AsyncSession, *, event: str, payload: dict[str, Any]
+) -> int:
+    """Best-effort wrapper around deliver_outbound() — never raises.
+
+    Use this from business-logic services so a webhook failure can't
+    break the caller's transaction.
+    """
+    try:
+        return await deliver_outbound(db, event=event, payload=payload)
+    except Exception as exc:
+        logger.warning("fire_event(%s) failed: %s", event, exc)
+        return 0
+
+
 __all__ = [
     "SUPPORTED_EVENTS",
     "create_endpoint",
     "delete_endpoint",
     "deliver_outbound",
+    "fire_event",
     "generate_secret",
     "get_endpoint",
     "list_deliveries",

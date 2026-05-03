@@ -170,6 +170,20 @@ async def create_contact(
     contact.ai_score_updated_at = datetime.now(UTC)
     db.add(contact)
     await db.flush()
+    from app.services import webhook_service
+
+    await webhook_service.fire_event(
+        db,
+        event="contact.created",
+        payload={
+            "id": str(contact.id),
+            "full_name": contact.full_name,
+            "phone": contact.phone,
+            "email": contact.email,
+            "status": contact.status,
+            "ai_score": contact.ai_score,
+        },
+    )
     return contact
 
 

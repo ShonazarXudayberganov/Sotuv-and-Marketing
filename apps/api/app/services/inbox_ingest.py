@@ -66,6 +66,19 @@ async def ingest_inbound(
         metadata=metadata,
     )
 
+    from app.services import webhook_service
+
+    await webhook_service.fire_event(
+        db,
+        event="inbox.message_in",
+        payload={
+            "conversation_id": str(conversation.id),
+            "channel": conversation.channel,
+            "external_id": conversation.external_id,
+            "body": body[:500],
+        },
+    )
+
     auto_msg: Message | None = None
     if auto_reply:
         auto_msg = await _maybe_auto_reply(db, conversation=conversation, incoming=msg)

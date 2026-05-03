@@ -167,6 +167,19 @@ async def create_deal(
             body=f"{deal.title} — {stage.name}",
             user_id=user_id,
         )
+    from app.services import webhook_service
+
+    await webhook_service.fire_event(
+        db,
+        event="deal.created",
+        payload={
+            "id": str(deal.id),
+            "title": deal.title,
+            "amount": deal.amount,
+            "currency": deal.currency,
+            "contact_id": str(contact_id) if contact_id else None,
+        },
+    )
     return deal
 
 
@@ -231,6 +244,20 @@ async def update_deal(
             title="Bitim bosqichi o'zgardi",
             body=f"{deal.title} → {stage.name if stage else '—'}",
             user_id=user_id,
+        )
+    if stage_changed and deal.status in {"won", "lost"}:
+        from app.services import webhook_service
+
+        await webhook_service.fire_event(
+            db,
+            event=f"deal.{deal.status}",
+            payload={
+                "id": str(deal.id),
+                "title": deal.title,
+                "amount": deal.amount,
+                "currency": deal.currency,
+                "contact_id": str(deal.contact_id) if deal.contact_id else None,
+            },
         )
     return deal
 

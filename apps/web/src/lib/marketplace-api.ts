@@ -66,4 +66,15 @@ export const marketplaceApi = {
     );
     return data;
   },
+  async sync(provider: string): Promise<{
+    provider: string;
+    direction: string;
+    pulled: number;
+    pushed: number;
+    errors: string[];
+    mocked: boolean;
+  }> {
+    const { data } = await apiClient.post(`/marketplace/sync/${provider}`);
+    return data;
+  },
 };

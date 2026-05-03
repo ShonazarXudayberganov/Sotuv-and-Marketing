@@ -14,7 +14,7 @@ from app.schemas.marketplace import (
     WebhookEndpointOut,
     WebhookEndpointWithSecret,
 )
-from app.services import audit_service, webhook_service
+from app.services import audit_service, sync_service, webhook_service
 from app.services.integration_service import PROVIDERS
 
 router = APIRouter()
@@ -189,6 +189,34 @@ async def deliveries(
         raise HTTPException(status_code=400, detail="limit must be 1..200")
     rows = await webhook_service.list_deliveries(db, endpoint_id=eid, limit=limit)
     return [WebhookDeliveryOut.model_validate(r) for r in rows]
+
+
+@router.post("/sync/{provider}")
+async def run_sync(
+    provider: str,
+    request: Request,
+    current: CurrentUser = Depends(require_permission("integrations.write")),
+    db: AsyncSession = Depends(get_tenant_session),
+) -> dict[str, Any]:
+    try:
+        result = await sync_service.run_sync(db, provider=provider, user_id=current.id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    await audit_service.record(
+        db,
+        user_id=current.id,
+        action="marketplace.sync",
+        resource_type="integration",
+        resource_id=provider,
+        metadata={
+            "pulled": result.pulled,
+            "pushed": result.pushed,
+            "mocked": result.mocked,
+        },
+        request=request,
+    )
+    await db.commit()
+    return result.to_dict()
 
 
 @router.post("/webhooks/in/{eid}", status_code=200)

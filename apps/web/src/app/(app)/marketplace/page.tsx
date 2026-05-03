@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
@@ -11,6 +11,7 @@ import {
   Megaphone,
   MessageSquare,
   Plug,
+  RefreshCw,
   Send,
   Shield,
   Sparkles,
@@ -19,15 +20,26 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
+import { Can } from "@/components/shared/can";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { extractApiError } from "@/lib/api-client";
 import { marketplaceApi } from "@/lib/marketplace-api";
 import type { MarketplaceProvider } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+const SYNCABLE = new Set([
+  "amocrm",
+  "bitrix24",
+  "onec",
+  "google_sheets",
+  "zapier",
+]);
 
 const CATEGORY_LABELS: Record<string, string> = {
   ai: "AI",
@@ -149,6 +161,24 @@ export default function MarketplacePage() {
 
 function ProviderCard({ provider }: { provider: MarketplaceProvider }) {
   const Icon = CATEGORY_ICONS[provider.category] ?? Plug;
+  const canSync = SYNCABLE.has(provider.provider);
+
+  const sync = useMutation({
+    mutationFn: () => marketplaceApi.sync(provider.provider),
+    onSuccess: (res) => {
+      const summary =
+        res.errors.length > 0
+          ? res.errors.join("; ")
+          : `Pulled ${res.pulled} · Pushed ${res.pushed}${res.mocked ? " (MOCK)" : ""}`;
+      if (res.errors.length > 0) {
+        toast.error(summary);
+      } else {
+        toast.success(summary);
+      }
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
   return (
     <Card className="flex h-full flex-col">
       <CardHeader>
@@ -192,11 +222,25 @@ function ProviderCard({ provider }: { provider: MarketplaceProvider }) {
           ) : (
             <span />
           )}
-          <Button asChild variant="secondary" size="sm">
-            <Link href="/settings/integrations">
-              Ulash <ArrowUpRight />
-            </Link>
-          </Button>
+          <div className="flex items-center gap-1.5">
+            {canSync ? (
+              <Can permission="integrations.write">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => sync.mutate()}
+                  loading={sync.isPending}
+                >
+                  <RefreshCw /> Sync
+                </Button>
+              </Can>
+            ) : null}
+            <Button asChild variant="secondary" size="sm">
+              <Link href="/settings/integrations">
+                Ulash <ArrowUpRight />
+              </Link>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
