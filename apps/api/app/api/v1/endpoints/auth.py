@@ -4,10 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_db
 from app.schemas.auth import (
     AuthBundle,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     LoginRequest,
     RefreshRequest,
     RegisterRequest,
     RegisterResponse,
+    ResetPasswordRequest,
     VerifyPhoneRequest,
 )
 from app.services import auth_service
@@ -42,6 +45,31 @@ async def login(
     return await auth_service.login(
         session, payload.email_or_phone, payload.password.get_secret_value()
     )
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    session: AsyncSession = Depends(get_db),
+) -> ForgotPasswordResponse:
+    verification_id, masked = await auth_service.start_password_reset(
+        session, payload.email_or_phone
+    )
+    return ForgotPasswordResponse(verification_id=verification_id, phone_masked=masked)
+
+
+@router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+async def reset_password(
+    payload: ResetPasswordRequest,
+    session: AsyncSession = Depends(get_db),
+) -> None:
+    await auth_service.reset_password(
+        session,
+        payload.verification_id,
+        payload.code,
+        payload.new_password.get_secret_value(),
+    )
+    return None
 
 
 @router.post("/refresh")

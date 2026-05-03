@@ -135,9 +135,7 @@ async def test_webhook(
         raise HTTPException(status_code=404, detail="Webhook not found")
     if ep.direction != "out":
         raise HTTPException(status_code=400, detail="Only outbound webhooks can be tested")
-    count = await webhook_service.deliver_outbound(
-        db, event=payload.event, payload=payload.payload
-    )
+    count = await webhook_service.deliver_outbound(db, event=payload.event, payload=payload.payload)
     if count == 0:
         raise HTTPException(status_code=400, detail="No matching active outbound endpoint")
     await audit_service.record(

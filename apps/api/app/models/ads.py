@@ -27,9 +27,7 @@ class AdAccount(Base, UUIDPKMixin, TimestampMixin):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), default="UZS", nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)
-    brand_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("brands.id", ondelete="SET NULL")
-    )
+    brand_id: Mapped[UUID | None] = mapped_column(ForeignKey("brands.id", ondelete="SET NULL"))
     is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     metadata_: Mapped[dict[str, object] | None] = mapped_column("metadata", JSON)
     last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

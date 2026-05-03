@@ -153,6 +153,96 @@ async def login(session: AsyncSession, email_or_phone: str, password: str) -> Au
     return _issue_auth_bundle(user, tenant)
 
 
+def _normalize_login_identifier(value: str) -> str:
+    value = value.strip()
+    if "@" in value:
+        return value.lower()
+    cleaned = "".join(c for c in value if c.isdigit() or c == "+")
+    if cleaned and not cleaned.startswith("+"):
+        cleaned = "+" + cleaned
+    return cleaned or value
+
+
+async def start_password_reset(session: AsyncSession, email_or_phone: str) -> tuple[UUID, str]:
+    identifier = _normalize_login_identifier(email_or_phone)
+    result = await session.execute(
+        select(User).where(or_(User.email == identifier, User.phone == identifier))
+    )
+    user = result.scalars().first()
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    code = generate_verification_code()
+
+    import json
+
+    record = VerificationCode(
+        phone=user.phone,
+        code_hash=hash_password(code),
+        purpose="password_reset",
+        payload=json.dumps({"user_id": str(user.id)}),
+    )
+    session.add(record)
+    await session.commit()
+    await session.refresh(record)
+
+    sms = get_sms_provider()
+    await sms.send(user.phone, f"NEXUS AI parol tiklash kodi: {code}")
+
+    return record.id, _mask_phone(user.phone)
+
+
+async def reset_password(
+    session: AsyncSession,
+    verification_id: UUID,
+    code: str,
+    new_password: str,
+) -> None:
+    record = await session.get(VerificationCode, verification_id)
+    if record is None or record.consumed or record.purpose != "password_reset":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset request",
+        )
+
+    age = datetime.now(UTC) - record.created_at
+    if age > timedelta(minutes=VERIFICATION_TTL_MINUTES):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Password reset code expired"
+        )
+
+    if record.attempts >= MAX_VERIFICATION_ATTEMPTS:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many attempts — request a new code",
+        )
+
+    if not verify_password(code, record.code_hash):
+        record.attempts += 1
+        await session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid password reset code"
+        )
+
+    import json
+
+    data = json.loads(record.payload or "{}")
+    user_id = data.get("user_id")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid password reset payload",
+        )
+
+    user = await session.get(User, UUID(user_id))
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    user.password_hash = hash_password(new_password)
+    record.consumed = True
+    await session.commit()
+
+
 async def refresh(session: AsyncSession, refresh_token: str) -> str:
     try:
         payload = decode_token(refresh_token)

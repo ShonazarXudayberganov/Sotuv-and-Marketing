@@ -37,12 +37,7 @@ import { Input } from "@/components/ui/input";
 import { extractApiError } from "@/lib/api-client";
 import { brandsApi, integrationsApi } from "@/lib/smm-api";
 import { socialApi } from "@/lib/social-api";
-import type {
-  Brand,
-  MetaPageOption,
-  SocialAccount,
-  YouTubeStats,
-} from "@/lib/types";
+import type { Brand, MetaPageOption, SocialAccount, YouTubeStats } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type LinkMode = null | "telegram" | "meta" | "youtube";
@@ -94,8 +89,11 @@ export default function SocialAccountsPage() {
   });
 
   const linkMeta = useMutation({
-    mutationFn: (args: { brandId: string; pageId: string; target: "facebook" | "instagram" }) =>
-      socialApi.metaLink(args.brandId, args.pageId, args.target),
+    mutationFn: (args: {
+      brandId: string;
+      pageId: string;
+      target: "facebook" | "instagram";
+    }) => socialApi.metaLink(args.brandId, args.pageId, args.target),
     onSuccess: () => {
       toast.success("Meta akkaunt ulandi");
       qc.invalidateQueries({ queryKey: ["social"] });
@@ -246,19 +244,14 @@ export default function SocialAccountsPage() {
       ) : null}
 
       {statsAccount ? (
-        <YouTubeStatsCard
-          account={statsAccount}
-          onClose={() => setStatsAccount(null)}
-        />
+        <YouTubeStatsCard account={statsAccount} onClose={() => setStatsAccount(null)} />
       ) : null}
 
       {testing ? (
         <TestSendForm
           account={testing}
           onCancel={() => setTesting(null)}
-          onSubmit={(text, imageUrl) =>
-            sendTest.mutate({ account: testing, text, imageUrl })
-          }
+          onSubmit={(text, imageUrl) => sendTest.mutate({ account: testing, text, imageUrl })}
           loading={sendTest.isPending}
         />
       ) : null}
@@ -339,9 +332,7 @@ export default function SocialAccountsPage() {
                   account={acc}
                   brand={brands.find((b) => b.id === acc.brand_id)}
                   onTest={() => setTesting(acc)}
-                  onStats={
-                    acc.provider === "youtube" ? () => setStatsAccount(acc) : undefined
-                  }
+                  onStats={acc.provider === "youtube" ? () => setStatsAccount(acc) : undefined}
                   onDelete={() => remove.mutate(acc.id)}
                 />
               ))}
@@ -366,8 +357,7 @@ function ProviderStatus({
   subtitle: string;
   mocked?: boolean;
 }) {
-  const Icon =
-    provider === "telegram" ? Send : provider === "youtube" ? Youtube : Facebook;
+  const Icon = provider === "telegram" ? Send : provider === "youtube" ? Youtube : Facebook;
   if (!connected) {
     return (
       <div className="flex items-start gap-3 rounded-lg border border-[var(--warning)] bg-[var(--warning-soft)] p-4">
@@ -506,7 +496,11 @@ function TelegramLinkForm({
           required
           hint="Username (@akme_news) yoki numeric chat ID"
         >
-          <Input value={chat} onChange={(e) => setChat(e.target.value)} placeholder="@akme_news" />
+          <Input
+            value={chat}
+            onChange={(e) => setChat(e.target.value)}
+            placeholder="@akme_news"
+          />
         </FormField>
       </div>
       <FormActions
@@ -669,8 +663,8 @@ function YouTubeLinkForm({
         </FormField>
       </div>
       <div className="rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] p-3 text-[12px] text-[var(--fg-muted)]">
-        Sprint 1.5 da YouTube faqat o&apos;qish (statistika va video ro&apos;yxati) uchun. Video
-        upload keyingi bosqichda (OAuth refresh token + resumable upload).
+        Sprint 1.5 da YouTube faqat o&apos;qish (statistika va video ro&apos;yxati) uchun.
+        Video upload keyingi bosqichda (OAuth refresh token + resumable upload).
       </div>
       <FormActions
         onCancel={onCancel}
@@ -779,7 +773,9 @@ function StatTile({ label, value }: { label: string; value: string }) {
       <p className="text-[11px] font-medium tracking-wider text-[var(--fg-muted)] uppercase">
         {label}
       </p>
-      <p className="mt-1.5 text-[22px] font-semibold tracking-tight text-[var(--fg)]">{value}</p>
+      <p className="mt-1.5 text-[22px] font-semibold tracking-tight text-[var(--fg)]">
+        {value}
+      </p>
     </div>
   );
 }
@@ -837,7 +833,11 @@ function TestSendForm({
       title={`Test xabar — ${account.external_name ?? account.external_handle ?? "akkaunt"}`}
       onCancel={onCancel}
     >
-      <FormField label="Matn" required hint="HTML/markdown qo'llab-quvvatlanadi (provayder cheklovlari bo'yicha)">
+      <FormField
+        label="Matn"
+        required
+        hint="HTML/markdown qo'llab-quvvatlanadi (provayder cheklovlari bo'yicha)"
+      >
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}

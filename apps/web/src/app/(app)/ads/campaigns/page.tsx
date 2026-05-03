@@ -42,9 +42,7 @@ const NETWORK_FILTERS = ["all", "meta", "google"] as const;
 export default function CampaignsPage() {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
-  const [networkFilter, setNetworkFilter] = useState<(typeof NETWORK_FILTERS)[number]>(
-    "all",
-  );
+  const [networkFilter, setNetworkFilter] = useState<(typeof NETWORK_FILTERS)[number]>("all");
   const [creating, setCreating] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -133,7 +131,7 @@ export default function CampaignsPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative max-w-md flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-[var(--fg-subtle)]" />
           <Input
             value={query}
@@ -209,12 +207,8 @@ export default function CampaignsPage() {
                     <CampaignRow
                       key={c.id}
                       campaign={c}
-                      onPause={() =>
-                        updateStatus.mutate({ id: c.id, status: "paused" })
-                      }
-                      onActivate={() =>
-                        updateStatus.mutate({ id: c.id, status: "active" })
-                      }
+                      onPause={() => updateStatus.mutate({ id: c.id, status: "paused" })}
+                      onActivate={() => updateStatus.mutate({ id: c.id, status: "active" })}
                       onDelete={() => remove.mutate(c.id)}
                     />
                   ))}
@@ -281,21 +275,15 @@ function CampaignRow({
       <td className="py-2 pr-3">
         <StatusBadge status={campaign.status} />
       </td>
-      <td className="py-2 pr-3 capitalize text-[var(--fg-muted)]">
-        {campaign.objective}
-      </td>
+      <td className="py-2 pr-3 text-[var(--fg-muted)] capitalize">{campaign.objective}</td>
       <td className="py-2 pr-3 font-medium">
         {fmt(campaign.daily_budget)} {campaign.currency}
       </td>
-      <td className="py-2 pr-3 text-[var(--fg-muted)]">
-        {m ? fmt(m.impressions) : "—"}
-      </td>
+      <td className="py-2 pr-3 text-[var(--fg-muted)]">{m ? fmt(m.impressions) : "—"}</td>
       <td className="py-2 pr-3 text-[var(--fg-muted)]">
         {m ? `${(m.ctr / 100).toFixed(2)}%` : "—"}
       </td>
-      <td className="py-2 pr-3 text-[var(--fg-muted)]">
-        {m ? fmt(m.spend) : "—"}
-      </td>
+      <td className="py-2 pr-3 text-[var(--fg-muted)]">{m ? fmt(m.spend) : "—"}</td>
       <td className="py-2 pr-3">
         <Can permission="ads.write">
           <div className="flex items-center justify-end gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
@@ -418,9 +406,7 @@ function DraftForm({
             <FormField label="Maqsad" required>
               <select
                 value={objective}
-                onChange={(e) =>
-                  setObjective(e.target.value as typeof objective)
-                }
+                onChange={(e) => setObjective(e.target.value as typeof objective)}
                 className="flex h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--fg)]"
               >
                 <option value="awareness">Awareness — tanitish</option>
@@ -482,8 +468,8 @@ function DraftForm({
 
           <div className="rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] p-3 text-[12px] text-[var(--fg-muted)]">
             <Camera className="mr-1.5 inline h-3.5 w-3.5" />
-            Sprint 3.1 — draft yaratish va lokal kuzatuv. Real Meta/Google
-            API&apos;ga launch bo&apos;lish keyingi sprintda (inson tasdig&apos;i bilan).
+            Sprint 3.1 — draft yaratish va lokal kuzatuv. Real Meta/Google API&apos;ga launch
+            bo&apos;lish keyingi sprintda (inson tasdig&apos;i bilan).
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-2">

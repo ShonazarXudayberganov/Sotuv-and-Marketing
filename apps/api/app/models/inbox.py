@@ -36,9 +36,7 @@ class Conversation(Base, UUIDPKMixin, TimestampMixin):
     )  # open, snoozed, closed
     assignee_id: Mapped[UUID | None] = mapped_column()
     unread_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    last_message_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), index=True
-    )
+    last_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     last_inbound_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_outbound_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     metadata_: Mapped[dict[str, object] | None] = mapped_column("metadata", JSON)
@@ -74,9 +72,7 @@ class AutoReplyConfig(Base, UUIDPKMixin, TimestampMixin):
     __tablename__ = "auto_reply_configs"
 
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    confidence_threshold: Mapped[int] = mapped_column(
-        Integer, default=90, nullable=False
-    )
+    confidence_threshold: Mapped[int] = mapped_column(Integer, default=90, nullable=False)
     quiet_hours_start: Mapped[int | None] = mapped_column(Integer)  # 0..23 UTC
     quiet_hours_end: Mapped[int | None] = mapped_column(Integer)
     default_brand_id: Mapped[UUID | None] = mapped_column(

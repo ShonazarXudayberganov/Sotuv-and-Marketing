@@ -218,7 +218,8 @@ export default function KnowledgeBasePage() {
             <Search className="h-4 w-4 text-[var(--primary)]" /> RAG qidiruv
           </CardTitle>
           <p className="text-[12px] text-[var(--fg-muted)]">
-            AI semantik qidiruv: bo&apos;laklar mazmun bo&apos;yicha topiladi, kalit so&apos;z bo&apos;yicha emas.
+            AI semantik qidiruv: bo&apos;laklar mazmun bo&apos;yicha topiladi, kalit so&apos;z
+            bo&apos;yicha emas.
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -623,7 +624,10 @@ function FileForm({
             </Button>
             <Button
               onClick={() =>
-                brandId && title.trim() && file && onSubmit({ brandId, title: title.trim(), file })
+                brandId &&
+                title.trim() &&
+                file &&
+                onSubmit({ brandId, title: title.trim(), file })
               }
               loading={loading}
               disabled={!brandId || !title.trim() || !file}

@@ -156,9 +156,7 @@ async def get_campaign(
         if latest is not None
         else None
     )
-    return CampaignWithMetrics(
-        **CampaignOut.model_validate(rec).model_dump(), metrics=metrics
-    )
+    return CampaignWithMetrics(**CampaignOut.model_validate(rec).model_dump(), metrics=metrics)
 
 
 @router.post("/campaigns", response_model=CampaignOut, status_code=201)

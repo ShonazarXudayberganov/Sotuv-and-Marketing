@@ -73,9 +73,7 @@ def _current_period() -> str:
 
 
 async def _get_or_create_usage(db: AsyncSession, period: str) -> AiUsage:
-    row = (
-        (await db.execute(select(AiUsage).where(AiUsage.period == period))).scalars().first()
-    )
+    row = (await db.execute(select(AiUsage).where(AiUsage.period == period))).scalars().first()
     if row is not None:
         return row
     row = AiUsage(period=period, tokens_used=0, tokens_cap=0)
@@ -105,9 +103,7 @@ async def _record_usage(db: AsyncSession, tokens: int) -> None:
 # ─────────── Provider implementations ───────────
 
 
-async def _call_anthropic(
-    api_key: str, system: str, user: str, *, max_tokens: int
-) -> AIResponse:
+async def _call_anthropic(api_key: str, system: str, user: str, *, max_tokens: int) -> AIResponse:
     payload: dict[str, Any] = {
         "model": ANTHROPIC_MODEL,
         "max_tokens": max_tokens,

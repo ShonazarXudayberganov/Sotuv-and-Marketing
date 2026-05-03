@@ -114,8 +114,7 @@ async def _latest_per_publication(
         select(PostMetrics, PostPublication, Post)
         .join(
             sub,
-            (sub.c.pub_id == PostMetrics.publication_id)
-            & (sub.c.latest == PostMetrics.sampled_at),
+            (sub.c.pub_id == PostMetrics.publication_id) & (sub.c.latest == PostMetrics.sampled_at),
         )
         .join(PostPublication, PostPublication.id == PostMetrics.publication_id)
         .join(Post, Post.id == PostPublication.post_id)
@@ -126,9 +125,7 @@ async def _latest_per_publication(
     return [LatestPerPublication(metrics=m, publication=p, post=post) for m, p, post in rows]
 
 
-async def overview(
-    db: AsyncSession, *, brand_id: UUID | None = None
-) -> dict[str, Any]:
+async def overview(db: AsyncSession, *, brand_id: UUID | None = None) -> dict[str, Any]:
     """KPI snapshot: totals + per-platform breakdown + average engagement."""
     items = await _latest_per_publication(db, brand_id=brand_id)
     if not items:
@@ -232,9 +229,7 @@ async def top_posts(
     return out
 
 
-async def optimal_times(
-    db: AsyncSession, *, brand_id: UUID | None = None
-) -> dict[str, Any]:
+async def optimal_times(db: AsyncSession, *, brand_id: UUID | None = None) -> dict[str, Any]:
     """Compute average engagement per (weekday, hour) cell.
 
     weekday: 0..6 (Mon..Sun, UTC). hour: 0..23 (UTC).
@@ -340,10 +335,7 @@ async def insights(
         "TOP TIMES:\n"
         f"{_format_optimal_for_prompt(optimal['best'])}\n\n"
         "TOP POSTS:\n"
-        + "\n".join(
-            f"- [{p['provider']}] {p['title']} — engagement {p['engagement']}"
-            for p in top
-        )
+        + "\n".join(f"- [{p['provider']}] {p['title']} — engagement {p['engagement']}" for p in top)
     )
 
     try:
@@ -405,9 +397,7 @@ def _fallback_insights(
         )
     by_platform = snapshot.get("by_platform") or {}
     if by_platform:
-        leader = max(
-            by_platform.items(), key=lambda kv: kv[1]["likes"] + kv[1]["comments"]
-        )
+        leader = max(by_platform.items(), key=lambda kv: kv[1]["likes"] + kv[1]["comments"])
         recs.append(
             f"{leader[0]} platformasi yetakchi — bu yerga ko'proq kontent va "
             f"A/B testlar yo'naltiring."

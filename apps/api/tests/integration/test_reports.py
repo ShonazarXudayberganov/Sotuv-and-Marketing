@@ -72,9 +72,7 @@ async def test_overview_returns_all_module_blocks(
     assert body["crm"]["contacts_total"] == 0
 
 
-async def test_overview_reflects_seeded_data(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_overview_reflects_seeded_data(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await _seed(client, headers)
@@ -84,9 +82,7 @@ async def test_overview_reflects_seeded_data(
     assert body["ads"]["campaigns"] > 0
 
 
-async def test_overview_rejects_bad_days(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_overview_rejects_bad_days(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     resp = await client.get("/api/v1/reports/overview?days=999", headers=headers)
@@ -122,9 +118,7 @@ async def test_funnel_buckets_match_deal_probabilities(
     assert body["totals"]["deals"] == 1
 
 
-async def test_cohorts_groups_by_month(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_cohorts_groups_by_month(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     for i in range(3):
@@ -144,18 +138,14 @@ async def test_cohorts_groups_by_month(
     assert total_customers == 1
 
 
-async def test_cohorts_rejects_bad_months(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_cohorts_rejects_bad_months(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     bad = await client.get("/api/v1/reports/cohorts?months=99", headers=headers)
     assert bad.status_code == 400
 
 
-async def test_insights_returns_recommendations(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_insights_returns_recommendations(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await _seed(client, headers)
@@ -168,9 +158,7 @@ async def test_insights_returns_recommendations(
     assert "funnel" in body
 
 
-async def test_insights_empty_state(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_insights_empty_state(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     body = (await client.get("/api/v1/reports/insights", headers=headers)).json()
@@ -178,9 +166,7 @@ async def test_insights_empty_state(
     assert "ma'lumot" in body["summary"].lower() or body["recommendations"] == []
 
 
-async def test_saved_report_crud(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_saved_report_crud(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
 
@@ -221,9 +207,7 @@ async def test_saved_report_crud(
     assert rm2.status_code == 404
 
 
-async def test_export_contacts_csv(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_export_contacts_csv(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await client.post(
@@ -231,9 +215,7 @@ async def test_export_contacts_csv(
         headers=headers,
         json={"full_name": "CSV User", "phone": "+998900000001", "status": "lead"},
     )
-    resp = await client.get(
-        "/api/v1/reports/export/contacts.csv", headers=headers
-    )
+    resp = await client.get("/api/v1/reports/export/contacts.csv", headers=headers)
     assert resp.status_code == 200
     assert "text/csv" in resp.headers["content-type"]
     body = resp.text
@@ -241,12 +223,8 @@ async def test_export_contacts_csv(
     assert "CSV User" in body
 
 
-async def test_export_unknown_kind_returns_400(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_export_unknown_kind_returns_400(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
-    resp = await client.get(
-        "/api/v1/reports/export/unicorns.csv", headers=headers
-    )
+    resp = await client.get("/api/v1/reports/export/unicorns.csv", headers=headers)
     assert resp.status_code == 400

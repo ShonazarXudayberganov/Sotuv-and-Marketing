@@ -11,7 +11,7 @@ pytestmark = pytest.mark.asyncio
 
 
 def _extract_code_from_sms(phone: str) -> str:
-    for sent_phone, message in MockSMSProvider.sent:
+    for sent_phone, message in reversed(MockSMSProvider.sent):
         if sent_phone == phone:
             match = re.search(r"\b(\d{4,8})\b", message)
             if match:
@@ -143,6 +143,52 @@ async def test_login_rejects_wrong_password(client: AsyncClient, sample_register
         },
     )
     assert resp.status_code == 401
+
+
+async def test_forgot_password_resets_login_password(
+    client: AsyncClient, sample_register_payload: dict
+):
+    reg = await client.post("/api/v1/auth/register", json=sample_register_payload)
+    code = _extract_code_from_sms(sample_register_payload["phone"])
+    await client.post(
+        "/api/v1/auth/verify-phone",
+        json={"verification_id": reg.json()["verification_id"], "code": code},
+    )
+
+    forgot = await client.post(
+        "/api/v1/auth/forgot-password",
+        json={"email_or_phone": sample_register_payload["email"]},
+    )
+    assert forgot.status_code == 200, forgot.text
+    reset_code = _extract_code_from_sms(sample_register_payload["phone"])
+
+    reset = await client.post(
+        "/api/v1/auth/reset-password",
+        json={
+            "verification_id": forgot.json()["verification_id"],
+            "code": reset_code,
+            "new_password": "NewPassword123",
+        },
+    )
+    assert reset.status_code == 204, reset.text
+
+    old_login = await client.post(
+        "/api/v1/auth/login",
+        json={
+            "email_or_phone": sample_register_payload["email"],
+            "password": sample_register_payload["password"],
+        },
+    )
+    assert old_login.status_code == 401
+
+    new_login = await client.post(
+        "/api/v1/auth/login",
+        json={
+            "email_or_phone": sample_register_payload["email"],
+            "password": "NewPassword123",
+        },
+    )
+    assert new_login.status_code == 200
 
 
 async def test_refresh_returns_new_access_token(client: AsyncClient, sample_register_payload: dict):

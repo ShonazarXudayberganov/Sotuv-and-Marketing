@@ -147,9 +147,7 @@ async def create_post(
         metadata={
             "brand_id": str(payload.brand_id),
             "platforms": len(payload.social_account_ids),
-            "scheduled_at": payload.scheduled_at.isoformat()
-            if payload.scheduled_at
-            else None,
+            "scheduled_at": payload.scheduled_at.isoformat() if payload.scheduled_at else None,
         },
         request=request,
     )
@@ -180,9 +178,7 @@ async def reschedule_post(
         resource_type="post",
         resource_id=str(post_id),
         metadata={
-            "scheduled_at": payload.scheduled_at.isoformat()
-            if payload.scheduled_at
-            else None,
+            "scheduled_at": payload.scheduled_at.isoformat() if payload.scheduled_at else None,
         },
         request=request,
     )

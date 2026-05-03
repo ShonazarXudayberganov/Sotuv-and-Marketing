@@ -39,9 +39,7 @@ def _recency_bonus(occurred_at: datetime, now: datetime) -> int:
     return 0
 
 
-def compute_score(
-    contact: Contact, activities: Sequence[ContactActivity]
-) -> tuple[int, str]:
+def compute_score(contact: Contact, activities: Sequence[ContactActivity]) -> tuple[int, str]:
     """Returns (score 0..100, human-readable reason).
 
     Pure function — easy to test, no DB or AI calls. The AI-driven version
@@ -294,9 +292,7 @@ async def add_activity(
 # ─────────── AI-flavoured re-score ───────────
 
 
-async def score_with_ai(
-    db: AsyncSession, contact_id: UUID
-) -> tuple[int, str] | None:
+async def score_with_ai(db: AsyncSession, contact_id: UUID) -> tuple[int, str] | None:
     """Optional AI rescoring: feeds activity summary to ai_service.
 
     Falls back to the deterministic score on any failure / no creds.

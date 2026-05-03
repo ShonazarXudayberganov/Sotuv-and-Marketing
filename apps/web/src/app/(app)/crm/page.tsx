@@ -68,12 +68,7 @@ export default function CRMDashboardPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <SummaryTile
-          icon={Users}
-          label="Mijozlar"
-          value={stats?.total ?? 0}
-          hint="Hamma"
-        />
+        <SummaryTile icon={Users} label="Mijozlar" value={stats?.total ?? 0} hint="Hamma" />
         <SummaryTile
           icon={Flame}
           label="Issiq lead'lar"
@@ -109,9 +104,7 @@ export default function CRMDashboardPage() {
           icon={DollarSign}
           label="Yopildi"
           value={
-            dealStats?.won_amount
-              ? `${(dealStats.won_amount / 1_000_000).toFixed(1)}M`
-              : 0
+            dealStats?.won_amount ? `${(dealStats.won_amount / 1_000_000).toFixed(1)}M` : 0
           }
           hint={`Win rate ${((dealStats?.win_rate ?? 0) * 100).toFixed(0)}%`}
           tone="success"
@@ -217,9 +210,7 @@ function SummaryTile({
         </p>
         <p className="mt-1.5 truncate text-[11px] text-[var(--fg-subtle)]">{hint}</p>
       </div>
-      <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tint}`}
-      >
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tint}`}>
         <Icon className="h-4 w-4" />
       </div>
     </div>
@@ -244,15 +235,7 @@ function ScoreDot({ score }: { score: number }) {
   );
 }
 
-function Phase({
-  label,
-  sprint,
-  done,
-}: {
-  label: string;
-  sprint: string;
-  done?: boolean;
-}) {
+function Phase({ label, sprint, done }: { label: string; sprint: string; done?: boolean }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-2.5">
       <div

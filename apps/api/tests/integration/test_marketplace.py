@@ -35,15 +35,15 @@ async def _bootstrap(client: AsyncClient, payload: dict) -> dict:
     return verify.json()
 
 
-async def test_catalog_lists_all_providers(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_catalog_lists_all_providers(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     catalog = (await client.get("/api/v1/marketplace/catalog", headers=headers)).json()
     keys = {p["provider"] for p in catalog}
     # Sprint 1 providers + new Sprint 4.1 ones
-    assert {"anthropic", "telegram_bot", "amocrm", "bitrix24", "onec", "google_sheets"}.issubset(keys)
+    assert {"anthropic", "telegram_bot", "amocrm", "bitrix24", "onec", "google_sheets"}.issubset(
+        keys
+    )
     crm_providers = [p for p in catalog if p["category"] == "crm"]
     assert len(crm_providers) >= 2  # amocrm + bitrix24
 
@@ -69,15 +69,11 @@ async def test_create_outbound_webhook_returns_secret_once(
     assert body["secret"]  # returned ONCE on creation
     assert body["events"] == ["deal.won", "post.published"]
     # Subsequent listing should not include secret
-    listing = (
-        await client.get("/api/v1/marketplace/webhooks", headers=headers)
-    ).json()
+    listing = (await client.get("/api/v1/marketplace/webhooks", headers=headers)).json()
     assert "secret" not in listing[0]
 
 
-async def test_outbound_webhook_requires_url(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_outbound_webhook_requires_url(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     resp = await client.post(
@@ -88,9 +84,7 @@ async def test_outbound_webhook_requires_url(
     assert resp.status_code == 400
 
 
-async def test_unknown_event_rejected(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_unknown_event_rejected(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     resp = await client.post(
@@ -106,9 +100,7 @@ async def test_unknown_event_rejected(
     assert resp.status_code == 400
 
 
-async def test_test_outbound_records_delivery(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_test_outbound_records_delivery(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     create = await client.post(
@@ -134,9 +126,7 @@ async def test_test_outbound_records_delivery(
     assert body["status_code"] == 200
 
     deliveries = (
-        await client.get(
-            f"/api/v1/marketplace/webhooks/{eid}/deliveries", headers=headers
-        )
+        await client.get(f"/api/v1/marketplace/webhooks/{eid}/deliveries", headers=headers)
     ).json()
     assert len(deliveries) == 1
 
@@ -194,9 +184,7 @@ async def test_inbound_webhook_with_invalid_signature(
     assert resp.status_code == 401
 
 
-async def test_rotate_secret_invalidates_old(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_rotate_secret_invalidates_old(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     create = await client.post(
@@ -223,9 +211,7 @@ async def test_rotate_secret_invalidates_old(
     assert bad.status_code == 401
 
 
-async def test_toggle_disables_inbound(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_toggle_disables_inbound(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     create = await client.post(
@@ -250,9 +236,7 @@ async def test_toggle_disables_inbound(
     assert blocked.status_code == 403
 
 
-async def test_delete_webhook(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_delete_webhook(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     create = await client.post(
@@ -265,11 +249,7 @@ async def test_delete_webhook(
         },
     )
     eid = create.json()["id"]
-    rm = await client.delete(
-        f"/api/v1/marketplace/webhooks/{eid}", headers=headers
-    )
+    rm = await client.delete(f"/api/v1/marketplace/webhooks/{eid}", headers=headers)
     assert rm.status_code == 200
-    rm2 = await client.delete(
-        f"/api/v1/marketplace/webhooks/{eid}", headers=headers
-    )
+    rm2 = await client.delete(f"/api/v1/marketplace/webhooks/{eid}", headers=headers)
     assert rm2.status_code == 404

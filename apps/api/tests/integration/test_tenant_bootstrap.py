@@ -138,6 +138,109 @@ async def test_list_roles_returns_5_seeded_roles(
     assert slugs == {"owner", "admin", "manager", "operator", "viewer"}
 
 
+async def test_owner_can_create_update_and_delete_custom_role(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _register(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+
+    created = await client.post(
+        "/api/v1/roles",
+        headers=headers,
+        json={
+            "name": "SMM Reviewer",
+            "permissions": ["tenant.read", "smm.read"],
+        },
+    )
+    assert created.status_code == 201, created.text
+    role = created.json()
+    assert role["slug"] == "smm_reviewer"
+    assert role["is_system"] is False
+
+    updated = await client.patch(
+        f"/api/v1/roles/{role['id']}",
+        headers=headers,
+        json={
+            "description": "Can review SMM work",
+            "permissions": ["tenant.read", "smm.read", "reports.read"],
+        },
+    )
+    assert updated.status_code == 200, updated.text
+    assert "reports.read" in updated.json()["permissions"]
+
+    deleted = await client.delete(f"/api/v1/roles/{role['id']}", headers=headers)
+    assert deleted.status_code == 200
+    assert deleted.json()["deleted"] is True
+
+
+async def test_system_role_cannot_be_deleted(client: AsyncClient, sample_register_payload: dict):
+    bundle = await _register(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    roles = (await client.get("/api/v1/roles", headers=headers)).json()
+    owner = next(r for r in roles if r["slug"] == "owner")
+
+    deleted = await client.delete(f"/api/v1/roles/{owner['id']}", headers=headers)
+    assert deleted.status_code == 400
+
+
+async def test_owner_can_invite_update_and_remove_user(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _register(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+
+    roles = (await client.get("/api/v1/roles", headers=headers)).json()
+    operator = next(r for r in roles if r["slug"] == "operator")
+    viewer = next(r for r in roles if r["slug"] == "viewer")
+
+    invited = await client.post(
+        "/api/v1/users",
+        headers=headers,
+        json={
+            "email": "operator@akme.uz",
+            "phone": "+998901112233",
+            "full_name": "Operator One",
+            "role_slug": operator["slug"],
+        },
+    )
+    assert invited.status_code == 201, invited.text
+    user = invited.json()
+    assert user["role"] == "operator"
+    assert user["temporary_password"].startswith("Nx")
+
+    login = await client.post(
+        "/api/v1/auth/login",
+        json={
+            "email_or_phone": "operator@akme.uz",
+            "password": user["temporary_password"],
+        },
+    )
+    assert login.status_code == 200, login.text
+
+    updated = await client.patch(
+        f"/api/v1/users/{user['id']}",
+        headers=headers,
+        json={"full_name": "Viewer One", "role_slug": viewer["slug"]},
+    )
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["full_name"] == "Viewer One"
+    assert updated.json()["role"] == "viewer"
+
+    listing = await client.get("/api/v1/users", headers=headers)
+    assert listing.status_code == 200
+    assert {u["email"] for u in listing.json()} == {
+        sample_register_payload["email"],
+        "operator@akme.uz",
+    }
+
+    deleted = await client.delete(f"/api/v1/users/{user['id']}", headers=headers)
+    assert deleted.status_code == 200
+    assert deleted.json()["deleted"] is True
+
+    listing_after = await client.get("/api/v1/users", headers=headers)
+    assert {u["email"] for u in listing_after.json()} == {sample_register_payload["email"]}
+
+
 async def test_audit_log_records_department_create(
     client: AsyncClient,
     db_session: AsyncSession,

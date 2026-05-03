@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import re
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.sms import MockSMSProvider
 
@@ -157,3 +160,28 @@ async def test_invoice_listing(client: AsyncClient, sample_register_payload: dic
     listing = await client.get("/api/v1/billing/invoices", headers=headers)
     assert listing.status_code == 200
     assert len(listing.json()) == 1
+
+
+async def test_read_only_grace_blocks_writes_but_allows_reads(
+    client: AsyncClient, sample_register_payload: dict, db_session: AsyncSession
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+
+    trial = await client.post("/api/v1/billing/start-trial", headers=headers)
+    assert trial.status_code == 201, trial.text
+
+    schema = bundle["tenant"]["schema_name"]
+    await db_session.execute(text(f"SET search_path TO {schema}, public"))
+    await db_session.execute(
+        text("UPDATE subscriptions SET expires_at = :expired_at"),
+        {"expired_at": datetime.now(UTC) - timedelta(days=20)},
+    )
+    await db_session.commit()
+
+    read = await client.get("/api/v1/brands", headers=headers)
+    assert read.status_code == 200
+
+    write = await client.post("/api/v1/brands", headers=headers, json={"name": "Blocked"})
+    assert write.status_code == 402
+    assert "Faqat o'qish" in write.json()["detail"]

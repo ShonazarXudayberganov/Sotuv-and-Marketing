@@ -33,13 +33,7 @@ import { marketplaceApi } from "@/lib/marketplace-api";
 import type { MarketplaceProvider } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const SYNCABLE = new Set([
-  "amocrm",
-  "bitrix24",
-  "onec",
-  "google_sheets",
-  "zapier",
-]);
+const SYNCABLE = new Set(["amocrm", "bitrix24", "onec", "google_sheets", "zapier"]);
 
 const CATEGORY_LABELS: Record<string, string> = {
   ai: "AI",
@@ -74,10 +68,7 @@ export default function MarketplacePage() {
   }, [providers]);
 
   const filtered = useMemo(
-    () =>
-      filter === "all"
-        ? providers
-        : providers.filter((p) => p.category === filter),
+    () => (filter === "all" ? providers : providers.filter((p) => p.category === filter)),
     [providers, filter],
   );
 
@@ -89,10 +80,7 @@ export default function MarketplacePage() {
       className="space-y-6"
     >
       <PageHeader
-        breadcrumbs={[
-          { label: "Bosh sahifa", href: "/dashboard" },
-          { label: "Marketplace" },
-        ]}
+        breadcrumbs={[{ label: "Bosh sahifa", href: "/dashboard" }, { label: "Marketplace" }]}
         title="Integratsiya marketplace"
         description="1C, AmoCRM, Bitrix24, Google Sheets, Zapier va Webhooks API — barchasini bir oynada"
         actions={
@@ -124,7 +112,7 @@ export default function MarketplacePage() {
                 : "border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--primary)]",
             )}
           >
-            {c === "all" ? "Hammasi" : CATEGORY_LABELS[c] ?? c}
+            {c === "all" ? "Hammasi" : (CATEGORY_LABELS[c] ?? c)}
           </button>
         ))}
       </div>

@@ -8,7 +8,11 @@ import type {
 } from "./types";
 
 export const postsApi = {
-  async list(params?: { brand_id?: string | null; status?: string | null; limit?: number }): Promise<Post[]> {
+  async list(params?: {
+    brand_id?: string | null;
+    status?: string | null;
+    limit?: number;
+  }): Promise<Post[]> {
     const query: Record<string, string | number> = {};
     if (params?.brand_id) query.brand_id = params.brand_id;
     if (params?.status) query.status = params.status;

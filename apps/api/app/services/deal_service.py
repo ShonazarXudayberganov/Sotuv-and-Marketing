@@ -20,8 +20,10 @@ from app.models.crm import Contact, ContactActivity, Deal, Pipeline, PipelineSta
 
 
 async def list_pipelines(db: AsyncSession) -> list[Pipeline]:
-    stmt = select(Pipeline).where(Pipeline.is_active.is_(True)).order_by(
-        Pipeline.sort_order, Pipeline.name
+    stmt = (
+        select(Pipeline)
+        .where(Pipeline.is_active.is_(True))
+        .order_by(Pipeline.sort_order, Pipeline.name)
     )
     return list((await db.execute(stmt)).scalars())
 
@@ -41,9 +43,7 @@ async def list_stages(db: AsyncSession, pipeline_id: UUID) -> list[PipelineStage
 
 async def default_pipeline(db: AsyncSession) -> Pipeline | None:
     stmt = (
-        select(Pipeline)
-        .where(Pipeline.is_default.is_(True), Pipeline.is_active.is_(True))
-        .limit(1)
+        select(Pipeline).where(Pipeline.is_default.is_(True), Pipeline.is_active.is_(True)).limit(1)
     )
     return (await db.execute(stmt)).scalars().first()
 
@@ -61,11 +61,7 @@ async def list_deals(
     status: str | None = None,
     limit: int = 100,
 ) -> list[Deal]:
-    stmt = (
-        select(Deal)
-        .order_by(desc(Deal.updated_at))
-        .limit(limit)
-    )
+    stmt = select(Deal).order_by(desc(Deal.updated_at)).limit(limit)
     conds = []
     if pipeline_id is not None:
         conds.append(Deal.pipeline_id == pipeline_id)
@@ -86,9 +82,7 @@ async def get_deal(db: AsyncSession, deal_id: UUID) -> Deal | None:
     return await db.get(Deal, deal_id)
 
 
-async def _resolve_default_stage(
-    db: AsyncSession, pipeline_id: UUID
-) -> PipelineStage | None:
+async def _resolve_default_stage(db: AsyncSession, pipeline_id: UUID) -> PipelineStage | None:
     stages = await list_stages(db, pipeline_id)
     return stages[0] if stages else None
 
@@ -270,9 +264,7 @@ async def win_deal(db: AsyncSession, deal_id: UUID, *, user_id: UUID) -> Deal | 
     won_stage = next((s for s in stages if s.is_won), None)
     if won_stage is None:
         raise ValueError("Pipeline has no won stage")
-    return await update_deal(
-        db, deal_id, payload={"stage_id": won_stage.id}, user_id=user_id
-    )
+    return await update_deal(db, deal_id, payload={"stage_id": won_stage.id}, user_id=user_id)
 
 
 async def lose_deal(db: AsyncSession, deal_id: UUID, *, user_id: UUID) -> Deal | None:
@@ -283,9 +275,7 @@ async def lose_deal(db: AsyncSession, deal_id: UUID, *, user_id: UUID) -> Deal |
     lost_stage = next((s for s in stages if s.is_lost), None)
     if lost_stage is None:
         raise ValueError("Pipeline has no lost stage")
-    return await update_deal(
-        db, deal_id, payload={"stage_id": lost_stage.id}, user_id=user_id
-    )
+    return await update_deal(db, deal_id, payload={"stage_id": lost_stage.id}, user_id=user_id)
 
 
 async def delete_deal(db: AsyncSession, deal_id: UUID) -> bool:
@@ -300,9 +290,7 @@ async def delete_deal(db: AsyncSession, deal_id: UUID) -> bool:
 # ─────────── Forecast / stats ───────────
 
 
-async def forecast(
-    db: AsyncSession, *, pipeline_id: UUID | None = None
-) -> dict[str, Any]:
+async def forecast(db: AsyncSession, *, pipeline_id: UUID | None = None) -> dict[str, Any]:
     """Probability-weighted total of OPEN deals plus straight totals."""
     stmt = select(Deal).where(Deal.status == "open")
     if pipeline_id is not None:

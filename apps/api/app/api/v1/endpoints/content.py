@@ -101,9 +101,7 @@ async def update_draft(
     current: CurrentUser = Depends(require_permission("smm.write")),
     db: AsyncSession = Depends(get_tenant_session),
 ) -> ContentDraft:
-    rec = await content_service.update_draft(
-        db, draft_id, title=payload.title, body=payload.body
-    )
+    rec = await content_service.update_draft(db, draft_id, title=payload.title, body=payload.body)
     if rec is None:
         raise HTTPException(status_code=404, detail="Draft not found")
     await audit_service.record(

@@ -57,6 +57,32 @@ class LoginRequest(BaseModel):
     remember_me: bool = False
 
 
+class ForgotPasswordRequest(BaseModel):
+    email_or_phone: str = Field(min_length=3, max_length=255)
+
+
+class ForgotPasswordResponse(BaseModel):
+    verification_id: UUID
+    phone_masked: str
+    expires_in_seconds: int = 300
+
+
+class ResetPasswordRequest(BaseModel):
+    verification_id: UUID
+    code: str = Field(min_length=4, max_length=8)
+    new_password: SecretStr = Field(min_length=8, max_length=100)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password_strength(cls, v: SecretStr) -> SecretStr:
+        s = v.get_secret_value()
+        if not any(c.isupper() for c in s):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.isdigit() for c in s):
+            raise ValueError("Password must contain at least one digit")
+        return v
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str
 

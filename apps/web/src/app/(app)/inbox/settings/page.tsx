@@ -103,9 +103,7 @@ export default function InboxSettingsPage() {
               className="h-4 w-4 accent-[var(--primary)]"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-[var(--fg)]">
-                Auto-reply yoqilgan
-              </p>
+              <p className="text-[13px] font-medium text-[var(--fg)]">Auto-reply yoqilgan</p>
               <p className="text-[11px] text-[var(--fg-muted)]">
                 Confidence chegarasidan yuqori javoblar avtomatik yuboriladi
               </p>

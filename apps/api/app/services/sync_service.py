@@ -121,9 +121,7 @@ async def _ensure_contact_from_external(
     return contact, True
 
 
-async def sync_amocrm(
-    db: AsyncSession, *, user_id: UUID
-) -> SyncResult:
+async def sync_amocrm(db: AsyncSession, *, user_id: UUID) -> SyncResult:
     creds = await get_credentials(db, "amocrm")
     if not creds and not _is_mock_mode():
         return SyncResult(
@@ -147,9 +145,7 @@ async def sync_amocrm(
     )
 
 
-async def sync_bitrix24(
-    db: AsyncSession, *, user_id: UUID
-) -> SyncResult:
+async def sync_bitrix24(db: AsyncSession, *, user_id: UUID) -> SyncResult:
     creds = await get_credentials(db, "bitrix24")
     if not creds and not _is_mock_mode():
         return SyncResult(
@@ -240,9 +236,7 @@ PROVIDERS_MAP = {
 }
 
 
-async def run_sync(
-    db: AsyncSession, *, provider: str, user_id: UUID
-) -> SyncResult:
+async def run_sync(db: AsyncSession, *, provider: str, user_id: UUID) -> SyncResult:
     if provider not in SUPPORTED_PROVIDERS:
         raise ValueError(f"Unsupported provider: {provider}")
     if provider == "google_sheets":

@@ -46,7 +46,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
               className={cn(
                 "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
                 active
-                  ? "bg-[var(--primary-soft)] text-[var(--primary-soft-fg)] font-medium"
+                  ? "bg-[var(--primary-soft)] font-medium text-[var(--primary-soft-fg)]"
                   : "text-[var(--fg-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--fg)]",
               )}
             >

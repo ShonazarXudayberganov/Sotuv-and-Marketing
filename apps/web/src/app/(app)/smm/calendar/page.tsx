@@ -91,14 +91,19 @@ export default function CalendarPage() {
   }, [anchor, viewMode]);
 
   const { data: calendar, isLoading } = useQuery({
-    queryKey: ["posts", "calendar", range.start.toISOString(), range.end.toISOString(), activeBrandId],
+    queryKey: [
+      "posts",
+      "calendar",
+      range.start.toISOString(),
+      range.end.toISOString(),
+      activeBrandId,
+    ],
     queryFn: () =>
       postsApi.calendar(range.start.toISOString(), range.end.toISOString(), activeBrandId),
   });
 
   const reschedule = useMutation({
-    mutationFn: (args: { id: string; iso: string }) =>
-      postsApi.reschedule(args.id, args.iso),
+    mutationFn: (args: { id: string; iso: string }) => postsApi.reschedule(args.id, args.iso),
     onSuccess: () => {
       toast.success("Vaqt o'zgartirildi");
       qc.invalidateQueries({ queryKey: ["posts"] });
@@ -130,13 +135,15 @@ export default function CalendarPage() {
       return;
     }
     const prev = post.scheduled_at ? new Date(post.scheduled_at) : new Date();
-    const iso = new Date(Date.UTC(
-      targetDay.getUTCFullYear(),
-      targetDay.getUTCMonth(),
-      targetDay.getUTCDate(),
-      prev.getUTCHours(),
-      prev.getUTCMinutes(),
-    )).toISOString();
+    const iso = new Date(
+      Date.UTC(
+        targetDay.getUTCFullYear(),
+        targetDay.getUTCMonth(),
+        targetDay.getUTCDate(),
+        prev.getUTCHours(),
+        prev.getUTCMinutes(),
+      ),
+    ).toISOString();
     reschedule.mutate({ id: post.id, iso });
   };
 
@@ -360,9 +367,7 @@ function DayCell({
           <PostChip key={p.id} post={p} />
         ))}
         {posts.length > 3 ? (
-          <p className="px-1 text-[10px] text-[var(--fg-subtle)]">
-            +{posts.length - 3} yana
-          </p>
+          <p className="px-1 text-[10px] text-[var(--fg-subtle)]">+{posts.length - 3} yana</p>
         ) : null}
       </div>
     </div>
@@ -382,8 +387,7 @@ const STATUS_ICONS = {
 function PostChip({ post }: { post: Post }) {
   const draggable = post.status === "scheduled" || post.status === "draft";
   const tone = STATUS_TONE[post.status] ?? STATUS_TONE.draft;
-  const Icon =
-    STATUS_ICONS[post.status as keyof typeof STATUS_ICONS] ?? CalendarDays;
+  const Icon = STATUS_ICONS[post.status as keyof typeof STATUS_ICONS] ?? CalendarDays;
   const time = post.scheduled_at
     ? new Date(post.scheduled_at).toLocaleTimeString("uz-UZ", {
         hour: "2-digit",

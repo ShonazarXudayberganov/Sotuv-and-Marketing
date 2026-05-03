@@ -235,9 +235,7 @@ function InsightsCard({ insights }: { insights: AnalyticsInsights }) {
         <CardTitle>AI insights</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-[14px] leading-relaxed text-[var(--fg)]">
-          {insights.summary}
-        </p>
+        <p className="text-[14px] leading-relaxed text-[var(--fg)]">{insights.summary}</p>
         {insights.recommendations.length > 0 ? (
           <ul className="mt-4 space-y-2">
             {insights.recommendations.map((r, i) => (
@@ -265,10 +263,7 @@ function TimeseriesCard({
   days: number;
   onDays: (d: number) => void;
 }) {
-  const maxViews = useMemo(
-    () => Math.max(1, ...data.map((d) => d.views)),
-    [data],
-  );
+  const maxViews = useMemo(() => Math.max(1, ...data.map((d) => d.views)), [data]);
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -314,13 +309,7 @@ function TimeseriesCard({
   );
 }
 
-function HeatmapCard({
-  cells,
-  best,
-}: {
-  cells: OptimalCell[];
-  best: OptimalCell[];
-}) {
+function HeatmapCard({ cells, best }: { cells: OptimalCell[]; best: OptimalCell[] }) {
   const maxEngagement = Math.max(1, ...cells.map((c) => c.avg_engagement));
   const map = new Map<string, OptimalCell>();
   cells.forEach((c) => map.set(`${c.weekday}-${c.hour}`, c));
@@ -334,13 +323,13 @@ function HeatmapCard({
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <div className="grid gap-0.5" style={{ gridTemplateColumns: "auto repeat(24, 1fr)" }}>
+          <div
+            className="grid gap-0.5"
+            style={{ gridTemplateColumns: "auto repeat(24, 1fr)" }}
+          >
             <div />
             {Array.from({ length: 24 }).map((_, h) => (
-              <div
-                key={h}
-                className="text-center text-[8px] text-[var(--fg-subtle)]"
-              >
+              <div key={h} className="text-center text-[8px] text-[var(--fg-subtle)]">
                 {h % 6 === 0 ? h : ""}
               </div>
             ))}

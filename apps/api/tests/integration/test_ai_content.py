@@ -120,22 +120,16 @@ async def test_list_drafts_filters_by_brand_and_platform(
             },
         )
 
-    only_a = (
-        await client.get(f"/api/v1/ai/drafts?brand_id={brand_a}", headers=headers)
-    ).json()
+    only_a = (await client.get(f"/api/v1/ai/drafts?brand_id={brand_a}", headers=headers)).json()
     only_a_telegram = (
-        await client.get(
-            f"/api/v1/ai/drafts?brand_id={brand_a}&platform=telegram", headers=headers
-        )
+        await client.get(f"/api/v1/ai/drafts?brand_id={brand_a}&platform=telegram", headers=headers)
     ).json()
     assert len(only_a) == 2
     assert len(only_a_telegram) == 1
     assert only_a_telegram[0]["platform"] == "telegram"
 
 
-async def test_star_and_unstar_draft(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_star_and_unstar_draft(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)
@@ -161,9 +155,7 @@ async def test_star_and_unstar_draft(
     assert unstar.json()["is_starred"] is False
 
 
-async def test_update_draft_invalidates_cache(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_update_draft_invalidates_cache(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)

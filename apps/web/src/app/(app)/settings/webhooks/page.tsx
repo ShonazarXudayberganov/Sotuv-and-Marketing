@@ -139,10 +139,7 @@ export default function WebhooksPage() {
       />
 
       {revealedSecret ? (
-        <SecretReveal
-          secret={revealedSecret.secret}
-          onClose={() => setRevealedSecret(null)}
-        />
+        <SecretReveal secret={revealedSecret.secret} onClose={() => setRevealedSecret(null)} />
       ) : null}
 
       {creating ? (
@@ -179,9 +176,7 @@ export default function WebhooksPage() {
               key={ep.id}
               endpoint={ep}
               expanded={activeId === ep.id}
-              onToggleDetails={() =>
-                setActiveId(activeId === ep.id ? null : ep.id)
-              }
+              onToggleDetails={() => setActiveId(activeId === ep.id ? null : ep.id)}
               onTest={() => test.mutate(ep.id)}
               onRotate={() => rotate.mutate(ep.id)}
               onActivate={() => toggle.mutate({ id: ep.id, active: !ep.is_active })}
@@ -194,13 +189,7 @@ export default function WebhooksPage() {
   );
 }
 
-function SecretReveal({
-  secret,
-  onClose,
-}: {
-  secret: string;
-  onClose: () => void;
-}) {
+function SecretReveal({ secret, onClose }: { secret: string; onClose: () => void }) {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(secret);
@@ -278,12 +267,8 @@ function EndpointRow({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[14px] font-semibold text-[var(--fg)]">
-              {endpoint.name}
-            </p>
-            <Badge variant="outline">
-              {isOutbound ? "Outbound" : "Inbound"}
-            </Badge>
+            <p className="text-[14px] font-semibold text-[var(--fg)]">{endpoint.name}</p>
+            <Badge variant="outline">{isOutbound ? "Outbound" : "Inbound"}</Badge>
             {endpoint.is_active ? (
               <Badge variant="success">
                 <CheckCircle2 className="h-2.5 w-2.5" /> Faol
@@ -304,13 +289,9 @@ function EndpointRow({
           <div className="mt-1.5 flex flex-wrap gap-2 text-[11px] text-[var(--fg-muted)]">
             <span>✓ {endpoint.success_count}</span>
             <span>✗ {endpoint.failure_count}</span>
-            {endpoint.last_status ? (
-              <span>HTTP {endpoint.last_status}</span>
-            ) : null}
+            {endpoint.last_status ? <span>HTTP {endpoint.last_status}</span> : null}
             {endpoint.last_triggered_at ? (
-              <span>
-                {new Date(endpoint.last_triggered_at).toLocaleString("uz-UZ")}
-              </span>
+              <span>{new Date(endpoint.last_triggered_at).toLocaleString("uz-UZ")}</span>
             ) : null}
           </div>
           {endpoint.last_error ? (
@@ -327,9 +308,7 @@ function EndpointRow({
               ))}
             </div>
           ) : null}
-          {expanded ? (
-            <DeliveriesPanel endpointId={endpoint.id} />
-          ) : null}
+          {expanded ? <DeliveriesPanel endpointId={endpoint.id} /> : null}
         </div>
         <Can permission="integrations.write">
           <div className="flex shrink-0 items-center gap-1">
@@ -373,11 +352,7 @@ function DeliveriesPanel({ endpointId }: { endpointId: string }) {
     );
   }
   if (data.length === 0) {
-    return (
-      <p className="mt-3 text-[11px] text-[var(--fg-subtle)]">
-        Tarix bo&apos;sh.
-      </p>
-    );
+    return <p className="mt-3 text-[11px] text-[var(--fg-subtle)]">Tarix bo&apos;sh.</p>;
   }
   return (
     <div className="mt-3 space-y-1.5">
@@ -493,10 +468,7 @@ function CreateForm({
                   placeholder="https://hooks.slack.com/..."
                 />
               </FormField>
-              <FormField
-                label="Voqealar"
-                hint="Bo'sh qoldirsangiz hammasiga obuna bo'ladi"
-              >
+              <FormField label="Voqealar" hint="Bo'sh qoldirsangiz hammasiga obuna bo'ladi">
                 <div className="flex flex-wrap gap-1.5">
                   {SUPPORTED_EVENTS.map((e) => (
                     <button
@@ -518,9 +490,9 @@ function CreateForm({
             </>
           ) : (
             <div className="rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] p-3 text-[12px] text-[var(--fg-muted)]">
-              Inbound webhook yaratilgach <code>POST</code> endpoint URL&apos;i
-              va HMAC secret beriladi. Tashqi tizim shu URL&apos;ga{" "}
-              <code>X-Nexus-Signature</code> headeri bilan POST qilishi kerak.
+              Inbound webhook yaratilgach <code>POST</code> endpoint URL&apos;i va HMAC secret
+              beriladi. Tashqi tizim shu URL&apos;ga <code>X-Nexus-Signature</code> headeri
+              bilan POST qilishi kerak.
             </div>
           )}
 
@@ -539,9 +511,7 @@ function CreateForm({
                 })
               }
               loading={loading}
-              disabled={
-                !name.trim() || (direction === "out" && !url.trim())
-              }
+              disabled={!name.trim() || (direction === "out" && !url.trim())}
             >
               Yaratish
             </Button>

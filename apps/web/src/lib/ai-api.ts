@@ -1,10 +1,5 @@
 import { apiClient } from "./api-client";
-import type {
-  AIUsage,
-  ContentDraft,
-  ContentStats,
-  GeneratePostRequest,
-} from "./types";
+import type { AIUsage, ContentDraft, ContentStats, GeneratePostRequest } from "./types";
 
 export const aiApi = {
   async generatePost(payload: GeneratePostRequest): Promise<ContentDraft> {

@@ -8,16 +8,13 @@ import type {
 
 export const marketplaceApi = {
   async catalog(): Promise<MarketplaceProvider[]> {
-    const { data } = await apiClient.get<MarketplaceProvider[]>(
-      "/marketplace/catalog",
-    );
+    const { data } = await apiClient.get<MarketplaceProvider[]>("/marketplace/catalog");
     return data;
   },
   async listWebhooks(direction?: "in" | "out"): Promise<WebhookEndpoint[]> {
-    const { data } = await apiClient.get<WebhookEndpoint[]>(
-      "/marketplace/webhooks",
-      { params: direction ? { direction } : undefined },
-    );
+    const { data } = await apiClient.get<WebhookEndpoint[]>("/marketplace/webhooks", {
+      params: direction ? { direction } : undefined,
+    });
     return data;
   },
   async createWebhook(payload: {

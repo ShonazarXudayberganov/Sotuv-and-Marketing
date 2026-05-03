@@ -135,9 +135,7 @@ class Post(Base, UUIDPKMixin, TimestampMixin):
     title: Mapped[str | None] = mapped_column(String(200))
     body: Mapped[str] = mapped_column(Text, nullable=False)
     media_urls: Mapped[list[str] | None] = mapped_column(JSON)
-    status: Mapped[str] = mapped_column(
-        String(20), default="draft", nullable=False, index=True
-    )
+    status: Mapped[str] = mapped_column(String(20), default="draft", nullable=False, index=True)
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_error: Mapped[str | None] = mapped_column(String(1000))
@@ -158,9 +156,7 @@ class PostPublication(Base, UUIDPKMixin, TimestampMixin):
         index=True,
     )
     provider: Mapped[str] = mapped_column(String(30), nullable=False)
-    status: Mapped[str] = mapped_column(
-        String(20), default="pending", nullable=False, index=True
-    )
+    status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False, index=True)
     attempts: Mapped[int] = mapped_column(default=0, nullable=False)
     next_retry_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     external_post_id: Mapped[str | None] = mapped_column(String(120))

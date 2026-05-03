@@ -16,15 +16,11 @@ export const adsApi = {
     return data;
   },
   async syncAccountsMock(): Promise<{ inserted: number }> {
-    const { data } = await apiClient.post<{ inserted: number }>(
-      "/ads/accounts/sync-mock",
-    );
+    const { data } = await apiClient.post<{ inserted: number }>("/ads/accounts/sync-mock");
     return data;
   },
   async syncCampaignsMock(): Promise<{ inserted: number }> {
-    const { data } = await apiClient.post<{ inserted: number }>(
-      "/ads/campaigns/sync-mock",
-    );
+    const { data } = await apiClient.post<{ inserted: number }>("/ads/campaigns/sync-mock");
     return data;
   },
   async snapshot(): Promise<{ inserted: number }> {

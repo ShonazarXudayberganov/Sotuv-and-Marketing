@@ -170,17 +170,11 @@ async def draft_reply(
     if conv is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     messages = await inbox_service.list_messages(db, cid, limit=20)
-    last_inbound = next(
-        (m for m in reversed(messages) if m.direction == "in"), None
-    )
+    last_inbound = next((m for m in reversed(messages) if m.direction == "in"), None)
     if last_inbound is None:
         raise HTTPException(status_code=400, detail="No inbound message to reply to")
-    draft = await auto_reply_service.draft_reply(
-        db, conversation=conv, incoming=last_inbound
-    )
-    return AutoReplyDraft(
-        reply=draft.reply, confidence=draft.confidence, mocked=draft.mocked
-    )
+    draft = await auto_reply_service.draft_reply(db, conversation=conv, incoming=last_inbound)
+    return AutoReplyDraft(reply=draft.reply, confidence=draft.confidence, mocked=draft.mocked)
 
 
 @router.post("/ingest", response_model=MessageOut, status_code=201)

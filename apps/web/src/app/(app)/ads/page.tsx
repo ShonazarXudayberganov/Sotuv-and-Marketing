@@ -170,7 +170,9 @@ function KpiGrid({ overview }: { overview: AdsOverviewType }) {
   );
 }
 
-type AdsOverviewType = NonNullable<ReturnType<typeof adsApi.overview> extends Promise<infer T> ? T : never>;
+type AdsOverviewType = NonNullable<
+  ReturnType<typeof adsApi.overview> extends Promise<infer T> ? T : never
+>;
 
 function KpiTile({
   icon: Icon,
@@ -200,9 +202,13 @@ function KpiTile({
         <p className="mt-2 text-[22px] leading-none font-semibold tracking-tight text-[var(--fg)]">
           {value}
         </p>
-        {sub ? <p className="mt-1.5 truncate text-[11px] text-[var(--fg-subtle)]">{sub}</p> : null}
+        {sub ? (
+          <p className="mt-1.5 truncate text-[11px] text-[var(--fg-subtle)]">{sub}</p>
+        ) : null}
       </div>
-      <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", tint)}>
+      <div
+        className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", tint)}
+      >
         <Icon className="h-4 w-4" />
       </div>
     </div>
@@ -221,9 +227,7 @@ function InsightsCard({
         <CardTitle>AI optimizatsiya</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-[14px] leading-relaxed text-[var(--fg)]">
-          {insights.summary}
-        </p>
+        <p className="text-[14px] leading-relaxed text-[var(--fg)]">{insights.summary}</p>
         {insights.recommendations.length > 0 ? (
           <ul className="mt-4 space-y-2">
             {insights.recommendations.map((r, i) => (
@@ -247,10 +251,7 @@ function TimeseriesCard({
 }: {
   data: { date: string; impressions: number; clicks: number; spend: number }[];
 }) {
-  const maxSpend = useMemo(
-    () => Math.max(1, ...data.map((d) => d.spend)),
-    [data],
-  );
+  const maxSpend = useMemo(() => Math.max(1, ...data.map((d) => d.spend)), [data]);
   return (
     <Card>
       <CardHeader>
@@ -298,9 +299,7 @@ function NetworkBreakdown({ overview }: { overview: AdsOverviewType }) {
               className="rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-4"
             >
               <div className="flex items-center justify-between">
-                <p className="text-[13px] font-semibold capitalize text-[var(--fg)]">
-                  {net}
-                </p>
+                <p className="text-[13px] font-semibold text-[var(--fg)] capitalize">{net}</p>
                 <Badge variant="primary">{slot.campaigns} kampaniya</Badge>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2 text-[11px]">

@@ -104,9 +104,7 @@ async def _maybe_auto_reply(
     if conversation.brand_id is None and cfg.default_brand_id is not None:
         conversation.brand_id = cfg.default_brand_id
 
-    draft = await auto_reply_service.draft_reply(
-        db, conversation=conversation, incoming=incoming
-    )
+    draft = await auto_reply_service.draft_reply(db, conversation=conversation, incoming=incoming)
     if draft.confidence < cfg.confidence_threshold:
         logger.info(
             "Inbox auto-reply skipped: confidence %s < threshold %s",
@@ -141,9 +139,7 @@ def _system_user_id() -> UUID:
 
 def telegram_message_payload(update: dict[str, Any]) -> dict[str, Any] | None:
     """Pull a clean (chat, body, sender) tuple out of a Telegram update."""
-    msg = update.get("message") or update.get("edited_message") or update.get(
-        "channel_post"
-    )
+    msg = update.get("message") or update.get("edited_message") or update.get("channel_post")
     if not isinstance(msg, dict):
         return None
     chat = msg.get("chat") or {}

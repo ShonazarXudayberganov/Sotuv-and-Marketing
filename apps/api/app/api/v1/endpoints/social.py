@@ -436,9 +436,7 @@ async def youtube_link_channel(
                 "subscribers": int(stats.get("subscriberCount") or 0),
                 "views": int(stats.get("viewCount") or 0),
                 "videos": int(stats.get("videoCount") or 0),
-                "thumbnail_url": (snippet.get("thumbnails") or {})
-                .get("default", {})
-                .get("url"),
+                "thumbnail_url": (snippet.get("thumbnails") or {}).get("default", {}).get("url"),
             },
             user_id=current.id,
         )

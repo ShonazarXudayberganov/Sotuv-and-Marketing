@@ -336,7 +336,7 @@ function PostRow({
 
   return (
     <div className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-4 transition-colors hover:border-[var(--primary)]">
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-[13px] font-medium text-[var(--fg)]">
             {post.title || post.body.slice(0, 60).trim() + (post.body.length > 60 ? "…" : "")}
@@ -564,9 +564,7 @@ function ScheduleModal({
                     <p className="truncate text-[12px] font-medium text-[var(--fg)]">
                       {d.title ?? d.user_goal?.slice(0, 50) ?? "—"}
                     </p>
-                    <p className="line-clamp-2 text-[11px] text-[var(--fg-muted)]">
-                      {d.body}
-                    </p>
+                    <p className="line-clamp-2 text-[11px] text-[var(--fg-muted)]">{d.body}</p>
                   </button>
                 ))}
               </div>
@@ -682,8 +680,8 @@ function ScheduleModal({
           </div>
           {scheduleMode === "now" ? (
             <p className="text-[11px] text-[var(--fg-subtle)]">
-              &quot;Hozir e&apos;lon&quot; — post draft sifatida yaratiladi.
-              Ro&apos;yxatdan &quot;Hozir&quot; tugmasi orqali e&apos;lon qiling.
+              &quot;Hozir e&apos;lon&quot; — post draft sifatida yaratiladi. Ro&apos;yxatdan
+              &quot;Hozir&quot; tugmasi orqali e&apos;lon qiling.
             </p>
           ) : null}
         </CardContent>

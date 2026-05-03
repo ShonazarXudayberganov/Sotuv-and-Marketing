@@ -106,9 +106,7 @@ export default function InboxPage() {
     mutationFn: (id: string) => inboxApi.draftReply(id),
     onSuccess: (res) => {
       setDraft(res.reply);
-      toast.success(
-        `AI taklif (${res.confidence}% ishonch${res.mocked ? " · MOCK" : ""})`,
-      );
+      toast.success(`AI taklif (${res.confidence}% ishonch${res.mocked ? " · MOCK" : ""})`);
     },
     onError: (e) => toast.error(extractApiError(e)),
   });
@@ -186,9 +184,7 @@ export default function InboxPage() {
           >
             {s.label}
             {s.key !== "all" && stats?.by_status?.[s.key] ? (
-              <span className="text-[10px] opacity-70">
-                {stats.by_status[s.key]}
-              </span>
+              <span className="text-[10px] opacity-70">{stats.by_status[s.key]}</span>
             ) : null}
           </button>
         ))}
@@ -250,9 +246,7 @@ export default function InboxPage() {
             sending={send.isPending}
             onAi={() => active && draftReply.mutate(active.id)}
             aiPending={draftReply.isPending}
-            onStatus={(status) =>
-              active && setStatus.mutate({ id: active.id, status })
-            }
+            onStatus={(status) => active && setStatus.mutate({ id: active.id, status })}
           />
         ) : (
           <Card>
@@ -366,9 +360,7 @@ function ThreadPane({
           <Can permission="inbox.write">
             <button
               type="button"
-              onClick={() =>
-                onStatus(conversation.status === "closed" ? "open" : "closed")
-              }
+              onClick={() => onStatus(conversation.status === "closed" ? "open" : "closed")}
               className="flex h-7 items-center gap-1 rounded-md border border-[var(--border)] px-2 text-[11px] text-[var(--fg-muted)] hover:border-[var(--primary)] hover:text-[var(--fg)]"
             >
               {conversation.status === "closed" ? (
@@ -424,19 +416,10 @@ function ThreadPane({
               }}
             />
             <div className="flex items-center justify-between gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={onAi}
-                loading={aiPending}
-              >
+              <Button variant="secondary" size="sm" onClick={onAi} loading={aiPending}>
                 <Wand2 /> AI tavsiya
               </Button>
-              <Button
-                onClick={onSend}
-                loading={sending}
-                disabled={!draft.trim()}
-              >
+              <Button onClick={onSend} loading={sending} disabled={!draft.trim()}>
                 <Send /> Yuborish
               </Button>
             </div>
@@ -463,7 +446,7 @@ function MessageBubble({ msg }: { msg: InboxMessage }) {
         )}
       >
         {msg.is_auto_reply ? (
-          <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase text-[var(--primary)]">
+          <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-[var(--primary)] uppercase">
             <Zap className="h-2.5 w-2.5" /> AI auto-javob
             {msg.confidence ? ` · ${msg.confidence}%` : ""}
           </div>

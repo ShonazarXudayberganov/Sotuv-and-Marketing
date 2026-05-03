@@ -119,7 +119,7 @@ export default function ContactsPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative max-w-md flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-[var(--fg-subtle)]" />
           <Input
             value={query}
@@ -239,9 +239,7 @@ function ContactRow({
           <Badge variant="outline" className="capitalize">
             {contact.status}
           </Badge>
-          {contact.tags?.includes("vip") ? (
-            <Badge variant="primary">VIP</Badge>
-          ) : null}
+          {contact.tags?.includes("vip") ? <Badge variant="primary">VIP</Badge> : null}
         </div>
         <p className="truncate text-[11px] text-[var(--fg-subtle)]">
           {contact.company_name ?? "—"}
@@ -294,8 +292,7 @@ function ContactDrawer({
   });
 
   const addActivity = useMutation({
-    mutationFn: (payload: ActivityCreateRequest) =>
-      crmApi.addActivity(contact.id, payload),
+    mutationFn: (payload: ActivityCreateRequest) => crmApi.addActivity(contact.id, payload),
     onSuccess: () => {
       toast.success("Faoliyat qo'shildi");
       qc.invalidateQueries({ queryKey: ["crm"] });
@@ -410,9 +407,7 @@ function ContactDrawer({
           <ActionPill
             icon={Sparkles}
             label="Eslatma"
-            onClick={() =>
-              addActivity.mutate({ kind: "note", title: "Eslatma" })
-            }
+            onClick={() => addActivity.mutate({ kind: "note", title: "Eslatma" })}
           />
         </div>
 
@@ -445,17 +440,10 @@ function ContactDrawer({
 
         {/* Channels */}
         <div className="space-y-1.5 text-[12px]">
-          {contact.phone ? (
-            <ChannelLine icon={Phone} value={contact.phone} />
-          ) : null}
-          {contact.email ? (
-            <ChannelLine icon={Mail} value={contact.email} />
-          ) : null}
+          {contact.phone ? <ChannelLine icon={Phone} value={contact.phone} /> : null}
+          {contact.email ? <ChannelLine icon={Mail} value={contact.email} /> : null}
           {contact.telegram_username ? (
-            <ChannelLine
-              icon={AtSign}
-              value={`@${contact.telegram_username} (TG)`}
-            />
+            <ChannelLine icon={AtSign} value={`@${contact.telegram_username} (TG)`} />
           ) : null}
         </div>
 
@@ -475,9 +463,7 @@ function ContactDrawer({
             </Can>
           </div>
           {deals.length === 0 ? (
-            <p className="text-[12px] text-[var(--fg-muted)]">
-              Hozircha bitim yo&apos;q.
-            </p>
+            <p className="text-[12px] text-[var(--fg-muted)]">Hozircha bitim yo&apos;q.</p>
           ) : (
             <div className="space-y-1.5">
               {deals.slice(0, 5).map((d) => (
@@ -497,17 +483,12 @@ function ContactDrawer({
                       {d.title}
                     </p>
                     <p className="truncate text-[10px] text-[var(--fg-subtle)]">
-                      {d.amount.toLocaleString("uz-UZ")} {d.currency} ·{" "}
-                      {d.probability}%
+                      {d.amount.toLocaleString("uz-UZ")} {d.currency} · {d.probability}%
                     </p>
                   </div>
                   <Badge
                     variant={
-                      d.status === "won"
-                        ? "success"
-                        : d.status === "lost"
-                          ? "danger"
-                          : "info"
+                      d.status === "won" ? "success" : d.status === "lost" ? "danger" : "info"
                     }
                   >
                     {d.status}
@@ -538,9 +519,7 @@ function ContactDrawer({
                     <Badge variant="outline" className="capitalize">
                       {a.kind.replace("_", " ")}
                     </Badge>
-                    {a.channel ? (
-                      <Badge variant="default">{a.channel}</Badge>
-                    ) : null}
+                    {a.channel ? <Badge variant="default">{a.channel}</Badge> : null}
                     <span className="ml-auto text-[10px] text-[var(--fg-subtle)]">
                       {new Date(a.occurred_at).toLocaleString("uz-UZ")}
                     </span>
@@ -591,13 +570,7 @@ function ActionPill({
   );
 }
 
-function ChannelLine({
-  icon: Icon,
-  value,
-}: {
-  icon: typeof Phone;
-  value: string;
-}) {
+function ChannelLine({ icon: Icon, value }: { icon: typeof Phone; value: string }) {
   return (
     <div className="flex items-center gap-2 text-[var(--fg)]">
       <Icon className="h-3.5 w-3.5 text-[var(--fg-subtle)]" />

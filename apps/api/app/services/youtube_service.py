@@ -190,17 +190,13 @@ async def list_recent_videos(
                 "view_count": int(stats.get("viewCount") or 0),
                 "like_count": int(stats.get("likeCount") or 0),
                 "comment_count": int(stats.get("commentCount") or 0),
-                "thumbnail_url": (snippet.get("thumbnails") or {})
-                .get("default", {})
-                .get("url"),
+                "thumbnail_url": (snippet.get("thumbnails") or {}).get("default", {}).get("url"),
             }
         )
     return out
 
 
-async def aggregate_stats(
-    db: AsyncSession, *, channel_id: str
-) -> dict[str, int | str]:
+async def aggregate_stats(db: AsyncSession, *, channel_id: str) -> dict[str, int | str]:
     """Quick channel-wide stats for a dashboard card."""
     channel = await get_channel(db, channel_id=channel_id)
     stats = channel.get("statistics") or {}

@@ -91,9 +91,7 @@ def _synth_metrics(seed: str) -> dict[str, int]:
 # ─────────── Accounts ───────────
 
 
-async def list_accounts(
-    db: AsyncSession, *, network: str | None = None
-) -> list[AdAccount]:
+async def list_accounts(db: AsyncSession, *, network: str | None = None) -> list[AdAccount]:
     stmt = select(AdAccount).order_by(AdAccount.network, AdAccount.name)
     if network is not None:
         stmt = stmt.where(AdAccount.network == network)
@@ -117,12 +115,16 @@ async def upsert_account(
     if network not in NETWORKS:
         raise ValueError(f"Unsupported network: {network}")
     existing = (
-        await db.execute(
-            select(AdAccount).where(
-                AdAccount.network == network, AdAccount.external_id == external_id
+        (
+            await db.execute(
+                select(AdAccount).where(
+                    AdAccount.network == network, AdAccount.external_id == external_id
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     if existing is not None:
         existing.name = name
         existing.currency = currency
@@ -226,13 +228,17 @@ async def sync_campaigns_mock(db: AsyncSession) -> int:
     for acc in accounts:
         for payload in _mock_campaigns(acc.external_id, acc.network):
             existing = (
-                await db.execute(
-                    select(Campaign).where(
-                        Campaign.account_id == acc.id,
-                        Campaign.external_id == payload["external_id"],
+                (
+                    await db.execute(
+                        select(Campaign).where(
+                            Campaign.account_id == acc.id,
+                            Campaign.external_id == payload["external_id"],
+                        )
                     )
                 )
-            ).scalars().first()
+                .scalars()
+                .first()
+            )
             if existing is not None:
                 existing.name = payload["name"]
                 existing.status = payload["status"]
@@ -298,9 +304,7 @@ async def delete_campaign(db: AsyncSession, campaign_id: UUID) -> bool:
 # ─────────── Metrics ───────────
 
 
-async def record_metrics_snapshot(
-    db: AsyncSession, *, account_id: UUID | None = None
-) -> int:
+async def record_metrics_snapshot(db: AsyncSession, *, account_id: UUID | None = None) -> int:
     """Insert one fresh AdMetricSnapshot per non-draft campaign."""
     stmt = select(Campaign).where(Campaign.status != "draft")
     if account_id is not None:
@@ -322,9 +326,7 @@ async def record_metrics_snapshot(
     return len(rows)
 
 
-async def latest_metrics(
-    db: AsyncSession, campaign_id: UUID
-) -> AdMetricSnapshot | None:
+async def latest_metrics(db: AsyncSession, campaign_id: UUID) -> AdMetricSnapshot | None:
     stmt = (
         select(AdMetricSnapshot)
         .where(AdMetricSnapshot.campaign_id == campaign_id)
@@ -334,9 +336,7 @@ async def latest_metrics(
     return (await db.execute(stmt)).scalars().first()
 
 
-async def overview(
-    db: AsyncSession, *, network: str | None = None
-) -> dict[str, Any]:
+async def overview(db: AsyncSession, *, network: str | None = None) -> dict[str, Any]:
     """Aggregate KPIs across the latest snapshot per campaign."""
     sub = (
         select(
@@ -402,9 +402,7 @@ async def overview(
     }
 
 
-async def timeseries(
-    db: AsyncSession, *, days: int = 14
-) -> list[dict[str, Any]]:
+async def timeseries(db: AsyncSession, *, days: int = 14) -> list[dict[str, Any]]:
     if days < 1 or days > 90:
         raise ValueError("days must be 1..90")
     since = datetime.now(UTC) - timedelta(days=days)
@@ -464,9 +462,7 @@ async def insights(db: AsyncSession) -> dict[str, Any]:
             "yuqori ROAS guruhlarga byudjet ko'chiring."
         )
     if roas and roas < 1.5:
-        recs.append(
-            "ROAS 1.5dan past — taklif (offer) va qo'nish sahifasini yaxshilang."
-        )
+        recs.append("ROAS 1.5dan past — taklif (offer) va qo'nish sahifasini yaxshilang.")
     if not recs:
         recs.append("Asosiy KPI'lar barqaror — eng yaxshi 2 ta kampaniyani scale qiling.")
 

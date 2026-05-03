@@ -36,9 +36,7 @@ def _cache_key(brand_id: UUID, platform: str, language: str, user_goal: str) -> 
     return hashlib.sha256(norm.encode()).hexdigest()[:48]
 
 
-async def _find_cached(
-    db: AsyncSession, *, cache_key: str
-) -> ContentDraft | None:
+async def _find_cached(db: AsyncSession, *, cache_key: str) -> ContentDraft | None:
     stmt = (
         select(ContentDraft)
         .where(ContentDraft.cache_key == cache_key)
@@ -80,9 +78,7 @@ async def generate_post(
         db, brand=brand, platform=platform, user_goal=user_goal, output_language=language
     )
 
-    response = await ai_service.complete(
-        db, system=SYSTEM_GUARDRAILS, user=rendered_prompt
-    )
+    response = await ai_service.complete(db, system=SYSTEM_GUARDRAILS, user=rendered_prompt)
 
     draft = ContentDraft(
         brand_id=brand_id,
@@ -170,8 +166,7 @@ async def stats(db: AsyncSession) -> dict[str, Any]:
         "drafts_total": len(total),
         "drafts_starred": sum(1 for d in total if d.is_starred),
         "by_platform": {
-            p: sum(1 for d in total if d.platform == p)
-            for p in {d.platform for d in total}
+            p: sum(1 for d in total if d.platform == p) for p in {d.platform for d in total}
         },
     }
 

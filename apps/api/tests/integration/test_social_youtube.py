@@ -104,9 +104,7 @@ async def test_link_is_idempotent_for_same_channel(
     assert first.json()["id"] == second.json()["id"]
 
 
-async def test_stats_returns_recent_videos(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_stats_returns_recent_videos(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)
@@ -117,9 +115,7 @@ async def test_stats_returns_recent_videos(
     )
     account_id = link.json()["id"]
 
-    stats = await client.get(
-        f"/api/v1/social/youtube/{account_id}/stats?limit=4", headers=headers
-    )
+    stats = await client.get(f"/api/v1/social/youtube/{account_id}/stats?limit=4", headers=headers)
     assert stats.status_code == 200, stats.text
     body = stats.json()
     assert body["mocked"] is True

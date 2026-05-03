@@ -101,9 +101,7 @@ async def test_create_post_without_schedule_starts_in_draft(
     assert create.json()["status"] == "draft"
 
 
-async def test_publish_now_marks_post_published(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_publish_now_marks_post_published(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)
@@ -152,15 +150,11 @@ async def test_cancel_scheduled_post(client: AsyncClient, sample_register_payloa
     assert cancel.status_code == 200
     assert cancel.json()["status"] == "cancelled"
 
-    cant_cancel_again = await client.post(
-        f"/api/v1/posts/{post_id}/cancel", headers=headers
-    )
+    cant_cancel_again = await client.post(f"/api/v1/posts/{post_id}/cancel", headers=headers)
     assert cant_cancel_again.status_code == 400
 
 
-async def test_reschedule_updates_time(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_reschedule_updates_time(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)
@@ -226,9 +220,7 @@ async def test_publish_to_unsupported_provider_marks_post_failed(
     assert body["publications"][0]["status"] in {"pending", "failed"}
 
 
-async def test_retry_resets_failed_publications(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_retry_resets_failed_publications(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)
@@ -277,12 +269,8 @@ async def test_list_filters_by_status(client: AsyncClient, sample_register_paylo
         json={"brand_id": brand_id, "body": "draft-1", "social_account_ids": [account_id]},
     )
 
-    only_drafts = (
-        await client.get("/api/v1/posts?status=draft", headers=headers)
-    ).json()
-    only_scheduled = (
-        await client.get("/api/v1/posts?status=scheduled", headers=headers)
-    ).json()
+    only_drafts = (await client.get("/api/v1/posts?status=draft", headers=headers)).json()
+    only_scheduled = (await client.get("/api/v1/posts?status=scheduled", headers=headers)).json()
     assert len(only_drafts) == 1
     assert only_drafts[0]["body"] == "draft-1"
     assert len(only_scheduled) == 1
@@ -314,9 +302,7 @@ async def test_claim_due_posts_atomic_transition(
     # publish-now drives the same publish_now() path the worker uses,
     # so we exercise the full pipeline without the worker's own session
     # factory (which uses a different event loop in tests).
-    publish = await client.post(
-        f"/api/v1/posts/{create.json()['id']}/publish-now", headers=headers
-    )
+    publish = await client.post(f"/api/v1/posts/{create.json()['id']}/publish-now", headers=headers)
     assert publish.json()["status"] == "published"
 
 
@@ -331,9 +317,7 @@ async def test_worker_sweep_noop_when_disabled():
     assert result is None
 
 
-async def test_calendar_groups_posts_by_day(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_calendar_groups_posts_by_day(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)
@@ -343,8 +327,12 @@ async def test_calendar_groups_posts_by_day(
     today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     base = today
     # Two posts on day+1, one on day+3, one outside the window (+30 days)
-    targets = [base + timedelta(days=1, hours=2), base + timedelta(days=1, hours=10),
-               base + timedelta(days=3, hours=5), base + timedelta(days=30)]
+    targets = [
+        base + timedelta(days=1, hours=2),
+        base + timedelta(days=1, hours=10),
+        base + timedelta(days=3, hours=5),
+        base + timedelta(days=30),
+    ]
     for t in targets:
         await client.post(
             "/api/v1/posts",
@@ -371,9 +359,7 @@ async def test_calendar_groups_posts_by_day(
     assert sorted(counts.values()) == [1, 2]
 
 
-async def test_calendar_rejects_inverted_range(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_calendar_rejects_inverted_range(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     base = datetime.now(UTC).replace(microsecond=0)
@@ -388,9 +374,7 @@ async def test_calendar_rejects_inverted_range(
     assert cal.status_code == 400
 
 
-async def test_stats_groups_by_status(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_stats_groups_by_status(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)

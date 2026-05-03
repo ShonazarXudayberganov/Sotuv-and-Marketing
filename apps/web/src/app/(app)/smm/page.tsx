@@ -201,7 +201,11 @@ export default function SmmDashboardPage() {
             <RoadmapItem done label="Instagram + Facebook" sprint="1.4" />
             <RoadmapItem done label="YouTube" sprint="1.5" />
             <RoadmapItem done label="AI kontent generatsiya (Claude + GPT)" sprint="1.6" />
-            <RoadmapItem done label="Postlar workflow (draft → schedule → publish)" sprint="1.7" />
+            <RoadmapItem
+              done
+              label="Postlar workflow (draft → schedule → publish)"
+              sprint="1.7"
+            />
             <RoadmapItem done label="Kontent reja kalendar" sprint="1.8" icon={CalendarDays} />
             <RoadmapItem done label="SMM analytics" sprint="1.9" />
           </div>

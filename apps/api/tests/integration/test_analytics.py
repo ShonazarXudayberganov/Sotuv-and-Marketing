@@ -38,9 +38,7 @@ async def _bootstrap(client: AsyncClient, payload: dict) -> dict:
     return verify.json()
 
 
-async def _seed_published_post(
-    client: AsyncClient, headers: dict, brand_id: str, body: str
-) -> str:
+async def _seed_published_post(client: AsyncClient, headers: dict, brand_id: str, body: str) -> str:
     """Create a Telegram-linked post and publish it now."""
     link = await client.post(
         "/api/v1/social/telegram/link",
@@ -67,9 +65,7 @@ async def _make_brand(client: AsyncClient, headers: dict) -> str:
     return resp.json()["id"]
 
 
-async def test_overview_zero_when_no_metrics(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_overview_zero_when_no_metrics(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     resp = await client.get("/api/v1/analytics/overview", headers=headers)
@@ -101,9 +97,7 @@ async def test_snapshot_then_overview_aggregates(
     assert overview["by_platform"]["telegram"]["posts"] == 3
 
 
-async def test_top_posts_sorted_by_engagement(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_top_posts_sorted_by_engagement(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)
@@ -111,9 +105,7 @@ async def test_top_posts_sorted_by_engagement(
         await _seed_published_post(client, headers, brand_id, f"post-{body}")
     await client.post("/api/v1/analytics/snapshot", headers=headers)
 
-    top = (
-        await client.get("/api/v1/analytics/top-posts?limit=3", headers=headers)
-    ).json()
+    top = (await client.get("/api/v1/analytics/top-posts?limit=3", headers=headers)).json()
     assert len(top) == 3
     engagements = [t["engagement"] for t in top]
     assert engagements == sorted(engagements, reverse=True)
@@ -129,26 +121,20 @@ async def test_timeseries_returns_per_day_buckets(
         await _seed_published_post(client, headers, brand_id, body)
     await client.post("/api/v1/analytics/snapshot", headers=headers)
 
-    rows = (
-        await client.get("/api/v1/analytics/timeseries?days=30", headers=headers)
-    ).json()
+    rows = (await client.get("/api/v1/analytics/timeseries?days=30", headers=headers)).json()
     assert len(rows) >= 1
     # Posts published today should land in a single bucket
     assert sum(r["posts"] for r in rows) >= 2
 
 
-async def test_timeseries_rejects_bad_days(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_timeseries_rejects_bad_days(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     bad = await client.get("/api/v1/analytics/timeseries?days=500", headers=headers)
     assert bad.status_code == 400
 
 
-async def test_optimal_times_picks_best_cells(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_optimal_times_picks_best_cells(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)
@@ -186,9 +172,7 @@ async def test_insights_returns_summary_and_recommendations(
     assert "optimal" in body
 
 
-async def test_insights_empty_state(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_insights_empty_state(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     resp = await client.get("/api/v1/analytics/insights", headers=headers)

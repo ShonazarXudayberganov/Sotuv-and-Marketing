@@ -146,9 +146,7 @@ async def cancel(db: AsyncSession, post_id: UUID) -> Post | None:
     return post
 
 
-async def reschedule(
-    db: AsyncSession, post_id: UUID, scheduled_at: datetime | None
-) -> Post | None:
+async def reschedule(db: AsyncSession, post_id: UUID, scheduled_at: datetime | None) -> Post | None:
     post = await db.get(Post, post_id)
     if post is None:
         return None
@@ -232,9 +230,7 @@ async def publish_now(db: AsyncSession, post: Post) -> Post:
     if any_pending_retry and not any_failed:
         post.status = "scheduled"
         # bump scheduled_at to the earliest pending retry so the worker re-sweeps
-        retry_times = [
-            p.next_retry_at for p in pubs if p.next_retry_at is not None
-        ]
+        retry_times = [p.next_retry_at for p in pubs if p.next_retry_at is not None]
         if retry_times:
             post.scheduled_at = min(retry_times)
         post.last_error = None
@@ -302,9 +298,7 @@ async def list_in_range(
     stmt = (
         select(Post)
         .where(
-            (
-                (Post.scheduled_at >= start) & (Post.scheduled_at < end)
-            )
+            ((Post.scheduled_at >= start) & (Post.scheduled_at < end))
             | ((Post.published_at >= start) & (Post.published_at < end))
         )
         .order_by(Post.scheduled_at, Post.published_at)

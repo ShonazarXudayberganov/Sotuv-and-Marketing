@@ -108,9 +108,7 @@ async def rotate_secret(db: AsyncSession, eid: UUID) -> WebhookEndpoint | None:
     return rec
 
 
-async def set_active(
-    db: AsyncSession, eid: UUID, *, active: bool
-) -> WebhookEndpoint | None:
+async def set_active(db: AsyncSession, eid: UUID, *, active: bool) -> WebhookEndpoint | None:
     rec = await db.get(WebhookEndpoint, eid)
     if rec is None:
         return None
@@ -166,9 +164,7 @@ async def record_inbound(
 # ─────────── Outbound ───────────
 
 
-async def deliver_outbound(
-    db: AsyncSession, *, event: str, payload: dict[str, Any]
-) -> int:
+async def deliver_outbound(db: AsyncSession, *, event: str, payload: dict[str, Any]) -> int:
     """Fire all active outbound endpoints subscribed to ``event``.
 
     Returns the number of attempted deliveries. Each attempt is recorded.
@@ -177,9 +173,7 @@ async def deliver_outbound(
         WebhookEndpoint.direction == "out", WebhookEndpoint.is_active.is_(True)
     )
     endpoints = list((await db.execute(stmt)).scalars())
-    targets = [
-        e for e in endpoints if not e.events or event in (e.events or [])
-    ]
+    targets = [e for e in endpoints if not e.events or event in (e.events or [])]
     if not targets:
         return 0
     body = json.dumps(
@@ -254,9 +248,7 @@ async def list_deliveries(
     return list((await db.execute(stmt)).scalars())
 
 
-async def fire_event(
-    db: AsyncSession, *, event: str, payload: dict[str, Any]
-) -> int:
+async def fire_event(db: AsyncSession, *, event: str, payload: dict[str, Any]) -> int:
     """Best-effort wrapper around deliver_outbound() — never raises.
 
     Use this from business-logic services so a webhook failure can't

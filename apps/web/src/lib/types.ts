@@ -55,6 +55,22 @@ export interface LoginPayload {
   remember_me?: boolean;
 }
 
+export interface ForgotPasswordPayload {
+  email_or_phone: string;
+}
+
+export interface ForgotPasswordResponse {
+  verification_id: string;
+  phone_masked: string;
+  expires_in_seconds: number;
+}
+
+export interface ResetPasswordPayload {
+  verification_id: string;
+  code: string;
+  new_password: string;
+}
+
 export interface ApiError {
   detail: string | { msg: string; loc?: string[] }[];
 }
@@ -423,12 +439,7 @@ export interface YouTubeStats {
 
 // ─────────── AI content / Sprint 1.6 ───────────
 
-export type ContentPlatform =
-  | "telegram"
-  | "instagram"
-  | "facebook"
-  | "youtube"
-  | "generic";
+export type ContentPlatform = "telegram" | "instagram" | "facebook" | "youtube" | "generic";
 
 export interface ContentDraft {
   id: string;
@@ -774,12 +785,7 @@ export interface DealStats {
 
 // ─────────── Inbox / Sprint 2.3 ───────────
 
-export type InboxChannel =
-  | "telegram"
-  | "instagram"
-  | "facebook"
-  | "email"
-  | "web_widget";
+export type InboxChannel = "telegram" | "instagram" | "facebook" | "email" | "web_widget";
 
 export type ConversationStatus = "open" | "snoozed" | "closed";
 
@@ -846,12 +852,7 @@ export interface AutoReplyDraft {
 // ─────────── Ads / Sprint 3.1 ───────────
 
 export type AdNetwork = "meta" | "google";
-export type CampaignObjective =
-  | "awareness"
-  | "traffic"
-  | "leads"
-  | "conversions"
-  | "sales";
+export type CampaignObjective = "awareness" | "traffic" | "leads" | "conversions" | "sales";
 export type CampaignStatus = "draft" | "paused" | "active" | "archived";
 
 export interface AdAccount {

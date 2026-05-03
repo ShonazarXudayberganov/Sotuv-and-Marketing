@@ -123,7 +123,9 @@
 
   --success: oklch(72% 0.16 155);
   --success-soft: oklch(28% 0.06 155);
-  --warning: oklch(75% 0.18 50); /* amber, not gold-yellow — avoid clashing with luxury landing */
+  --warning: oklch(
+    75% 0.18 50
+  ); /* amber, not gold-yellow — avoid clashing with luxury landing */
   --warning-soft: oklch(28% 0.07 50);
   --danger: oklch(68% 0.2 25);
   --danger-soft: oklch(28% 0.08 25);
@@ -403,11 +405,7 @@ h6 {
 }
 /* The legacy text-gradient utility — recolor with primary, not gold. */
 .gold-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--primary-hover) 0%,
-    var(--primary) 100%
-  ) !important;
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
@@ -442,7 +440,9 @@ h6 {
   background-color: transparent !important;
   color: var(--primary) !important;
   border: 1px solid color-mix(in oklab, var(--primary) 45%, transparent) !important;
-  transition: background-color 150ms ease, border-color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
 }
 .btn-luxury-outline:hover {
   background-color: var(--primary-soft) !important;

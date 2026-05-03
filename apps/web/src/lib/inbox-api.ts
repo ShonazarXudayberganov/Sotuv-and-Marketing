@@ -41,16 +41,13 @@ export const inboxApi = {
     return data;
   },
   async markRead(id: string): Promise<Conversation> {
-    const { data } = await apiClient.post<Conversation>(
-      `/inbox/conversations/${id}/read`,
-    );
+    const { data } = await apiClient.post<Conversation>(`/inbox/conversations/${id}/read`);
     return data;
   },
   async setStatus(id: string, status: string): Promise<Conversation> {
-    const { data } = await apiClient.post<Conversation>(
-      `/inbox/conversations/${id}/status`,
-      { status },
-    );
+    const { data } = await apiClient.post<Conversation>(`/inbox/conversations/${id}/status`, {
+      status,
+    });
     return data;
   },
   async draftReply(id: string): Promise<AutoReplyDraft> {
@@ -64,9 +61,7 @@ export const inboxApi = {
     return data;
   },
   async seedMock(): Promise<{ inserted: number }> {
-    const { data } = await apiClient.post<{ inserted: number }>(
-      "/inbox/seed-mock",
-    );
+    const { data } = await apiClient.post<{ inserted: number }>("/inbox/seed-mock");
     return data;
   },
   async getAutoReply(): Promise<AutoReplyConfig> {
@@ -74,10 +69,7 @@ export const inboxApi = {
     return data;
   },
   async updateAutoReply(payload: Partial<AutoReplyConfig>): Promise<AutoReplyConfig> {
-    const { data } = await apiClient.patch<AutoReplyConfig>(
-      "/inbox/auto-reply",
-      payload,
-    );
+    const { data } = await apiClient.patch<AutoReplyConfig>("/inbox/auto-reply", payload);
     return data;
   },
 };

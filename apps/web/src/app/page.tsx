@@ -149,13 +149,17 @@ export default function Home() {
             </Link>
             <ThemeToggle size="sm" />
             <Link href="/register">
-              <Button size="sm" className="btn-luxury">Bepul boshlash</Button>
+              <Button size="sm" className="btn-luxury">
+                Bepul boshlash
+              </Button>
             </Link>
           </nav>
           <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle size="sm" />
             <Link href="/register">
-              <Button size="sm" className="btn-luxury">Boshlash</Button>
+              <Button size="sm" className="btn-luxury">
+                Boshlash
+              </Button>
             </Link>
           </div>
         </div>

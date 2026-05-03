@@ -26,11 +26,7 @@ export const knowledgeApi = {
     );
     return data;
   },
-  async uploadFile(
-    brandId: string,
-    title: string,
-    file: File,
-  ): Promise<KnowledgeDocument> {
+  async uploadFile(brandId: string, title: string, file: File): Promise<KnowledgeDocument> {
     const form = new FormData();
     form.append("brand_id", brandId);
     form.append("title", title);

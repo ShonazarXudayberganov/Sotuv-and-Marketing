@@ -34,9 +34,7 @@ async def _bootstrap(client: AsyncClient, payload: dict) -> dict:
     return verify.json()
 
 
-async def _make_contact(
-    client: AsyncClient, headers: dict, name: str = "Akmal", **extra
-) -> dict:
+async def _make_contact(client: AsyncClient, headers: dict, name: str = "Akmal", **extra) -> dict:
     payload = {
         "full_name": name,
         "phone": "+998901112233",
@@ -49,9 +47,7 @@ async def _make_contact(
     return resp.json()
 
 
-async def test_create_contact_initialises_score(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_create_contact_initialises_score(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact = await _make_contact(client, headers, name="Akmal Karimov")
@@ -61,9 +57,7 @@ async def test_create_contact_initialises_score(
     assert contact["ai_score_reason"]
 
 
-async def test_search_filters_contacts_by_query(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_search_filters_contacts_by_query(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await _make_contact(
@@ -81,33 +75,21 @@ async def test_search_filters_contacts_by_query(
         email="bobur@b.uz",
     )
 
-    only_akmal = (
-        await client.get("/api/v1/crm/contacts?query=Akmal", headers=headers)
-    ).json()
-    only_phone = (
-        await client.get("/api/v1/crm/contacts?query=0001111", headers=headers)
-    ).json()
+    only_akmal = (await client.get("/api/v1/crm/contacts?query=Akmal", headers=headers)).json()
+    only_phone = (await client.get("/api/v1/crm/contacts?query=0001111", headers=headers)).json()
     assert len(only_akmal) == 1
     assert only_akmal[0]["full_name"] == "Akmal Karimov"
     assert len(only_phone) == 1
 
 
-async def test_status_filter_and_min_score(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_status_filter_and_min_score(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     lead = await _make_contact(client, headers, name="Lead One", status="lead")
-    customer = await _make_contact(
-        client, headers, name="Big Customer", status="customer"
-    )
+    customer = await _make_contact(client, headers, name="Big Customer", status="customer")
 
-    leads = (
-        await client.get("/api/v1/crm/contacts?status=lead", headers=headers)
-    ).json()
-    customers = (
-        await client.get("/api/v1/crm/contacts?status=customer", headers=headers)
-    ).json()
+    leads = (await client.get("/api/v1/crm/contacts?status=lead", headers=headers)).json()
+    customers = (await client.get("/api/v1/crm/contacts?status=customer", headers=headers)).json()
     assert any(c["id"] == lead["id"] for c in leads)
     assert any(c["id"] == customer["id"] for c in customers)
 
@@ -138,25 +120,17 @@ async def test_update_changes_status_and_rescore(
     assert upd.json()["ai_score"] >= initial
 
 
-async def test_delete_contact_removes_it(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_delete_contact_removes_it(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact = await _make_contact(client, headers, name="Delete Me")
-    rm = await client.delete(
-        f"/api/v1/crm/contacts/{contact['id']}", headers=headers
-    )
+    rm = await client.delete(f"/api/v1/crm/contacts/{contact['id']}", headers=headers)
     assert rm.status_code == 200
-    rm2 = await client.delete(
-        f"/api/v1/crm/contacts/{contact['id']}", headers=headers
-    )
+    rm2 = await client.delete(f"/api/v1/crm/contacts/{contact['id']}", headers=headers)
     assert rm2.status_code == 404
 
 
-async def test_add_activity_bumps_score(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_add_activity_bumps_score(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact = await _make_contact(client, headers, name="Active Lead")
@@ -176,37 +150,27 @@ async def test_add_activity_bumps_score(
     assert act.status_code == 201
     assert act.json()["kind"] == "call_in"
 
-    refreshed = (
-        await client.get(f"/api/v1/crm/contacts/{contact['id']}", headers=headers)
-    ).json()
+    refreshed = (await client.get(f"/api/v1/crm/contacts/{contact['id']}", headers=headers)).json()
     assert refreshed["ai_score"] > initial_score
 
     timeline = (
-        await client.get(
-            f"/api/v1/crm/contacts/{contact['id']}/activities", headers=headers
-        )
+        await client.get(f"/api/v1/crm/contacts/{contact['id']}/activities", headers=headers)
     ).json()
     assert len(timeline) == 1
 
 
-async def test_rescore_endpoint_returns_score(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_rescore_endpoint_returns_score(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact = await _make_contact(client, headers, name="Rescore Me")
-    resp = await client.post(
-        f"/api/v1/crm/contacts/{contact['id']}/rescore", headers=headers
-    )
+    resp = await client.post(f"/api/v1/crm/contacts/{contact['id']}/rescore", headers=headers)
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert 0 <= body["score"] <= 100
     assert body["reason"]
 
 
-async def test_stats_groups_by_status(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_stats_groups_by_status(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await _make_contact(client, headers, name="L1", status="lead")
@@ -218,9 +182,7 @@ async def test_stats_groups_by_status(
     assert stats["by_status"]["customer"] == 1
 
 
-async def test_unknown_contact_returns_404(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_unknown_contact_returns_404(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     fake = "00000000-0000-0000-0000-000000000000"

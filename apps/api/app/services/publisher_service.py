@@ -111,14 +111,10 @@ PROVIDER_DISPATCH = {
 }
 
 
-async def publish(
-    db: AsyncSession, *, account: BrandSocialAccount, post: Post
-) -> PublishResult:
+async def publish(db: AsyncSession, *, account: BrandSocialAccount, post: Post) -> PublishResult:
     handler = PROVIDER_DISPATCH.get(account.provider)
     if handler is None:
-        raise UnsupportedProviderError(
-            f"Publishing to {account.provider} is not supported yet"
-        )
+        raise UnsupportedProviderError(f"Publishing to {account.provider} is not supported yet")
     return await handler(db, account, post)
 
 

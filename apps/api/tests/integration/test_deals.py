@@ -120,16 +120,12 @@ async def test_move_to_stage_syncs_probability_and_logs_activity(
     assert move.json()["probability"] == 60
 
     timeline = (
-        await client.get(
-            f"/api/v1/crm/contacts/{contact_id}/activities", headers=headers
-        )
+        await client.get(f"/api/v1/crm/contacts/{contact_id}/activities", headers=headers)
     ).json()
     assert any(a["kind"] == "status_change" for a in timeline)
 
 
-async def test_win_deal_closes_it(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_win_deal_closes_it(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact_id = await _make_contact(client, headers, "Winner")
@@ -150,9 +146,7 @@ async def test_win_deal_closes_it(
     assert body["closed_at"] is not None
 
 
-async def test_lose_deal_closes_it(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_lose_deal_closes_it(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact_id = await _make_contact(client, headers, "Loser")
@@ -170,9 +164,7 @@ async def test_lose_deal_closes_it(
     assert lose.json()["probability"] == 0
 
 
-async def test_filter_by_pipeline_and_status(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_filter_by_pipeline_and_status(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact_id = await _make_contact(client, headers, "Filter Me")
@@ -187,25 +179,17 @@ async def test_filter_by_pipeline_and_status(
         )
     # Win one
     deals = (await client.get("/api/v1/crm/deals", headers=headers)).json()
-    await client.post(
-        f"/api/v1/crm/deals/{deals[0]['id']}/win", headers=headers
-    )
+    await client.post(f"/api/v1/crm/deals/{deals[0]['id']}/win", headers=headers)
 
-    open_only = (
-        await client.get("/api/v1/crm/deals?status=open", headers=headers)
-    ).json()
+    open_only = (await client.get("/api/v1/crm/deals?status=open", headers=headers)).json()
     assert len(open_only) == 2
     by_pipeline = (
-        await client.get(
-            f"/api/v1/crm/deals?pipeline_id={pipeline_id}", headers=headers
-        )
+        await client.get(f"/api/v1/crm/deals?pipeline_id={pipeline_id}", headers=headers)
     ).json()
     assert len(by_pipeline) == 3
 
 
-async def test_forecast_weights_probability(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_forecast_weights_probability(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact_id = await _make_contact(client, headers, "Forecast Lead")
@@ -224,18 +208,14 @@ async def test_forecast_weights_probability(
         json={"stage_id": proposal["id"]},
     )
 
-    forecast = (
-        await client.get("/api/v1/crm/deals/forecast", headers=headers)
-    ).json()
+    forecast = (await client.get("/api/v1/crm/deals/forecast", headers=headers)).json()
     assert forecast["open_count"] == 1
     assert forecast["open_amount"] == 10_000_000
     # 60% probability
     assert forecast["weighted_amount"] == 6_000_000
 
 
-async def test_contact_deals_listing(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_contact_deals_listing(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact_id = await _make_contact(client, headers, "Multi-deal contact")
@@ -245,17 +225,11 @@ async def test_contact_deals_listing(
             headers=headers,
             json={"title": title, "contact_id": contact_id, "amount": 100},
         )
-    rows = (
-        await client.get(
-            f"/api/v1/crm/contacts/{contact_id}/deals", headers=headers
-        )
-    ).json()
+    rows = (await client.get(f"/api/v1/crm/contacts/{contact_id}/deals", headers=headers)).json()
     assert len(rows) == 2
 
 
-async def test_stats_reports_win_rate(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_stats_reports_win_rate(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact_id = await _make_contact(client, headers, "Stats Lead")
@@ -266,13 +240,9 @@ async def test_stats_reports_win_rate(
             json={"title": title, "contact_id": contact_id, "amount": 100},
         )
         if title == "Won deal":
-            await client.post(
-                f"/api/v1/crm/deals/{d.json()['id']}/win", headers=headers
-            )
+            await client.post(f"/api/v1/crm/deals/{d.json()['id']}/win", headers=headers)
         elif title == "Lost deal":
-            await client.post(
-                f"/api/v1/crm/deals/{d.json()['id']}/lose", headers=headers
-            )
+            await client.post(f"/api/v1/crm/deals/{d.json()['id']}/lose", headers=headers)
     stats = (await client.get("/api/v1/crm/deals/stats", headers=headers)).json()
     assert stats["total"] == 3
     assert stats["by_status"].get("won") == 1
@@ -281,9 +251,7 @@ async def test_stats_reports_win_rate(
     assert stats["win_rate"] == 0.5  # 1 won / 2 closed
 
 
-async def test_delete_deal(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_delete_deal(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     contact_id = await _make_contact(client, headers, "Delete Me")

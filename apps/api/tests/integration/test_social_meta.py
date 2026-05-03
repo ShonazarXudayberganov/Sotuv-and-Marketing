@@ -40,9 +40,7 @@ async def _make_brand(client: AsyncClient, headers: dict, name: str = "Brand") -
     return resp.json()["id"]
 
 
-async def test_list_pages_returns_mock_pages(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_list_pages_returns_mock_pages(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     resp = await client.get("/api/v1/social/meta/pages", headers=headers)
@@ -96,9 +94,7 @@ async def test_link_instagram_uses_business_account_id(
     assert body["external_handle"]
 
 
-async def test_link_unknown_page_returns_404(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_link_unknown_page_returns_404(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)

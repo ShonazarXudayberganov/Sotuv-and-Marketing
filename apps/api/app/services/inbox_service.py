@@ -47,9 +47,7 @@ async def get_conversation(db: AsyncSession, cid: UUID) -> Conversation | None:
     return await db.get(Conversation, cid)
 
 
-async def list_messages(
-    db: AsyncSession, cid: UUID, *, limit: int = 100
-) -> list[Message]:
+async def list_messages(db: AsyncSession, cid: UUID, *, limit: int = 100) -> list[Message]:
     stmt = (
         select(Message)
         .where(Message.conversation_id == cid)
@@ -139,9 +137,7 @@ async def mark_read(db: AsyncSession, cid: UUID) -> Conversation | None:
     return rec
 
 
-async def set_status(
-    db: AsyncSession, cid: UUID, *, status: str
-) -> Conversation | None:
+async def set_status(db: AsyncSession, cid: UUID, *, status: str) -> Conversation | None:
     if status not in {"open", "snoozed", "closed"}:
         raise ValueError("Invalid status")
     rec = await db.get(Conversation, cid)
@@ -172,9 +168,7 @@ async def send_outbound(
             chat_id: int | str = conversation.external_id
             if isinstance(chat_id, str) and chat_id.lstrip("-").isdigit():
                 chat_id = int(chat_id)
-            res = await telegram_service.send_message(
-                db, chat_id=chat_id, text=body
-            )
+            res = await telegram_service.send_message(db, chat_id=chat_id, text=body)
             external_id = str(res.get("message_id") or "") or None
         except TelegramError as exc:
             raise RuntimeError(f"Telegram send failed: {exc}") from exc
@@ -206,9 +200,7 @@ async def send_outbound(
     )
 
 
-async def _resolve_meta_page_token(
-    db: AsyncSession, brand_id: UUID | None
-) -> str | None:
+async def _resolve_meta_page_token(db: AsyncSession, brand_id: UUID | None) -> str | None:
     if brand_id is None:
         return None
     stmt = select(BrandSocialAccount).where(
@@ -239,9 +231,7 @@ async def get_auto_reply_config(db: AsyncSession) -> AutoReplyConfig:
     return rec
 
 
-async def update_auto_reply_config(
-    db: AsyncSession, *, payload: dict[str, Any]
-) -> AutoReplyConfig:
+async def update_auto_reply_config(db: AsyncSession, *, payload: dict[str, Any]) -> AutoReplyConfig:
     rec = await get_auto_reply_config(db)
     for field in (
         "is_enabled",
@@ -268,8 +258,10 @@ async def stats(db: AsyncSession) -> dict[str, Any]:
         by_channel[r.channel] = by_channel.get(r.channel, 0) + 1
         unread_total += r.unread_count or 0
     msgs = (
-        await db.execute(select(Message).order_by(desc(Message.occurred_at)).limit(1))
-    ).scalars().first()
+        (await db.execute(select(Message).order_by(desc(Message.occurred_at)).limit(1)))
+        .scalars()
+        .first()
+    )
     return {
         "total": len(rows),
         "by_status": by_status,

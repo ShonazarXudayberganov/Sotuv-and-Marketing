@@ -69,8 +69,7 @@ export default function AIStudioPage() {
 
   const { data: drafts = [], isLoading: draftsLoading } = useQuery({
     queryKey: ["ai", "drafts", brandId || null],
-    queryFn: () =>
-      aiApi.listDrafts({ brand_id: brandId || null, limit: 50 }),
+    queryFn: () => aiApi.listDrafts({ brand_id: brandId || null, limit: 50 }),
   });
   const { data: usage } = useQuery({
     queryKey: ["ai", "usage"],
@@ -126,9 +125,10 @@ export default function AIStudioPage() {
     onError: (e) => toast.error(extractApiError(e)),
   });
 
-  const usagePct = usage && usage.tokens_cap > 0
-    ? Math.min(100, Math.round((usage.tokens_used / usage.tokens_cap) * 100))
-    : 0;
+  const usagePct =
+    usage && usage.tokens_cap > 0
+      ? Math.min(100, Math.round((usage.tokens_used / usage.tokens_cap) * 100))
+      : 0;
 
   return (
     <motion.div
@@ -450,9 +450,7 @@ function DraftCard({
                 : "text-[var(--fg-subtle)] hover:bg-[var(--surface-hover)] hover:text-[var(--fg)]",
             )}
           >
-            <Star
-              className={cn("h-3.5 w-3.5", draft.is_starred && "fill-current")}
-            />
+            <Star className={cn("h-3.5 w-3.5", draft.is_starred && "fill-current")} />
           </button>
           <button
             type="button"

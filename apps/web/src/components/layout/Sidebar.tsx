@@ -369,8 +369,7 @@ function NavGroupNode({
           {item.children!.map((child) => {
             const childActive =
               pathname === child.href ||
-              (child.href !== item.href &&
-                pathname?.startsWith(`${child.href}/`));
+              (child.href !== item.href && pathname?.startsWith(`${child.href}/`));
             return (
               <Link
                 key={child.href}

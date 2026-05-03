@@ -40,9 +40,7 @@ async def _make_brand(client: AsyncClient, headers: dict, name: str = "Brand") -
     return resp.json()["id"]
 
 
-async def test_bot_info_returns_mocked_profile(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_bot_info_returns_mocked_profile(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     resp = await client.get("/api/v1/social/telegram/bot-info", headers=headers)
@@ -72,9 +70,7 @@ async def test_link_telegram_channel_creates_account(
     assert body["is_active"] is True
 
 
-async def test_link_is_idempotent_for_same_chat(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_link_is_idempotent_for_same_chat(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)
@@ -93,9 +89,7 @@ async def test_link_is_idempotent_for_same_chat(
     assert second.status_code == 201
     assert first.json()["id"] == second.json()["id"]
 
-    listing = await client.get(
-        f"/api/v1/social/accounts?brand_id={brand_id}", headers=headers
-    )
+    listing = await client.get(f"/api/v1/social/accounts?brand_id={brand_id}", headers=headers)
     assert listing.status_code == 200
     accounts = listing.json()
     assert len(accounts) == 1
@@ -126,9 +120,7 @@ async def test_send_test_message_returns_message_id(
     assert body["message_id"] >= 0
 
 
-async def test_unlink_account_removes_it(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_unlink_account_removes_it(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_id = await _make_brand(client, headers)
@@ -142,9 +134,7 @@ async def test_unlink_account_removes_it(
     rm = await client.delete(f"/api/v1/social/accounts/{account_id}", headers=headers)
     assert rm.status_code == 200
 
-    listing = await client.get(
-        f"/api/v1/social/accounts?brand_id={brand_id}", headers=headers
-    )
+    listing = await client.get(f"/api/v1/social/accounts?brand_id={brand_id}", headers=headers)
     assert listing.json() == []
 
     rm2 = await client.delete(f"/api/v1/social/accounts/{account_id}", headers=headers)
@@ -165,9 +155,7 @@ async def test_send_test_to_unknown_account_returns_404(
     assert send.status_code == 404
 
 
-async def test_accounts_filtered_by_brand(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_accounts_filtered_by_brand(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     brand_a = await _make_brand(client, headers, "Brand A")
@@ -180,12 +168,8 @@ async def test_accounts_filtered_by_brand(
             json={"brand_id": brand_id, "chat": chat},
         )
 
-    only_a = await client.get(
-        f"/api/v1/social/accounts?brand_id={brand_a}", headers=headers
-    )
-    only_b = await client.get(
-        f"/api/v1/social/accounts?brand_id={brand_b}", headers=headers
-    )
+    only_a = await client.get(f"/api/v1/social/accounts?brand_id={brand_a}", headers=headers)
+    only_b = await client.get(f"/api/v1/social/accounts?brand_id={brand_b}", headers=headers)
     assert len(only_a.json()) == 1
     assert len(only_b.json()) == 1
     assert only_a.json()[0]["brand_id"] == brand_a

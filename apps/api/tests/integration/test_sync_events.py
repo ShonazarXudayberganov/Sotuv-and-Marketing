@@ -36,9 +36,7 @@ async def _bootstrap(client: AsyncClient, payload: dict) -> dict:
     return verify.json()
 
 
-async def _create_outbound(
-    client: AsyncClient, headers: dict, events: list[str]
-) -> str:
+async def _create_outbound(client: AsyncClient, headers: dict, events: list[str]) -> str:
     resp = await client.post(
         "/api/v1/marketplace/webhooks",
         headers=headers,
@@ -53,9 +51,7 @@ async def _create_outbound(
     return resp.json()["id"]
 
 
-async def test_contact_created_fires_outbound(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_contact_created_fires_outbound(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     eid = await _create_outbound(client, headers, ["contact.created"])
@@ -66,18 +62,12 @@ async def test_contact_created_fires_outbound(
         json={"full_name": "Webhook Lead", "phone": "+998900099001"},
     )
     deliveries = (
-        await client.get(
-            f"/api/v1/marketplace/webhooks/{eid}/deliveries", headers=headers
-        )
+        await client.get(f"/api/v1/marketplace/webhooks/{eid}/deliveries", headers=headers)
     ).json()
-    assert any(
-        d["event"] == "contact.created" and d["succeeded"] for d in deliveries
-    )
+    assert any(d["event"] == "contact.created" and d["succeeded"] for d in deliveries)
 
 
-async def test_deal_won_fires_outbound(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_deal_won_fires_outbound(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     eid = await _create_outbound(client, headers, ["deal.won"])
@@ -96,20 +86,14 @@ async def test_deal_won_fires_outbound(
             "amount": 5_000_000,
         },
     )
-    await client.post(
-        f"/api/v1/crm/deals/{deal.json()['id']}/win", headers=headers
-    )
+    await client.post(f"/api/v1/crm/deals/{deal.json()['id']}/win", headers=headers)
     deliveries = (
-        await client.get(
-            f"/api/v1/marketplace/webhooks/{eid}/deliveries", headers=headers
-        )
+        await client.get(f"/api/v1/marketplace/webhooks/{eid}/deliveries", headers=headers)
     ).json()
     assert any(d["event"] == "deal.won" for d in deliveries)
 
 
-async def test_event_filter_skips_unsubscribed(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_event_filter_skips_unsubscribed(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     eid = await _create_outbound(client, headers, ["deal.lost"])  # narrow subscription
@@ -120,16 +104,12 @@ async def test_event_filter_skips_unsubscribed(
         json={"full_name": "Skipped", "phone": "+998900099003"},
     )
     deliveries = (
-        await client.get(
-            f"/api/v1/marketplace/webhooks/{eid}/deliveries", headers=headers
-        )
+        await client.get(f"/api/v1/marketplace/webhooks/{eid}/deliveries", headers=headers)
     ).json()
     assert not any(d["event"] == "contact.created" for d in deliveries)
 
 
-async def test_sync_amocrm_imports_contacts(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_sync_amocrm_imports_contacts(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     resp = await client.post("/api/v1/marketplace/sync/amocrm", headers=headers)
@@ -144,9 +124,7 @@ async def test_sync_amocrm_imports_contacts(
     assert again.json()["pulled"] == 0
 
 
-async def test_sync_bitrix24_imports_contacts(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_sync_bitrix24_imports_contacts(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     resp = await client.post("/api/v1/marketplace/sync/bitrix24", headers=headers)
@@ -156,9 +134,7 @@ async def test_sync_bitrix24_imports_contacts(
     assert body["provider"] == "bitrix24"
 
 
-async def test_sync_google_sheets_pushes_count(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_sync_google_sheets_pushes_count(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await client.post(
@@ -166,19 +142,13 @@ async def test_sync_google_sheets_pushes_count(
         headers=headers,
         json={"full_name": "Sheet User", "phone": "+998900099005"},
     )
-    resp = await client.post(
-        "/api/v1/marketplace/sync/google_sheets", headers=headers
-    )
+    resp = await client.post("/api/v1/marketplace/sync/google_sheets", headers=headers)
     assert resp.status_code == 200
     assert resp.json()["pushed"] >= 1
 
 
-async def test_sync_unknown_provider_400(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_sync_unknown_provider_400(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
-    resp = await client.post(
-        "/api/v1/marketplace/sync/unicorn", headers=headers
-    )
+    resp = await client.post("/api/v1/marketplace/sync/unicorn", headers=headers)
     assert resp.status_code == 400

@@ -51,16 +51,12 @@ export const crmApi = {
     await apiClient.delete(`/crm/contacts/${id}`);
   },
   async listActivities(id: string, limit = 50): Promise<ContactActivity[]> {
-    const { data } = await apiClient.get<ContactActivity[]>(
-      `/crm/contacts/${id}/activities`,
-      { params: { limit } },
-    );
+    const { data } = await apiClient.get<ContactActivity[]>(`/crm/contacts/${id}/activities`, {
+      params: { limit },
+    });
     return data;
   },
-  async addActivity(
-    id: string,
-    payload: ActivityCreateRequest,
-  ): Promise<ContactActivity> {
+  async addActivity(id: string, payload: ActivityCreateRequest): Promise<ContactActivity> {
     const { data } = await apiClient.post<ContactActivity>(
       `/crm/contacts/${id}/activities`,
       payload,
@@ -107,10 +103,13 @@ export const crmApi = {
     const { data } = await apiClient.post<Deal>("/crm/deals", payload);
     return data;
   },
-  async updateDeal(id: string, payload: Partial<DealCreateRequest> & {
-    stage_id?: string;
-    probability?: number;
-  }): Promise<Deal> {
+  async updateDeal(
+    id: string,
+    payload: Partial<DealCreateRequest> & {
+      stage_id?: string;
+      probability?: number;
+    },
+  ): Promise<Deal> {
     const { data } = await apiClient.patch<Deal>(`/crm/deals/${id}`, payload);
     return data;
   },

@@ -47,9 +47,7 @@ def _load_template() -> str:
     return PROMPT_PATH.read_text(encoding="utf-8")
 
 
-async def _history(
-    db: AsyncSession, conversation_id: UUID, limit: int = 6
-) -> list[Message]:
+async def _history(db: AsyncSession, conversation_id: UUID, limit: int = 6) -> list[Message]:
     stmt = (
         select(Message)
         .where(Message.conversation_id == conversation_id)
@@ -65,32 +63,21 @@ def _format_history(rows: list[Message]) -> str:
         return "(no prior messages)"
     lines: list[str] = []
     for m in rows:
-        speaker = (
-            "Customer"
-            if m.direction == "in"
-            else ("AI" if m.is_auto_reply else "Agent")
-        )
+        speaker = "Customer" if m.direction == "in" else ("AI" if m.is_auto_reply else "Agent")
         lines.append(f"{speaker}: {m.body.strip()[:280]}")
     return "\n".join(lines)
 
 
-async def _rag_context(
-    db: AsyncSession, *, brand_id: UUID | None, query: str
-) -> str:
+async def _rag_context(db: AsyncSession, *, brand_id: UUID | None, query: str) -> str:
     if brand_id is None or not query.strip():
         return "(no relevant knowledge base context)"
     try:
-        hits = await knowledge_service.search(
-            db, query=query, brand_id=brand_id, top_k=4
-        )
+        hits = await knowledge_service.search(db, query=query, brand_id=brand_id, top_k=4)
     except Exception:
         return "(knowledge base search failed — proceed without it)"
     if not hits:
         return "(no relevant knowledge base context)"
-    return "\n\n".join(
-        f"[{h.get('document_title') or '—'}] {h['content'].strip()}"
-        for h in hits
-    )
+    return "\n\n".join(f"[{h.get('document_title') or '—'}] {h['content'].strip()}" for h in hits)
 
 
 def _mock_reply(incoming: str) -> AutoReplyResult:
@@ -149,22 +136,14 @@ async def draft_reply(
     if _is_mock_mode():
         return _mock_reply(incoming.body)
 
-    brand = (
-        await db.get(Brand, conversation.brand_id)
-        if conversation.brand_id
-        else None
-    )
+    brand = await db.get(Brand, conversation.brand_id) if conversation.brand_id else None
     history_rows = await _history(db, conversation.id, limit=6)
-    rag = await _rag_context(
-        db, brand_id=conversation.brand_id, query=incoming.body
-    )
+    rag = await _rag_context(db, brand_id=conversation.brand_id, query=incoming.body)
 
     template = _load_template()
     brand_name = brand.name if brand else "Brand"
     brand_voice = (brand.voice_tone if brand else None) or "Friendly, professional"
-    brand_audience = (
-        brand.target_audience if brand else None
-    ) or "General customers"
+    brand_audience = (brand.target_audience if brand else None) or "General customers"
     brand_languages = ", ".join((brand.languages if brand else ["uz"]) or ["uz"])
     rendered = (
         template.replace("{brand_name}", brand_name)

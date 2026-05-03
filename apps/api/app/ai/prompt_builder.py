@@ -40,10 +40,7 @@ PLATFORM_RULES: dict[str, str] = {
     ),
 }
 
-DEFAULT_PLATFORM_RULES = (
-    "- Generic social-media post.\n"
-    "- 200-800 characters. 3-8 hashtags."
-)
+DEFAULT_PLATFORM_RULES = "- Generic social-media post.\n" "- 200-800 characters. 3-8 hashtags."
 
 
 def _platform_rules(platform: str) -> str:
@@ -61,9 +58,7 @@ async def _rag_context(
     if not query.strip():
         return "(no relevant knowledge base context)", []
     try:
-        hits = await knowledge_service.search(
-            db, query=query, brand_id=brand_id, top_k=top_k
-        )
+        hits = await knowledge_service.search(db, query=query, brand_id=brand_id, top_k=top_k)
     except Exception:
         return "(knowledge base search failed — proceed without it)", []
     if not hits:

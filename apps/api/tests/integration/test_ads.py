@@ -63,16 +63,14 @@ async def test_sync_mock_campaigns_creates_per_account(
     await client.post("/api/v1/ads/accounts/sync-mock", headers=headers)
     seed = await client.post("/api/v1/ads/campaigns/sync-mock", headers=headers)
     assert seed.status_code == 200, seed.text
-    # 2 networks × 2 accounts × 3 campaigns = 12
+    # 2 networks x 2 accounts x 3 campaigns = 12
     assert seed.json()["inserted"] == 12
 
     campaigns = (await client.get("/api/v1/ads/campaigns", headers=headers)).json()
     assert len(campaigns) == 12
 
 
-async def test_create_draft_campaign(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_create_draft_campaign(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await client.post("/api/v1/ads/accounts/sync-mock", headers=headers)
@@ -138,9 +136,7 @@ async def test_metrics_snapshot_attaches_to_active_campaigns(
     assert sample["ctr"] > 0  # basis points
 
 
-async def test_overview_aggregates_kpis(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_overview_aggregates_kpis(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await _seed_full(client, headers)
@@ -154,29 +150,21 @@ async def test_overview_aggregates_kpis(
     assert "google" in overview["by_network"]
 
 
-async def test_filter_by_network(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_filter_by_network(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await _seed_full(client, headers)
 
-    only_meta = (
-        await client.get("/api/v1/ads/campaigns?network=meta", headers=headers)
-    ).json()
+    only_meta = (await client.get("/api/v1/ads/campaigns?network=meta", headers=headers)).json()
     assert len(only_meta) > 0
     assert all(c["network"] == "meta" for c in only_meta)
 
-    only_google = (
-        await client.get("/api/v1/ads/overview?network=google", headers=headers)
-    ).json()
+    only_google = (await client.get("/api/v1/ads/overview?network=google", headers=headers)).json()
     assert "google" in only_google["by_network"]
     assert "meta" not in only_google["by_network"]
 
 
-async def test_update_campaign_changes_status(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_update_campaign_changes_status(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await client.post("/api/v1/ads/accounts/sync-mock", headers=headers)
@@ -203,9 +191,7 @@ async def test_update_campaign_changes_status(
     assert upd.json()["daily_budget"] == 200_000
 
 
-async def test_delete_campaign(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_delete_campaign(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await client.post("/api/v1/ads/accounts/sync-mock", headers=headers)
@@ -226,9 +212,7 @@ async def test_delete_campaign(
     assert rm2.status_code == 404
 
 
-async def test_insights_returns_recommendations(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_insights_returns_recommendations(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await _seed_full(client, headers)
@@ -241,9 +225,7 @@ async def test_insights_returns_recommendations(
     assert body["snapshot"]["campaigns"] > 0
 
 
-async def test_insights_empty_state(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_insights_empty_state(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     resp = await client.get("/api/v1/ads/insights", headers=headers)
@@ -252,15 +234,11 @@ async def test_insights_empty_state(
     assert body["recommendations"] == []
 
 
-async def test_timeseries_buckets_per_day(
-    client: AsyncClient, sample_register_payload: dict
-):
+async def test_timeseries_buckets_per_day(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
     await _seed_full(client, headers)
 
-    rows = (
-        await client.get("/api/v1/ads/timeseries?days=7", headers=headers)
-    ).json()
+    rows = (await client.get("/api/v1/ads/timeseries?days=7", headers=headers)).json()
     assert len(rows) >= 1
     assert rows[0]["impressions"] > 0

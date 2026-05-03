@@ -28,13 +28,7 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { extractApiError } from "@/lib/api-client";
 import { crmApi } from "@/lib/crm-api";
-import type {
-  Contact,
-  Deal,
-  DealCreateRequest,
-  Pipeline,
-  PipelineStage,
-} from "@/lib/types";
+import type { Contact, Deal, DealCreateRequest, Pipeline, PipelineStage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function fmtAmount(n: number, currency: string): string {
@@ -279,9 +273,7 @@ function SummaryTile({
         </p>
         <p className="mt-1.5 truncate text-[11px] text-[var(--fg-subtle)]">{hint}</p>
       </div>
-      <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tint}`}
-      >
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tint}`}>
         <Icon className="h-4 w-4" />
       </div>
     </div>
@@ -316,7 +308,12 @@ function KanbanBoard({
 
   if (loading) {
     return (
-      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${pipeline.stages.length}, minmax(220px, 1fr))` }}>
+      <div
+        className="grid gap-3"
+        style={{
+          gridTemplateColumns: `repeat(${pipeline.stages.length}, minmax(220px, 1fr))`,
+        }}
+      >
         {pipeline.stages.map((s) => (
           <div
             key={s.id}
@@ -390,15 +387,14 @@ function StageColumn({
       }}
       className={cn(
         "flex min-h-[300px] flex-col gap-2 rounded-lg border bg-[var(--bg-subtle)] p-2 transition-colors",
-        hover ? "border-[var(--primary)] bg-[var(--primary-soft)]/30" : "border-[var(--border)]",
+        hover
+          ? "border-[var(--primary)] bg-[var(--primary-soft)]/30"
+          : "border-[var(--border)]",
       )}
     >
       <div className="flex items-center justify-between gap-2 px-1.5 py-1">
         <div className="flex items-center gap-2">
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: accent }}
-          />
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: accent }} />
           <p className="text-[12px] font-semibold text-[var(--fg)]">{stage.name}</p>
         </div>
         <div className="flex items-center gap-1.5 text-[10px] text-[var(--fg-subtle)]">
@@ -407,9 +403,7 @@ function StageColumn({
           <span>{stage.default_probability}%</span>
         </div>
       </div>
-      <div className="px-1.5 text-[10px] text-[var(--fg-subtle)]">
-        {fmtAmount(sum, "UZS")}
-      </div>
+      <div className="px-1.5 text-[10px] text-[var(--fg-subtle)]">{fmtAmount(sum, "UZS")}</div>
       <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto">
         {deals.map((d) => (
           <DealCard
@@ -454,9 +448,7 @@ function DealCard({
         deal.status === "open" ? "cursor-grab active:cursor-grabbing" : "opacity-70",
       )}
     >
-      <p className="truncate text-[12px] font-medium text-[var(--fg)]">
-        {deal.title}
-      </p>
+      <p className="truncate text-[12px] font-medium text-[var(--fg)]">{deal.title}</p>
       <div className="mt-1 flex items-center justify-between gap-2 text-[10px]">
         <span className="font-semibold text-[var(--fg)]">
           {fmtAmount(deal.amount, deal.currency)}
@@ -504,13 +496,7 @@ function DealCard({
   );
 }
 
-function DealsTable({
-  deals,
-  pipeline,
-}: {
-  deals: Deal[];
-  pipeline: Pipeline;
-}) {
+function DealsTable({ deals, pipeline }: { deals: Deal[]; pipeline: Pipeline }) {
   const stageMap = useMemo(() => {
     const map = new Map<string, PipelineStage>();
     for (const s of pipeline.stages) map.set(s.id, s);
@@ -553,9 +539,7 @@ function DealsTable({
                       <td className="py-2 pr-3 text-[var(--fg-muted)]">
                         {stage?.name ?? "—"}
                       </td>
-                      <td className="py-2 pr-3">
-                        {fmtAmount(d.amount, d.currency)}
-                      </td>
+                      <td className="py-2 pr-3">{fmtAmount(d.amount, d.currency)}</td>
                       <td className="py-2 pr-3">{d.probability}%</td>
                       <td className="py-2 pr-3">
                         <DealStatusBadge status={d.status} />
@@ -647,10 +631,7 @@ function DealForm({
             />
           </FormField>
 
-          <FormField
-            label="Kontakt"
-            hint="Ism yoki telefon kiriting (kamida 2 belgi)"
-          >
+          <FormField label="Kontakt" hint="Ism yoki telefon kiriting (kamida 2 belgi)">
             <Input
               value={contactQuery}
               onChange={(e) => {

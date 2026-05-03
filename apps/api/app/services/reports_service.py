@@ -30,9 +30,7 @@ logger = logging.getLogger(__name__)
 # ─────────── Cross-module overview ───────────
 
 
-async def overview(
-    db: AsyncSession, *, days: int = 30
-) -> dict[str, Any]:
+async def overview(db: AsyncSession, *, days: int = 30) -> dict[str, Any]:
     """Single dashboard payload pulling from CRM + SMM + Ads + Inbox."""
     if days < 1 or days > 365:
         raise ValueError("days must be 1..365")
@@ -52,11 +50,7 @@ async def overview(
     # Inbox
     convs = list((await db.execute(select(Conversation))).scalars())
     msgs_in_window = list(
-        (
-            await db.execute(
-                select(Message).where(Message.occurred_at >= since)
-            )
-        ).scalars()
+        (await db.execute(select(Message).where(Message.occurred_at >= since))).scalars()
     )
     inbound = sum(1 for m in msgs_in_window if m.direction == "in")
     outbound = sum(1 for m in msgs_in_window if m.direction == "out")
@@ -171,20 +165,12 @@ async def funnel(db: AsyncSession) -> dict[str, Any]:
 # ─────────── Cohorts (monthly) ───────────
 
 
-async def contact_cohorts(
-    db: AsyncSession, *, months: int = 6
-) -> list[dict[str, Any]]:
+async def contact_cohorts(db: AsyncSession, *, months: int = 6) -> list[dict[str, Any]]:
     """Group contacts by created-at month and report cohort size + customers."""
     if months < 1 or months > 24:
         raise ValueError("months must be 1..24")
     since = datetime.now(UTC) - timedelta(days=months * 31)
-    rows = list(
-        (
-            await db.execute(
-                select(Contact).where(Contact.created_at >= since)
-            )
-        ).scalars()
-    )
+    rows = list((await db.execute(select(Contact).where(Contact.created_at >= since))).scalars())
     by_month: dict[str, dict[str, int]] = {}
     for c in rows:
         key = c.created_at.astimezone(UTC).strftime("%Y-%m")
@@ -201,9 +187,7 @@ async def contact_cohorts(
 
 
 async def list_saved(db: AsyncSession) -> list[SavedReport]:
-    stmt = select(SavedReport).order_by(
-        desc(SavedReport.is_pinned), desc(SavedReport.updated_at)
-    )
+    stmt = select(SavedReport).order_by(desc(SavedReport.is_pinned), desc(SavedReport.updated_at))
     return list((await db.execute(stmt)).scalars())
 
 
@@ -311,9 +295,7 @@ def _heuristic_insights(snap: dict[str, Any], fnl: dict[str, Any]) -> dict[str, 
     return {"summary": summary, "recommendations": recs[:5]}
 
 
-async def insights(
-    db: AsyncSession, *, days: int = 30
-) -> dict[str, Any]:
+async def insights(db: AsyncSession, *, days: int = 30) -> dict[str, Any]:
     snap = await overview(db, days=days)
     fnl = await funnel(db)
     base = _heuristic_insights(snap, fnl)
@@ -377,9 +359,7 @@ async def export_csv(db: AsyncSession, *, kind: str) -> str:
     writer = csv.writer(buf)
     if kind == "contacts":
         contacts = list((await db.execute(select(Contact))).scalars())
-        writer.writerow(
-            ["id", "full_name", "phone", "email", "status", "ai_score", "created_at"]
-        )
+        writer.writerow(["id", "full_name", "phone", "email", "status", "ai_score", "created_at"])
         for c in contacts:
             writer.writerow(
                 [

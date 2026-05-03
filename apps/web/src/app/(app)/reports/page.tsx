@@ -92,10 +92,7 @@ export default function ReportsPage() {
       className="space-y-6"
     >
       <PageHeader
-        breadcrumbs={[
-          { label: "Bosh sahifa", href: "/dashboard" },
-          { label: "Hisobotlar" },
-        ]}
+        breadcrumbs={[{ label: "Bosh sahifa", href: "/dashboard" }, { label: "Hisobotlar" }]}
         title="Hisobotlar"
         description="Cross-modul KPI'lar, funnel, kogortalar va AI biznes insights"
         actions={
@@ -147,7 +144,12 @@ export default function ReportsPage() {
 function ModuleKpiGrid({
   overview,
 }: {
-  overview: { crm: ReportsCRMSnapshot; smm: ReportsSMMSnapshot; ads: ReportsAdsSnapshot; inbox: ReportsInboxSnapshot };
+  overview: {
+    crm: ReportsCRMSnapshot;
+    smm: ReportsSMMSnapshot;
+    ads: ReportsAdsSnapshot;
+    inbox: ReportsInboxSnapshot;
+  };
 }) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -262,9 +264,7 @@ function InsightsCard({ insights }: { insights: ReportsInsights }) {
         <CardTitle>AI biznes tahlili</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-[14px] leading-relaxed text-[var(--fg)]">
-          {insights.summary}
-        </p>
+        <p className="text-[14px] leading-relaxed text-[var(--fg)]">{insights.summary}</p>
         {insights.recommendations.length > 0 ? (
           <ul className="mt-4 space-y-2">
             {insights.recommendations.map((r, i) => (
@@ -331,9 +331,7 @@ function FunnelCard({ funnel }: { funnel: ReportsFunnel }) {
         <div className="mt-4 grid grid-cols-3 gap-3 border-t border-[var(--border)] pt-4 text-[12px]">
           <div>
             <p className="text-[var(--fg-subtle)]">Mijozlar</p>
-            <p className="font-semibold text-[var(--fg)]">
-              {funnel.totals.contacts}
-            </p>
+            <p className="font-semibold text-[var(--fg)]">{funnel.totals.contacts}</p>
           </div>
           <div>
             <p className="text-[var(--fg-subtle)]">Bitimlar</p>
@@ -341,9 +339,7 @@ function FunnelCard({ funnel }: { funnel: ReportsFunnel }) {
           </div>
           <div>
             <p className="text-[var(--fg-subtle)]">Yopilgan</p>
-            <p className="font-semibold text-[var(--fg)]">
-              {funnel.totals.closed_deals}
-            </p>
+            <p className="font-semibold text-[var(--fg)]">{funnel.totals.closed_deals}</p>
           </div>
         </div>
       </CardContent>
@@ -389,9 +385,7 @@ function CohortsCard({
                   >
                     <td className="py-2 pr-3 font-medium">{r.month}</td>
                     <td className="py-2 pr-3">{r.size}</td>
-                    <td className="py-2 pr-3 text-[var(--success)]">
-                      {r.customers}
-                    </td>
+                    <td className="py-2 pr-3 text-[var(--success)]">{r.customers}</td>
                     <td className="py-2 pr-3 text-[var(--danger)]">{r.lost}</td>
                     <td className="py-2 pr-3">{(conv * 100).toFixed(0)}%</td>
                   </tr>
@@ -428,11 +422,7 @@ function ExportCard() {
         <div className="flex flex-wrap gap-2">
           {exports.map((e) => (
             <Button asChild key={e.kind} variant="secondary" size="sm">
-              <a
-                href={reportsApi.exportCsvUrl(e.kind)}
-                target="_blank"
-                rel="noopener"
-              >
+              <a href={reportsApi.exportCsvUrl(e.kind)} target="_blank" rel="noopener">
                 <e.icon /> {e.label}
               </a>
             </Button>

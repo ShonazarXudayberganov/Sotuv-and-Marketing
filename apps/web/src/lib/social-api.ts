@@ -56,11 +56,7 @@ export const socialApi = {
     });
     return data;
   },
-  async metaTest(
-    accountId: string,
-    text: string,
-    imageUrl?: string,
-  ): Promise<MetaSendResult> {
+  async metaTest(accountId: string, text: string, imageUrl?: string): Promise<MetaSendResult> {
     const { data } = await apiClient.post<MetaSendResult>("/social/meta/test", {
       account_id: accountId,
       text,
@@ -90,10 +86,9 @@ export const socialApi = {
     return data;
   },
   async youtubeStats(accountId: string, limit = 5): Promise<YouTubeStats> {
-    const { data } = await apiClient.get<YouTubeStats>(
-      `/social/youtube/${accountId}/stats`,
-      { params: { limit } },
-    );
+    const { data } = await apiClient.get<YouTubeStats>(`/social/youtube/${accountId}/stats`, {
+      params: { limit },
+    });
     return data;
   },
 };
