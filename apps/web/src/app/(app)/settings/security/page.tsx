@@ -1,7 +1,7 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-import { ShieldCheck } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { LogOut, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import {
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { extractApiError } from "@/lib/api-client";
+import { sessionsApi } from "@/lib/security-api";
 import { twofaApi } from "@/lib/sprint4-api";
 import type { TwoFactorSetup } from "@/lib/types";
 
@@ -120,14 +121,70 @@ export default function SecurityPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Faol sessiyalar</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted text-sm">Sprint 5 da qo&apos;shiladi.</p>
-        </CardContent>
-      </Card>
+      <ActiveSessions />
     </div>
+  );
+}
+
+function ActiveSessions() {
+  const qc = useQueryClient();
+  const { data = [], isLoading } = useQuery({
+    queryKey: ["sessions"],
+    queryFn: sessionsApi.list,
+  });
+
+  const revoke = useMutation({
+    mutationFn: sessionsApi.revoke,
+    onSuccess: () => {
+      toast.success("Sessiya bekor qilindi");
+      qc.invalidateQueries({ queryKey: ["sessions"] });
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Faol sessiyalar ({data.length})</CardTitle>
+        <CardDescription>
+          Bu yerda hozirda kirilgan barcha qurilmalarni ko&apos;rasiz. Tanish bo&apos;lmagan
+          sessiyani darhol bekor qiling.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-muted text-sm">Yuklanmoqda...</p>
+        ) : data.length === 0 ? (
+          <p className="text-muted text-sm">Faol sessiya yo&apos;q</p>
+        ) : (
+          <ul className="border-cream-200 divide-cream-200 divide-y rounded-md border">
+            {data.map((s) => (
+              <li
+                key={s.id}
+                className="bg-cream flex items-center justify-between gap-3 px-3 py-3 text-sm first:rounded-t-md last:rounded-b-md"
+              >
+                <div className="min-w-0">
+                  <p className="text-charcoal truncate text-xs">
+                    {s.user_agent ?? "Noma'lum qurilma"}
+                  </p>
+                  <p className="text-muted mt-0.5 text-[11px]">
+                    IP: {s.ip_address ?? "—"} · oxirgi faollik:{" "}
+                    {new Date(s.last_active_at).toLocaleString("uz-UZ")}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => revoke.mutate(s.id)}
+                  loading={revoke.isPending}
+                >
+                  <LogOut className="h-3.5 w-3.5" /> Chiqish
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }

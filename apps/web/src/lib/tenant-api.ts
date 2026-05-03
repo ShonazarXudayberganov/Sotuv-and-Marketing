@@ -2,9 +2,14 @@ import { apiClient } from "./api-client";
 import type {
   Department,
   DepartmentCreate,
+  InviteUserPayload,
+  InvitedUser,
   OnboardingState,
   Role,
+  RoleCreatePayload,
+  RoleUpdatePayload,
   Tenant,
+  UpdateUserPayload,
   User,
 } from "./types";
 
@@ -50,6 +55,17 @@ export const rolesApi = {
     const { data } = await apiClient.get<string[]>("/roles/permissions");
     return data;
   },
+  async create(payload: RoleCreatePayload): Promise<Role> {
+    const { data } = await apiClient.post<Role>("/roles", payload);
+    return data;
+  },
+  async update(id: string, payload: RoleUpdatePayload): Promise<Role> {
+    const { data } = await apiClient.patch<Role>(`/roles/${id}`, payload);
+    return data;
+  },
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`/roles/${id}`);
+  },
 };
 
 export const usersApi = {
@@ -60,6 +76,17 @@ export const usersApi = {
   async list(): Promise<User[]> {
     const { data } = await apiClient.get<User[]>("/users");
     return data;
+  },
+  async invite(payload: InviteUserPayload): Promise<InvitedUser> {
+    const { data } = await apiClient.post<InvitedUser>("/users", payload);
+    return data;
+  },
+  async update(id: string, payload: UpdateUserPayload): Promise<User> {
+    const { data } = await apiClient.patch<User>(`/users/${id}`, payload);
+    return data;
+  },
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`/users/${id}`);
   },
 };
 

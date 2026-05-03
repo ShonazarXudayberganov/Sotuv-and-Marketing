@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import {
@@ -15,7 +16,7 @@ import {
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useLogin } from "@/hooks/use-auth";
+import { useGoogleLogin, useLogin, useTelegramLogin } from "@/hooks/use-auth";
 
 const schema = z.object({
   email_or_phone: z.string().min(3, "Email yoki telefon raqamini kiriting"),
@@ -27,6 +28,8 @@ type LoginForm = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const login = useLogin();
+  const googleLogin = useGoogleLogin();
+  const telegramLogin = useTelegramLogin();
   const {
     register,
     handleSubmit,
@@ -42,6 +45,8 @@ export default function LoginPage() {
       password: values.password,
       remember_me: values.remember_me ?? false,
     });
+
+  const oauthMockEnabled = process.env.NEXT_PUBLIC_OAUTH_MOCK !== "false";
 
   return (
     <Card>
@@ -105,6 +110,51 @@ export default function LoginPage() {
             </Link>
           </div>
         </form>
+
+        <div className="border-cream-200 mt-6 border-t pt-4">
+          <p className="text-muted mb-3 text-center text-xs tracking-wide uppercase">yoki</p>
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              loading={googleLogin.isPending}
+              onClick={() => {
+                if (oauthMockEnabled) {
+                  const email = window.prompt(
+                    "Mock Google: emailingizni kiriting",
+                    "demo@gmail.com",
+                  );
+                  if (email) googleLogin.mutate(`mock:${email}:Google Demo`);
+                } else {
+                  toast.error("Google kirish hozircha mavjud emas");
+                }
+              }}
+            >
+              Google bilan kirish
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              loading={telegramLogin.isPending}
+              onClick={() => {
+                if (oauthMockEnabled) {
+                  const username = window.prompt(
+                    "Mock Telegram: usernameingizni kiriting",
+                    "demo_user",
+                  );
+                  if (username)
+                    telegramLogin.mutate({
+                      mock_token: `mock:${username}@telegram.nexus.local:${username}`,
+                    });
+                } else {
+                  toast.error("Telegram kirish hozircha mavjud emas");
+                }
+              }}
+            >
+              Telegram bilan kirish
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

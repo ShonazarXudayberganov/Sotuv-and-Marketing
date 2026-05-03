@@ -39,7 +39,25 @@ export const authApi = {
     await apiClient.post("/auth/reset-password", payload);
   },
 
-  async logout(): Promise<void> {
-    await apiClient.post("/auth/logout");
+  async logout(refreshToken: string): Promise<void> {
+    await apiClient.post("/auth/logout", { refresh_token: refreshToken });
+  },
+
+  async loginWithGoogle(idToken: string): Promise<AuthBundle & { is_new_user: boolean }> {
+    const { data } = await apiClient.post<AuthBundle & { is_new_user: boolean }>(
+      "/auth/google",
+      { id_token: idToken },
+    );
+    return data;
+  },
+
+  async loginWithTelegram(
+    payload: Record<string, unknown>,
+  ): Promise<AuthBundle & { is_new_user: boolean }> {
+    const { data } = await apiClient.post<AuthBundle & { is_new_user: boolean }>(
+      "/auth/telegram",
+      payload,
+    );
+    return data;
   },
 };

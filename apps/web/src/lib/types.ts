@@ -1084,3 +1084,73 @@ export interface WebhookDelivery {
   error: string | null;
   created_at: string;
 }
+
+export interface InviteUserPayload {
+  email: string;
+  phone: string;
+  full_name?: string | null;
+  role_slug: string;
+  department_id?: string | null;
+}
+
+export interface UpdateUserPayload {
+  full_name?: string | null;
+  role_slug?: string | null;
+  department_id?: string | null;
+}
+
+export interface InvitedUser extends User {
+  phone: string;
+  temporary_password: string;
+}
+
+export interface RoleCreatePayload {
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  permissions: string[];
+}
+
+export interface RoleUpdatePayload {
+  name?: string;
+  description?: string | null;
+  permissions?: string[];
+}
+
+export interface AuditLogEntry {
+  id: string;
+  user_id: string | null;
+  action: string;
+  resource_type: string;
+  resource_id: string | null;
+  metadata: Record<string, unknown> | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+}
+
+export type NotificationChannel = "in_app" | "email" | "telegram";
+export type NotificationCategory = "tasks" | "billing" | "ai" | "inbox" | "social" | "system";
+
+export interface NotificationPreferences {
+  channels: Record<NotificationCategory, NotificationChannel[]>;
+  quiet_hours_start: number | null;
+  quiet_hours_end: number | null;
+  telegram_chat_id: string | null;
+}
+
+export interface UserSession {
+  id: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+  last_active_at: string;
+  is_current: boolean;
+}
+
+export interface OAuthBundle {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  is_new_user: boolean;
+}

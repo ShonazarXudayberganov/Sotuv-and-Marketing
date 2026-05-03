@@ -46,12 +46,49 @@ export function useLogin() {
 
 export function useLogout() {
   const clear = useAuthStore((s) => s.clear);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
   const router = useRouter();
   return useMutation({
-    mutationFn: () => authApi.logout(),
+    mutationFn: () => authApi.logout(refreshToken ?? ""),
     onSettled: () => {
       clear();
       router.push("/login");
     },
+  });
+}
+
+export function useGoogleLogin() {
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const router = useRouter();
+  return useMutation({
+    mutationFn: (idToken: string) => authApi.loginWithGoogle(idToken),
+    onSuccess: (data) => {
+      setAuth(data);
+      toast.success(
+        data.is_new_user
+          ? "Yangi akkaunt yaratildi"
+          : `Xush kelibsiz, ${data.user.full_name ?? data.user.email}`,
+      );
+      router.push(data.is_new_user ? "/onboarding" : "/dashboard");
+    },
+    onError: (error) => toast.error(extractApiError(error)),
+  });
+}
+
+export function useTelegramLogin() {
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const router = useRouter();
+  return useMutation({
+    mutationFn: (payload: Record<string, unknown>) => authApi.loginWithTelegram(payload),
+    onSuccess: (data) => {
+      setAuth(data);
+      toast.success(
+        data.is_new_user
+          ? "Yangi akkaunt yaratildi"
+          : `Xush kelibsiz, ${data.user.full_name ?? data.user.email}`,
+      );
+      router.push(data.is_new_user ? "/onboarding" : "/dashboard");
+    },
+    onError: (error) => toast.error(extractApiError(error)),
   });
 }
