@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
+    ads,
     analytics,
     api_keys,
     auth,
@@ -45,4 +46,5 @@ api_router.include_router(posts.router, prefix="/posts", tags=["smm"])
 api_router.include_router(analytics.router, prefix="/analytics", tags=["smm"])
 api_router.include_router(crm.router, prefix="/crm", tags=["crm"])
 api_router.include_router(inbox.router, prefix="/inbox", tags=["inbox"])
+api_router.include_router(ads.router, prefix="/ads", tags=["ads"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])

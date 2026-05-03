@@ -646,6 +646,84 @@ TENANT_DDL: tuple[str, ...] = (
         updated_at              timestamptz NOT NULL DEFAULT now()
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS ad_accounts (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        network         varchar(20) NOT NULL,
+        external_id     varchar(120) NOT NULL,
+        name            varchar(200) NOT NULL,
+        currency        varchar(3) NOT NULL DEFAULT 'UZS',
+        status          varchar(20) NOT NULL DEFAULT 'active',
+        brand_id        uuid REFERENCES brands(id) ON DELETE SET NULL,
+        is_default      boolean NOT NULL DEFAULT false,
+        metadata        jsonb,
+        last_synced_at  timestamptz,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now(),
+        CONSTRAINT uq_ad_account_network_external UNIQUE (network, external_id)
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_ad_accounts_network ON ad_accounts(network)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS campaigns (
+        id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id          uuid NOT NULL REFERENCES ad_accounts(id) ON DELETE CASCADE,
+        network             varchar(20) NOT NULL,
+        external_id         varchar(120),
+        name                varchar(200) NOT NULL,
+        objective           varchar(40) NOT NULL DEFAULT 'traffic',
+        status              varchar(20) NOT NULL DEFAULT 'draft',
+        daily_budget        bigint NOT NULL DEFAULT 0,
+        lifetime_budget     bigint,
+        currency            varchar(3) NOT NULL DEFAULT 'UZS',
+        starts_at           timestamptz,
+        ends_at             timestamptz,
+        audience            jsonb,
+        creative            jsonb,
+        notes               text,
+        last_synced_at      timestamptz,
+        created_by          uuid NOT NULL,
+        created_at          timestamptz NOT NULL DEFAULT now(),
+        updated_at          timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_campaigns_account ON campaigns(account_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_campaigns_network ON campaigns(network)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_campaigns_status ON campaigns(status)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS ad_metric_snapshots (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        campaign_id     uuid NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+        network         varchar(20) NOT NULL,
+        sampled_at      timestamptz NOT NULL,
+        impressions     integer NOT NULL DEFAULT 0,
+        clicks          integer NOT NULL DEFAULT 0,
+        conversions     integer NOT NULL DEFAULT 0,
+        spend           bigint NOT NULL DEFAULT 0,
+        revenue         bigint NOT NULL DEFAULT 0,
+        ctr             integer NOT NULL DEFAULT 0,
+        cpc             bigint NOT NULL DEFAULT 0,
+        cpa             bigint NOT NULL DEFAULT 0,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_ad_metric_snapshots_campaign
+        ON ad_metric_snapshots(campaign_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_ad_metric_snapshots_sampled
+        ON ad_metric_snapshots(sampled_at)
+    """,
 )
 
 

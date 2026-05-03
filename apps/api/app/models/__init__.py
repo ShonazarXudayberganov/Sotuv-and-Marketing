@@ -1,3 +1,4 @@
+from app.models.ads import AdAccount, AdMetricSnapshot, Campaign
 from app.models.base import Base, TimestampMixin, UUIDPKMixin
 from app.models.billing import AiUsage, Invoice, Plan, Subscription
 from app.models.crm import Contact, ContactActivity, Deal, Pipeline, PipelineStage
@@ -28,6 +29,8 @@ from app.models.user import User, VerificationCode
 
 __all__ = [
     "EMBEDDING_DIM",
+    "AdAccount",
+    "AdMetricSnapshot",
     "AiUsage",
     "ApiKey",
     "AuditLog",
@@ -36,6 +39,7 @@ __all__ = [
     "Brand",
     "BrandMembership",
     "BrandSocialAccount",
+    "Campaign",
     "Contact",
     "ContactActivity",
     "ContentDraft",

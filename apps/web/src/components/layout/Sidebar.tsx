@@ -88,7 +88,16 @@ const MODULES: NavGroupItem[] = [
       { href: "/smm/analytics", label: "Analytics", icon: BarChart3 },
     ],
   },
-  { href: "/ads", label: "Reklama", icon: Megaphone, badge: "Tez orada" },
+  {
+    href: "/ads",
+    label: "Reklama",
+    icon: Megaphone,
+    enabled: true,
+    children: [
+      { href: "/ads", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/ads/campaigns", label: "Kampaniyalar", icon: Megaphone },
+    ],
+  },
   {
     href: "/inbox",
     label: "Inbox",

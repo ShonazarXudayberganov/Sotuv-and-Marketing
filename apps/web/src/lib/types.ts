@@ -842,3 +842,112 @@ export interface AutoReplyDraft {
   confidence: number;
   mocked: boolean;
 }
+
+// ─────────── Ads / Sprint 3.1 ───────────
+
+export type AdNetwork = "meta" | "google";
+export type CampaignObjective =
+  | "awareness"
+  | "traffic"
+  | "leads"
+  | "conversions"
+  | "sales";
+export type CampaignStatus = "draft" | "paused" | "active" | "archived";
+
+export interface AdAccount {
+  id: string;
+  network: AdNetwork | string;
+  external_id: string;
+  name: string;
+  currency: string;
+  status: string;
+  brand_id: string | null;
+  is_default: boolean;
+  last_synced_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdMetrics {
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  spend: number;
+  revenue: number;
+  ctr: number;
+  cpc: number;
+  cpa: number;
+  sampled_at: string | null;
+}
+
+export interface Campaign {
+  id: string;
+  account_id: string;
+  network: AdNetwork | string;
+  external_id: string | null;
+  name: string;
+  objective: CampaignObjective | string;
+  status: CampaignStatus | string;
+  daily_budget: number;
+  lifetime_budget: number | null;
+  currency: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  audience: Record<string, unknown> | null;
+  creative: Record<string, unknown> | null;
+  notes: string | null;
+  last_synced_at: string | null;
+  created_at: string;
+  updated_at: string;
+  metrics: AdMetrics | null;
+}
+
+export interface AdsOverview {
+  campaigns: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  spend: number;
+  revenue: number;
+  ctr: number;
+  cpc: number;
+  cpa: number;
+  roas: number;
+  by_network: Record<
+    string,
+    {
+      campaigns: number;
+      impressions: number;
+      clicks: number;
+      conversions: number;
+      spend: number;
+      revenue: number;
+    }
+  >;
+}
+
+export interface AdsTimePoint {
+  date: string;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  spend: number;
+  revenue: number;
+}
+
+export interface AdsInsights {
+  summary: string;
+  recommendations: string[];
+  snapshot: AdsOverview;
+}
+
+export interface CampaignDraftRequest {
+  account_id: string;
+  name: string;
+  objective?: CampaignObjective | string;
+  daily_budget?: number;
+  currency?: string;
+  audience?: Record<string, unknown> | null;
+  creative?: Record<string, unknown> | null;
+  notes?: string | null;
+}
