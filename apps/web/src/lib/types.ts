@@ -1040,3 +1040,46 @@ export interface SavedReport {
   created_at: string;
   updated_at: string;
 }
+
+// ─────────── Marketplace + Webhooks / Sprint 4.1 ───────────
+
+export interface MarketplaceProvider {
+  provider: string;
+  label: string;
+  category: string;
+  description: string;
+  secret_fields: string[];
+  docs_url: string | null;
+}
+
+export interface WebhookEndpoint {
+  id: string;
+  name: string;
+  direction: "in" | "out" | string;
+  url: string | null;
+  events: string[] | null;
+  is_active: boolean;
+  last_triggered_at: string | null;
+  last_status: number | null;
+  last_error: string | null;
+  success_count: number;
+  failure_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WebhookEndpointWithSecret extends WebhookEndpoint {
+  secret: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  endpoint_id: string;
+  direction: string;
+  event: string | null;
+  status_code: number | null;
+  attempts: number;
+  succeeded: boolean;
+  error: string | null;
+  created_at: string;
+}

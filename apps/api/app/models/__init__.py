@@ -4,6 +4,7 @@ from app.models.billing import AiUsage, Invoice, Plan, Subscription
 from app.models.crm import Contact, ContactActivity, Deal, Pipeline, PipelineStage
 from app.models.inbox import AutoReplyConfig, Conversation, Message
 from app.models.knowledge import EMBEDDING_DIM, KnowledgeChunk, KnowledgeDocument
+from app.models.marketplace import WebhookDelivery, WebhookEndpoint
 from app.models.reports import SavedReport
 from app.models.smm import (
     Brand,
@@ -70,4 +71,6 @@ __all__ = [
     "User",
     "UserMembership",
     "VerificationCode",
+    "WebhookDelivery",
+    "WebhookEndpoint",
 ]

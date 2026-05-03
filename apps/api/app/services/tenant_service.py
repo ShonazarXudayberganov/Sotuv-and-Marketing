@@ -741,6 +741,49 @@ TENANT_DDL: tuple[str, ...] = (
     """
     CREATE INDEX IF NOT EXISTS ix_saved_reports_pinned ON saved_reports(is_pinned)
     """,
+    """
+    CREATE TABLE IF NOT EXISTS webhook_endpoints (
+        id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name                varchar(120) NOT NULL,
+        direction           varchar(10) NOT NULL,
+        url                 varchar(500),
+        secret              varchar(120) NOT NULL,
+        events              jsonb,
+        is_active           boolean NOT NULL DEFAULT true,
+        last_triggered_at   timestamptz,
+        last_status         integer,
+        last_error          varchar(500),
+        success_count       integer NOT NULL DEFAULT 0,
+        failure_count       integer NOT NULL DEFAULT 0,
+        created_by          uuid NOT NULL,
+        created_at          timestamptz NOT NULL DEFAULT now(),
+        updated_at          timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_webhook_endpoints_direction
+        ON webhook_endpoints(direction)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS webhook_deliveries (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        endpoint_id     uuid NOT NULL REFERENCES webhook_endpoints(id) ON DELETE CASCADE,
+        direction       varchar(10) NOT NULL,
+        event           varchar(80),
+        status_code     integer,
+        request_body    text,
+        response_body   text,
+        attempts        integer NOT NULL DEFAULT 1,
+        succeeded       boolean NOT NULL DEFAULT false,
+        error           varchar(500),
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_webhook_deliveries_endpoint
+        ON webhook_deliveries(endpoint_id)
+    """,
 )
 
 

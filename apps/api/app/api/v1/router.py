@@ -14,6 +14,7 @@ from app.api.v1.endpoints import (
     inbox,
     integrations,
     knowledge,
+    marketplace,
     notifications,
     onboarding,
     posts,
@@ -50,3 +51,4 @@ api_router.include_router(inbox.router, prefix="/inbox", tags=["inbox"])
 api_router.include_router(ads.router, prefix="/ads", tags=["ads"])
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])
+api_router.include_router(marketplace.router, prefix="/marketplace", tags=["marketplace"])

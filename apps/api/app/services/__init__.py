@@ -28,6 +28,7 @@ from app.services import (
     telegram_service,
     tenant_service,
     twofa_service,
+    webhook_service,
     youtube_service,
 )
 
@@ -61,5 +62,6 @@ __all__ = [
     "telegram_service",
     "tenant_service",
     "twofa_service",
+    "webhook_service",
     "youtube_service",
 ]

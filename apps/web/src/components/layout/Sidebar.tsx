@@ -109,6 +109,12 @@ const MODULES: NavGroupItem[] = [
     ],
   },
   { href: "/reports", label: "Hisobotlar", icon: BarChart3, enabled: true },
+  {
+    href: "/marketplace",
+    label: "Marketplace",
+    icon: Plug,
+    enabled: true,
+  },
 ];
 
 const SETTINGS: NavGroupItem = {
@@ -126,6 +132,7 @@ const SETTINGS: NavGroupItem = {
     { href: "/settings/billing", label: "Tarif va to'lov", icon: CreditCard },
     { href: "/settings/security", label: "Xavfsizlik", icon: Shield },
     { href: "/settings/api-keys", label: "API kalitlar", icon: KeyRound },
+    { href: "/settings/webhooks", label: "Webhooks", icon: Plug },
     { href: "/settings/audit", label: "Audit log", icon: FileClock },
   ],
 };
