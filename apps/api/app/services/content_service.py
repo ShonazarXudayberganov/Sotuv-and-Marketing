@@ -18,21 +18,12 @@ from uuid import UUID
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai.prompt_builder import build_prompt
+from app.ai.prompt_builder import build_prompt, load_prompt_text, render_prompt
 from app.models.smm import Brand, ContentDraft
 from app.services import ai_service, knowledge_service
 
-SYSTEM_GUARDRAILS = (
-    "You are NEXUS AI, an SMM copywriter. Always obey platform constraints, "
-    "never invent facts not present in the knowledge base context, and respond "
-    "only with the post body — no preface, no markdown headers, no labels."
-)
-
-ASSISTANT_GUARDRAILS = (
-    "You are NEXUS AI's SMM assistant. Use the supplied brand and knowledge "
-    "context, avoid unsupported claims, and answer in the requested language. "
-    "Be concise, practical, and directly useful."
-)
+SYSTEM_GUARDRAILS = load_prompt_text("system_guardrails.txt")
+ASSISTANT_GUARDRAILS = load_prompt_text("assistant_guardrails.txt")
 
 CACHE_TTL_HOURS = 24
 
@@ -209,18 +200,18 @@ async def improve_content(
         if selected_text
         else "Return the FULL improved draft."
     )
-    prompt = "\n\n".join(
-        [
-            _brand_context(brand),
-            f"Platform: {draft.platform}",
-            f"Language: {draft.language}",
-            f"Knowledge context:\n{rag_text}",
-            f"Current draft:\n{draft.body}",
-            f"Target text:\n{target}",
-            f"Instruction:\n{instruction.strip()}",
-            selected_note,
-            "No preface, no labels, no markdown fence.",
-        ]
+    prompt = render_prompt(
+        "improve_content.txt",
+        {
+            "brand_context": _brand_context(brand),
+            "platform": draft.platform,
+            "language": draft.language,
+            "rag_context": rag_text,
+            "current_draft": draft.body,
+            "target_text": target,
+            "instruction": instruction.strip(),
+            "selected_note": selected_note,
+        },
     )
     response = await ai_service.complete(db, system=SYSTEM_GUARDRAILS, user=prompt, max_tokens=1400)
 
@@ -255,15 +246,16 @@ async def chat(
         content = (item.get("content") or "").strip()
         if content:
             history_lines.append(f"{role}: {content}")
-    prompt = "\n\n".join(
-        [
-            _brand_context(brand),
-            f"Language: {language}",
-            f"Knowledge context:\n{rag_text}",
-            f"Current draft:\n{draft.body}" if draft else "Current draft: -",
-            "Recent chat:\n" + ("\n".join(history_lines) if history_lines else "-"),
-            f"User message:\n{message.strip()}",
-        ]
+    prompt = render_prompt(
+        "ai_chat.txt",
+        {
+            "brand_context": _brand_context(brand),
+            "language": language,
+            "rag_context": rag_text,
+            "current_draft": draft.body if draft else "-",
+            "recent_chat": "\n".join(history_lines) if history_lines else "-",
+            "message": message.strip(),
+        },
     )
     response = await ai_service.complete(
         db, system=ASSISTANT_GUARDRAILS, user=prompt, max_tokens=1200
@@ -315,19 +307,16 @@ async def generate_hashtags(
 ) -> dict[str, Any]:
     brand = await _get_brand(db, brand_id)
     rag_text, chunk_ids = await _rag_snippets(db, brand_id=brand_id, query=topic)
-    prompt = "\n\n".join(
-        [
-            _brand_context(brand),
-            f"Platform: {platform}",
-            f"Language: {language}",
-            f"Topic: {topic.strip()}",
-            f"Knowledge context:\n{rag_text}",
-            (
-                f"Generate exactly {count} relevant hashtags. Mix local, industry, "
-                "topic, and brand tags."
-            ),
-            "Return only hashtags separated by spaces.",
-        ]
+    prompt = render_prompt(
+        "generate_hashtags.txt",
+        {
+            "brand_context": _brand_context(brand),
+            "platform": platform,
+            "language": language,
+            "topic": topic.strip(),
+            "rag_context": rag_text,
+            "count": count,
+        },
     )
     response = await ai_service.complete(
         db, system=ASSISTANT_GUARDRAILS, user=prompt, max_tokens=500
@@ -358,19 +347,15 @@ async def generate_reels_script(
 ) -> dict[str, Any]:
     brand = await _get_brand(db, brand_id)
     rag_text, chunk_ids = await _rag_snippets(db, brand_id=brand_id, query=topic)
-    prompt = "\n\n".join(
-        [
-            _brand_context(brand),
-            f"Language: {language}",
-            f"Duration: {duration_seconds} seconds",
-            f"Topic: {topic.strip()}",
-            f"Knowledge context:\n{rag_text}",
-            (
-                "Write a Reels/Shorts script with timecodes, hook, visual direction, "
-                "captions, and CTA."
-            ),
-            "Keep it production-ready and realistic for a small Uzbekistan business.",
-        ]
+    prompt = render_prompt(
+        "generate_reels_script.txt",
+        {
+            "brand_context": _brand_context(brand),
+            "language": language,
+            "duration_seconds": duration_seconds,
+            "topic": topic.strip(),
+            "rag_context": rag_text,
+        },
     )
     response = await ai_service.complete(
         db, system=ASSISTANT_GUARDRAILS, user=prompt, max_tokens=1600
@@ -395,20 +380,16 @@ async def generate_30_day_plan(
 ) -> dict[str, Any]:
     brand = await _get_brand(db, brand_id)
     rag_text, chunk_ids = await _rag_snippets(db, brand_id=brand_id, query=topic)
-    prompt = "\n\n".join(
-        [
-            _brand_context(brand),
-            f"Platform: {platform}",
-            f"Language: {language}",
-            f"Planning horizon: {days} days",
-            f"Topic/focus: {topic.strip()}",
-            f"Knowledge context:\n{rag_text}",
-            (
-                "Create a day-by-day content plan. For each day include: day number, "
-                "format, topic, goal, caption angle, and CTA."
-            ),
-            "Keep the plan compact enough to scan in a dashboard.",
-        ]
+    prompt = render_prompt(
+        "generate_30_day_plan.txt",
+        {
+            "brand_context": _brand_context(brand),
+            "platform": platform,
+            "language": language,
+            "days": days,
+            "topic": topic.strip(),
+            "rag_context": rag_text,
+        },
     )
     response = await ai_service.complete(
         db, system=ASSISTANT_GUARDRAILS, user=prompt, max_tokens=2200

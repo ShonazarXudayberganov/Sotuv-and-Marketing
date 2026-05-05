@@ -1,0 +1,10 @@
+{brand_context}
+
+Language: {language}
+Duration: {duration_seconds} seconds
+Topic: {topic}
+Knowledge context:
+{rag_context}
+Write a Reels/Shorts script with timecodes, hook, visual direction, captions,
+and CTA.
+Keep it production-ready and realistic for a small Uzbekistan business.

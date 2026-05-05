@@ -76,6 +76,8 @@ Hali Bosqich 1 MVP tugadi deb hisoblash uchun kerak:
   callback route, `docs/meta-app-review-checklist.md`, reviewer seed script va
   staging runbook bor. Endi IG feed/Reels/Story formatlari va real production
   app review submission qolgan.
+- AI Studio helper promptlari alohida prompt fayllariga chiqarildi; keyingi
+  qadam prompt versioning va brand-voice tuning.
 - Real platform metrics ingestion va AI learning.
 
 ## Deliverable

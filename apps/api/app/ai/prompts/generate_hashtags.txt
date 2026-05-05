@@ -1,0 +1,10 @@
+{brand_context}
+
+Platform: {platform}
+Language: {language}
+Topic: {topic}
+Knowledge context:
+{rag_context}
+Generate exactly {count} relevant hashtags. Mix local, industry, topic, and
+brand tags.
+Return only hashtags separated by spaces.

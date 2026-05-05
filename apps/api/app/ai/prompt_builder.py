@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from uuid import UUID
 
@@ -10,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.smm import Brand
 from app.services import knowledge_service
 
-PROMPT_PATH = Path(__file__).parent / "prompts" / "post_generator.txt"
+PROMPTS_DIR = Path(__file__).parent / "prompts"
+PROMPT_PATH = PROMPTS_DIR / "post_generator.txt"
 
 # Platform-specific output guidance. Kept short — the model already knows
 # the format, we mostly clarify limits and required style.
@@ -51,6 +53,17 @@ def _load_template() -> str:
     return PROMPT_PATH.read_text(encoding="utf-8")
 
 
+def load_prompt_text(template_name: str) -> str:
+    return (PROMPTS_DIR / template_name).read_text(encoding="utf-8")
+
+
+def render_prompt(template_name: str, values: Mapping[str, object]) -> str:
+    rendered = load_prompt_text(template_name)
+    for key, value in values.items():
+        rendered = rendered.replace("{" + key + "}", str(value))
+    return rendered
+
+
 async def _rag_context(
     db: AsyncSession, *, brand_id: UUID, query: str, top_k: int = 4
 ) -> tuple[str, list[str]]:
@@ -86,22 +99,23 @@ async def build_prompt(
     with ``str.replace`` to avoid surprises from user-supplied braces.
     """
     rag_text, chunk_ids = await _rag_context(db, brand_id=brand.id, query=user_goal)
-    template = _load_template()
-
     languages = ", ".join(brand.languages or ["uz"])
-    rendered = (
-        template.replace("{brand_name}", brand.name)
-        .replace("{brand_industry}", brand.industry or "—")
-        .replace("{brand_voice}", brand.voice_tone or "Friendly, professional")
-        .replace("{brand_audience}", brand.target_audience or "—")
-        .replace("{brand_languages}", languages)
-        .replace("{platform}", platform)
-        .replace("{platform_rules}", _platform_rules(platform))
-        .replace("{user_goal}", user_goal.strip() or "—")
-        .replace("{rag_context}", rag_text)
-        .replace("{output_language}", output_language)
+    rendered = render_prompt(
+        "post_generator.txt",
+        {
+            "brand_name": brand.name,
+            "brand_industry": brand.industry or "—",
+            "brand_voice": brand.voice_tone or "Friendly, professional",
+            "brand_audience": brand.target_audience or "—",
+            "brand_languages": languages,
+            "platform": platform,
+            "platform_rules": _platform_rules(platform),
+            "user_goal": user_goal.strip() or "—",
+            "rag_context": rag_text,
+            "output_language": output_language,
+        },
     )
     return rendered, chunk_ids
 
 
-__all__ = ["PLATFORM_RULES", "build_prompt"]
+__all__ = ["PLATFORM_RULES", "build_prompt", "load_prompt_text", "render_prompt"]

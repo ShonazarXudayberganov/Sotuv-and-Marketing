@@ -100,7 +100,7 @@
 - [x] Approval workflow: reviewga yuborish, approve, reject, audit va posts UI actionlari.
 - [x] Brand assets CRUD/upload.
 - [x] Content plan 3-view: calendar/list/kanban, AI text import va plan itemdan post yaratish.
-- [ ] AI Studio yordamchi promptlarini alohida prompt fayllariga chiqarish.
+- [x] AI Studio yordamchi promptlarini alohida prompt fayllariga chiqarish.
 - [ ] IG/FB publishingni real credential/OAuth bilan production holatga keltirish.
   - [x] Publish hardening #1: publication event log, transient retry scheduling,
         manual retry reset, platform status sync endpoint/UI.

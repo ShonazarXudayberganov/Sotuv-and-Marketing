@@ -1,0 +1,11 @@
+{brand_context}
+
+Language: {language}
+Knowledge context:
+{rag_context}
+Current draft:
+{current_draft}
+Recent chat:
+{recent_chat}
+User message:
+{message}

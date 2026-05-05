@@ -1,0 +1,14 @@
+{brand_context}
+
+Platform: {platform}
+Language: {language}
+Knowledge context:
+{rag_context}
+Current draft:
+{current_draft}
+Target text:
+{target_text}
+Instruction:
+{instruction}
+{selected_note}
+No preface, no labels, no markdown fence.

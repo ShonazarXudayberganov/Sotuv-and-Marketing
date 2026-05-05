@@ -1,0 +1,11 @@
+{brand_context}
+
+Platform: {platform}
+Language: {language}
+Planning horizon: {days} days
+Topic/focus: {topic}
+Knowledge context:
+{rag_context}
+Create a day-by-day content plan. For each day include: day number, format,
+topic, goal, caption angle, and CTA.
+Keep the plan compact enough to scan in a dashboard.

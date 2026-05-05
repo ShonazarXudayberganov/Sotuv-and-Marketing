@@ -537,20 +537,21 @@ Asosiy:
 
 ## AI promptlar
 
-`apps/api/app/ai/prompts/smm/` papkasida:
+`apps/api/app/ai/prompts/` papkasida:
 
 ```
-generate_post.txt          # Asosiy post yaratish prompt
-generate_3_variants.txt    # 3 variant + farqlovchi yondashuvlar
+post_generator.txt         # Asosiy post yaratish prompt
 improve_content.txt        # Tahrir
+ai_chat.txt                # AI chat yordamchi prompti
 generate_30_day_plan.txt   # Reja
 generate_hashtags.txt      # Hashtag generatsiya
 generate_reels_script.txt  # Reels ssenariy
+system_guardrails.txt      # Draft generatsiya guardrail'i
+assistant_guardrails.txt   # Yordamchi AI guardrail'i
 ```
 
-Target: har prompt alohida faylda saqlanadi. Hozir asosiy post prompti faylda,
-AI Studio yordamchi promptlarini alohida faylga chiqarish texnik qarz sifatida
-qoldi.
+Target bajarildi: AI Studio yordamchi promptlari ham alohida prompt fayllariga
+chiqarildi va render helper orqali yuklanadi.
 
 ---
 
