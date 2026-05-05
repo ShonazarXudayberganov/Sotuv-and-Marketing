@@ -57,7 +57,7 @@ async def engine() -> AsyncIterator[AsyncEngine]:
     await eng.dispose()
 
 
-@pytest_asyncio.fixture(loop_scope="session")
+@pytest_asyncio.fixture(scope="function", loop_scope="session")
 async def client(engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
     """FastAPI test client with per-request fresh sessions and per-test cleanup."""
     factory = async_sessionmaker(bind=engine, expire_on_commit=False)

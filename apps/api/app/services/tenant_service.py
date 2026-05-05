@@ -922,11 +922,18 @@ TENANT_DDL: tuple[str, ...] = (
 
 
 async def schema_name_available(session: AsyncSession, schema_name: str) -> bool:
-    result = await session.execute(
+    schema_row = await session.execute(
         text("SELECT 1 FROM information_schema.schemata WHERE schema_name = :s"),
         {"s": schema_name},
     )
-    return result.first() is None
+    if schema_row.first() is not None:
+        return False
+
+    tenant_row = await session.execute(
+        text("SELECT 1 FROM public.tenants WHERE schema_name = :s"),
+        {"s": schema_name},
+    )
+    return tenant_row.first() is None
 
 
 async def generate_unique_schema_name(session: AsyncSession, company_name: str) -> str:
