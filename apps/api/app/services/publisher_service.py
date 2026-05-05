@@ -113,17 +113,14 @@ async def _publish_instagram(
     media = media_list[0] if media_list else None
     if not media:
         raise PermanentPublishError("Instagram requires at least one media_url")
-    if post.content_format in {"reels", "story"}:
-        raise PermanentPublishError(
-            f"Instagram {post.content_format} publishing is not implemented yet"
-        )
     try:
         result = await meta_service.publish_instagram_post(
             db,
             ig_user_id=account.external_id,
             page_access_token=str(page_token),
-            image_url=str(media),
+            media_url=str(media),
             caption=post.body,
+            content_format=post.content_format,
         )
     except MetaError as exc:
         if exc.is_auth:
@@ -138,8 +135,9 @@ async def _publish_instagram(
                         db,
                         ig_user_id=account.external_id,
                         page_access_token=refreshed,
-                        image_url=str(media),
+                        media_url=str(media),
                         caption=post.body,
+                        content_format=post.content_format,
                     )
                 except MetaError as retry_exc:
                     raise _meta_publish_error(retry_exc) from retry_exc

@@ -180,7 +180,7 @@ def _normalize_content_format(
     providers = {account.provider for account in accounts}
     normalized = (content_format or "").strip().lower()
     if not normalized:
-        return "feed" if providers == {"instagram"} else "standard"
+        normalized = "feed" if providers == {"instagram"} else "standard"
     if normalized not in POST_CONTENT_FORMATS:
         allowed = ", ".join(sorted(POST_CONTENT_FORMATS))
         raise ValueError(f"Unsupported post format. Allowed: {allowed}")

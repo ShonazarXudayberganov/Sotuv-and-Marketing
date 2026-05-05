@@ -37,7 +37,13 @@ import { Input } from "@/components/ui/input";
 import { extractApiError } from "@/lib/api-client";
 import { brandsApi, integrationsApi } from "@/lib/smm-api";
 import { socialApi } from "@/lib/social-api";
-import type { Brand, MetaPageOption, SocialAccount, YouTubeStats } from "@/lib/types";
+import type {
+  Brand,
+  MetaContentFormat,
+  MetaPageOption,
+  SocialAccount,
+  YouTubeStats,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type LinkMode = null | "telegram" | "meta" | "youtube";
@@ -125,12 +131,22 @@ export default function SocialAccountsPage() {
   });
 
   const sendTest = useMutation({
-    mutationFn: async (args: { account: SocialAccount; text: string; imageUrl?: string }) => {
+    mutationFn: async (args: {
+      account: SocialAccount;
+      text: string;
+      imageUrl?: string;
+      videoUrl?: string;
+      contentFormat?: MetaContentFormat;
+    }) => {
       if (args.account.provider === "telegram") {
         const r = await socialApi.telegramTest(args.account.id, args.text);
         return { id: `message_id=${r.message_id}`, mocked: r.mocked };
       }
-      const r = await socialApi.metaTest(args.account.id, args.text, args.imageUrl);
+      const r = await socialApi.metaTest(args.account.id, args.text, {
+        imageUrl: args.imageUrl,
+        videoUrl: args.videoUrl,
+        contentFormat: args.contentFormat,
+      });
       return { id: r.post_id, mocked: r.mocked };
     },
     onSuccess: (res) => {
@@ -262,7 +278,7 @@ export default function SocialAccountsPage() {
         <TestSendForm
           account={testing}
           onCancel={() => setTesting(null)}
-          onSubmit={(text, imageUrl) => sendTest.mutate({ account: testing, text, imageUrl })}
+          onSubmit={(payload) => sendTest.mutate({ account: testing, ...payload })}
           loading={sendTest.isPending}
         />
       ) : null}
@@ -849,14 +865,30 @@ function TestSendForm({
 }: {
   account: SocialAccount;
   onCancel: () => void;
-  onSubmit: (text: string, imageUrl?: string) => void;
+  onSubmit: (payload: {
+    text: string;
+    imageUrl?: string;
+    videoUrl?: string;
+    contentFormat?: MetaContentFormat;
+  }) => void;
   loading: boolean;
 }) {
   const [text, setText] = useState(
     "Test xabar — NEXUS AI orqali yuborildi.\nMuvaffaqiyatli ulanish belgisi.",
   );
   const [imageUrl, setImageUrl] = useState("https://picsum.photos/1080");
+  const [videoUrl, setVideoUrl] = useState("https://example.com/reel.mp4");
+  const [contentFormat, setContentFormat] = useState<MetaContentFormat>("feed");
   const isInstagram = account.provider === "instagram";
+  const needsVideo = isInstagram && contentFormat === "reels";
+  const needsAnyMedia = isInstagram;
+  const canSubmit = !text.trim()
+    ? false
+    : !needsAnyMedia
+      ? true
+      : needsVideo
+        ? !!videoUrl.trim()
+        : !!imageUrl.trim() || !!videoUrl.trim();
 
   return (
     <FormCard
@@ -875,25 +907,66 @@ function TestSendForm({
         />
       </FormField>
       {isInstagram ? (
-        <FormField
-          label="Rasm URL"
-          required
-          hint="Instagram post sifatida e'lon qilish uchun ommaviy rasm URL'i kerak"
-        >
-          <Input
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-          />
-        </FormField>
+        <div className="space-y-4">
+          <FormField label="Instagram formati" required>
+            <div className="flex gap-2">
+              <PlatformPill
+                active={contentFormat === "feed"}
+                onClick={() => setContentFormat("feed")}
+                icon={Instagram}
+                label="Feed"
+              />
+              <PlatformPill
+                active={contentFormat === "reels"}
+                onClick={() => setContentFormat("reels")}
+                icon={Play}
+                label="Reels"
+              />
+              <PlatformPill
+                active={contentFormat === "story"}
+                onClick={() => setContentFormat("story")}
+                icon={Eye}
+                label="Story"
+              />
+            </div>
+          </FormField>
+          <FormField
+            label="Rasm URL"
+            required={!needsVideo}
+            hint="Feed yoki Story image uchun ommaviy rasm URL'i"
+          >
+            <Input
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+            />
+          </FormField>
+          <FormField
+            label="Video URL"
+            required={needsVideo}
+            hint="Feed video, Reels yoki Story video uchun ommaviy video URL'i"
+          >
+            <Input
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="https://example.com/video.mp4"
+            />
+          </FormField>
+        </div>
       ) : null}
       <FormActions
         onCancel={onCancel}
         onSubmit={() =>
-          text.trim() && onSubmit(text.trim(), isInstagram ? imageUrl.trim() : undefined)
+          canSubmit &&
+          onSubmit({
+            text: text.trim(),
+            imageUrl: isInstagram && imageUrl.trim() ? imageUrl.trim() : undefined,
+            videoUrl: isInstagram && videoUrl.trim() ? videoUrl.trim() : undefined,
+            contentFormat: isInstagram ? contentFormat : undefined,
+          })
         }
         loading={loading}
-        disabled={!text.trim() || (isInstagram && !imageUrl.trim())}
+        disabled={!canSubmit}
         cta="Yuborish"
         cancelLabel="Bekor qilish"
       />

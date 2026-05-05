@@ -112,7 +112,8 @@
   - [ ] Production reviewer environment + real Meta app review submission.
   - [ ] IG formatlari: feed image/video, Reels, Story variantlari.
     - [x] Post contract: `content_format` (`feed` / `reels` / `story`) va create UI.
-    - [ ] Media-type aware Meta adapters: feed image/video, Reels, Story publish flows.
+    - [x] Media-type aware Meta adapters: feed image/video, Reels, Story publish flows.
+    - [ ] Real production smoke: Meta Graph API bilan feed video / reels / story publish verifikatsiyasi.
 - [ ] SMM analyticsga real platform metrics ingestion.
 
 ### CRM / Inbox Qarzlari

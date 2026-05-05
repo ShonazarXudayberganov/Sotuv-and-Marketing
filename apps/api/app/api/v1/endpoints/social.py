@@ -336,16 +336,24 @@ async def meta_send_test(
                 message=payload.text,
             )
         else:
-            if not payload.image_url:
+            media_url = payload.video_url or payload.image_url
+            if not media_url:
                 raise HTTPException(
-                    status_code=400, detail="Instagram requires image_url for test publish"
+                    status_code=400,
+                    detail="Instagram requires image_url or video_url for test publish",
+                )
+            if payload.content_format == "reels" and not payload.video_url:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Instagram reels requires video_url for test publish",
                 )
             result = await meta_service.publish_instagram_post(
                 db,
                 ig_user_id=rec.external_id,
                 page_access_token=str(page_token),
-                image_url=payload.image_url,
+                media_url=media_url,
                 caption=payload.text,
+                content_format=payload.content_format,
             )
         await social_account_service.mark_published(db, rec.id)
     except MetaError as exc:

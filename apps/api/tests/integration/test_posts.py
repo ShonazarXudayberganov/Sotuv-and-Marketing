@@ -290,7 +290,7 @@ async def test_publish_now_marks_post_published(client: AsyncClient, sample_regi
     assert body["publications"][0]["events"][0]["event_type"] == "published"
 
 
-async def test_instagram_story_publish_is_marked_failed_until_adapter_exists(
+async def test_instagram_story_publish_now_succeeds_in_mock_mode(
     client: AsyncClient, sample_register_payload: dict
 ):
     bundle = await _bootstrap(client, sample_register_payload)
@@ -314,9 +314,9 @@ async def test_instagram_story_publish_is_marked_failed_until_adapter_exists(
     publish = await client.post(f"/api/v1/posts/{post_id}/publish-now", headers=headers)
     assert publish.status_code == 200, publish.text
     body = publish.json()
-    assert body["status"] == "failed"
-    assert body["publications"][0]["status"] == "failed"
-    assert "not implemented yet" in (body["publications"][0]["last_error"] or "")
+    assert body["status"] == "published"
+    assert body["publications"][0]["status"] == "published"
+    assert body["publications"][0]["remote_status"] == "published"
 
 
 async def test_transient_publish_failure_schedules_retry_and_event(

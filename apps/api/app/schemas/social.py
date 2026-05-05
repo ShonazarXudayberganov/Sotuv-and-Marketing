@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -66,6 +67,8 @@ class MetaTestRequest(BaseModel):
     account_id: UUID
     text: str = Field(min_length=1, max_length=2000)
     image_url: str | None = Field(default=None, max_length=500)
+    video_url: str | None = Field(default=None, max_length=500)
+    content_format: Literal["feed", "reels", "story"] = "feed"
 
 
 class MetaSendResult(BaseModel):

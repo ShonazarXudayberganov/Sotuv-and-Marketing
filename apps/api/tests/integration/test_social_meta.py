@@ -167,6 +167,132 @@ async def test_test_publish_instagram_requires_image_url(
     assert send_ok.json()["target"] == "instagram"
 
 
+async def test_test_publish_instagram_reels_requires_video_url(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    pages = (await client.get("/api/v1/social/meta/pages", headers=headers)).json()
+    link = await client.post(
+        "/api/v1/social/meta/link",
+        headers=headers,
+        json={"brand_id": brand_id, "page_id": pages[0]["id"], "target": "instagram"},
+    )
+    account_id = link.json()["id"]
+
+    send_bad = await client.post(
+        "/api/v1/social/meta/test",
+        headers=headers,
+        json={
+            "account_id": account_id,
+            "text": "IG reels test",
+            "content_format": "reels",
+            "image_url": "https://example.com/cover.jpg",
+        },
+    )
+    assert send_bad.status_code == 400
+
+    send_ok = await client.post(
+        "/api/v1/social/meta/test",
+        headers=headers,
+        json={
+            "account_id": account_id,
+            "text": "IG reels test",
+            "content_format": "reels",
+            "video_url": "https://example.com/reel.mp4",
+        },
+    )
+    assert send_ok.status_code == 200, send_ok.text
+    assert send_ok.json()["target"] == "instagram"
+
+
+async def test_publish_instagram_post_builds_reels_payload(monkeypatch: pytest.MonkeyPatch):
+    from app.services import meta_service
+
+    monkeypatch.setenv("META_MOCK", "false")
+    calls: list[dict[str, object]] = []
+
+    async def fake_call(method: str, url: str, *, params=None, json_body=None):
+        calls.append({"method": method, "url": url, "params": params, "json_body": json_body})
+        return {"id": "creation-1"} if url.endswith("/media") else {"id": "publish-1"}
+
+    monkeypatch.setattr(meta_service, "_call", fake_call)
+    result = await meta_service.publish_instagram_post(
+        None,  # type: ignore[arg-type]
+        ig_user_id="178123",
+        page_access_token="page-token",
+        media_url="https://example.com/reel.mp4",
+        caption="Reels caption",
+        content_format="reels",
+    )
+    assert result["id"] == "publish-1"
+    assert calls[0]["json_body"] == {
+        "access_token": "page-token",
+        "media_type": "REELS",
+        "video_url": "https://example.com/reel.mp4",
+        "caption": "Reels caption",
+        "share_to_feed": True,
+    }
+
+
+async def test_publish_instagram_post_builds_story_payload(monkeypatch: pytest.MonkeyPatch):
+    from app.services import meta_service
+
+    monkeypatch.setenv("META_MOCK", "false")
+    calls: list[dict[str, object]] = []
+
+    async def fake_call(method: str, url: str, *, params=None, json_body=None):
+        calls.append({"method": method, "url": url, "params": params, "json_body": json_body})
+        return {"id": "creation-1"} if url.endswith("/media") else {"id": "publish-1"}
+
+    monkeypatch.setattr(meta_service, "_call", fake_call)
+    result = await meta_service.publish_instagram_post(
+        None,  # type: ignore[arg-type]
+        ig_user_id="178123",
+        page_access_token="page-token",
+        media_url="https://example.com/story.jpg",
+        caption="Story caption",
+        content_format="story",
+    )
+    assert result["id"] == "publish-1"
+    assert calls[0]["json_body"] == {
+        "access_token": "page-token",
+        "media_type": "STORIES",
+        "image_url": "https://example.com/story.jpg",
+    }
+
+
+async def test_publish_instagram_post_builds_feed_video_payload(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from app.services import meta_service
+
+    monkeypatch.setenv("META_MOCK", "false")
+    calls: list[dict[str, object]] = []
+
+    async def fake_call(method: str, url: str, *, params=None, json_body=None):
+        calls.append({"method": method, "url": url, "params": params, "json_body": json_body})
+        return {"id": "creation-1"} if url.endswith("/media") else {"id": "publish-1"}
+
+    monkeypatch.setattr(meta_service, "_call", fake_call)
+    result = await meta_service.publish_instagram_post(
+        None,  # type: ignore[arg-type]
+        ig_user_id="178123",
+        page_access_token="page-token",
+        media_url="https://example.com/feed.mp4",
+        caption="Feed video",
+        content_format="feed",
+    )
+    assert result["id"] == "publish-1"
+    assert calls[0]["json_body"] == {
+        "access_token": "page-token",
+        "media_type": "VIDEO",
+        "video_url": "https://example.com/feed.mp4",
+        "caption": "Feed video",
+    }
+
+
 async def test_test_publish_unknown_account_returns_404(
     client: AsyncClient, sample_register_payload: dict
 ):

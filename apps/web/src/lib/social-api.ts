@@ -1,5 +1,6 @@
 import { apiClient } from "./api-client";
 import type {
+  MetaContentFormat,
   MetaPageOption,
   MetaSendResult,
   SocialAccount,
@@ -56,11 +57,21 @@ export const socialApi = {
     });
     return data;
   },
-  async metaTest(accountId: string, text: string, imageUrl?: string): Promise<MetaSendResult> {
+  async metaTest(
+    accountId: string,
+    text: string,
+    args?: {
+      imageUrl?: string;
+      videoUrl?: string;
+      contentFormat?: MetaContentFormat;
+    },
+  ): Promise<MetaSendResult> {
     const { data } = await apiClient.post<MetaSendResult>("/social/meta/test", {
       account_id: accountId,
       text,
-      image_url: imageUrl ?? null,
+      image_url: args?.imageUrl ?? null,
+      video_url: args?.videoUrl ?? null,
+      content_format: args?.contentFormat ?? "feed",
     });
     return data;
   },

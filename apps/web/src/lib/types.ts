@@ -495,6 +495,8 @@ export interface MetaSendResult {
   mocked: boolean;
 }
 
+export type MetaContentFormat = "feed" | "reels" | "story";
+
 export interface YouTubeChannelInfo {
   id: string;
   title: string;

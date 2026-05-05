@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 import os
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,6 +33,7 @@ META_OAUTH_SCOPES = (
     "instagram_basic",
     "instagram_content_publish",
 )
+VIDEO_EXTENSIONS = {".mp4", ".mov", ".m4v", ".webm"}
 
 
 class MetaError(RuntimeError):
@@ -177,6 +178,47 @@ def _mock_instagram_snapshot(ig_user_id: str) -> dict[str, Any]:
             ]
         },
     }
+
+
+def _infer_instagram_media_kind(media_url: str) -> str:
+    path = urlparse(media_url).path.lower()
+    for ext in VIDEO_EXTENSIONS:
+        if path.endswith(ext):
+            return "video"
+    return "image"
+
+
+def _instagram_media_payload(
+    *,
+    media_url: str,
+    caption: str,
+    content_format: str,
+    access_token: str,
+) -> dict[str, Any]:
+    kind = _infer_instagram_media_kind(media_url)
+    payload: dict[str, Any] = {"access_token": access_token}
+
+    if content_format == "reels":
+        if kind != "video":
+            raise MetaError("Instagram reels requires a public video URL")
+        payload["media_type"] = "REELS"
+        payload["video_url"] = media_url
+        payload["caption"] = caption
+        payload["share_to_feed"] = True
+        return payload
+
+    if content_format == "story":
+        payload["media_type"] = "STORIES"
+        payload["video_url" if kind == "video" else "image_url"] = media_url
+        return payload
+
+    if kind == "video":
+        payload["media_type"] = "VIDEO"
+        payload["video_url"] = media_url
+    else:
+        payload["image_url"] = media_url
+    payload["caption"] = caption
+    return payload
 
 
 # ─────────── Public API ───────────
@@ -334,20 +376,23 @@ async def publish_instagram_post(
     *,
     ig_user_id: str,
     page_access_token: str,
-    image_url: str,
+    media_url: str,
     caption: str,
+    content_format: str = "feed",
 ) -> dict[str, Any]:
     """Two-step IG publish: create container, then publish it."""
     if _is_mock_mode():
         return _mock_publish(caption)
+    payload = _instagram_media_payload(
+        media_url=media_url,
+        caption=caption,
+        content_format=content_format,
+        access_token=page_access_token,
+    )
     container = await _call(
         "POST",
         f"{GRAPH_API_BASE}/{ig_user_id}/media",
-        json_body={
-            "image_url": image_url,
-            "caption": caption,
-            "access_token": page_access_token,
-        },
+        json_body=payload,
     )
     creation_id = container.get("id")
     if not creation_id:
