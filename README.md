@@ -11,21 +11,22 @@
 **Foundation:** Bosqich 0 ✅ tugagan  
 **Izoh:** CRM, Inbox, Ads, Reports va Marketplace bo‘yicha prototiplar ham kodda bor, lekin ular hali product-ready scope emas.
 
-| Yo‘nalish | Mazmun | Holat |
-|---|---|---|
-| Foundation | Auth, tenancy, RBAC, tasks, notifications, billing, deploy skeleti | ✅ |
-| SMM | Brands, knowledge base, AI drafts, social accounts, posts, analytics | In progress |
-| CRM/Inbox | Contacts, deals, conversations, auto-reply prototiplari | Prototype |
-| Ads/Reports | Mock sync, campaign draft, overview/reports prototiplari | Prototype |
-| Marketplace | Catalog, webhooks, mock sync prototipi | Prototype |
+| Yo‘nalish   | Mazmun                                                               | Holat       |
+| ----------- | -------------------------------------------------------------------- | ----------- |
+| Foundation  | Auth, tenancy, RBAC, tasks, notifications, billing, deploy skeleti   | ✅          |
+| SMM         | Brands, knowledge base, AI drafts, social accounts, posts, analytics | In progress |
+| CRM/Inbox   | Contacts, deals, conversations, auto-reply prototiplari              | Prototype   |
+| Ads/Reports | Mock sync, campaign draft, overview/reports prototiplari             | Prototype   |
+| Marketplace | Catalog, webhooks, mock sync prototipi                               | Prototype   |
 
-**Oxirgi tekshiruv:** 202 backend test + 8 frontend test, backend coverage 83%+.
+**Oxirgi tekshiruv:** 223 backend test + 8 frontend test, backend coverage 83.05%.
 
 ---
 
 ## Tezkor boshlash (Local development)
 
 ### Talablar
+
 - Docker Desktop 4+
 - Node.js 20+ va pnpm 10+
 - Python 3.11+ va Poetry 2+
@@ -58,6 +59,7 @@ pnpm dev
 ```
 
 Brauzerda oching:
+
 - Frontend: http://localhost:3000
 - API docs: http://localhost:8000/docs
 
@@ -65,7 +67,7 @@ Brauzerda oching:
 
 ```bash
 # Backend
-cd apps/api && poetry run pytest                  # 202 tests, 83%+ coverage
+cd apps/api && poetry run pytest                  # 223 tests, 83.05% coverage
 cd apps/api && poetry run ruff check .            # lint
 cd apps/api && poetry run ruff format --check .   # format
 cd apps/api && poetry run mypy app                # types
@@ -139,10 +141,12 @@ cd apps/web && pnpm build                         # production build
 GitHub Secrets va GitHub Variables panelida o'rnating:
 
 **Secrets:**
+
 - `STAGING_HOST`, `STAGING_USER`, `STAGING_SSH_KEY`
 - `PRODUCTION_HOST`, `PRODUCTION_USER`, `PRODUCTION_SSH_KEY`
 
 **Variables:**
+
 - `STAGING_URL` — masalan `https://staging.nexusai.uz`
 - `PRODUCTION_URL` — masalan `https://nexusai.uz`
 - `NEXT_PUBLIC_API_URL` — frontend build uchun
@@ -203,6 +207,7 @@ GitHub environment "production" protection rules orqali manual approve so'raydi.
 ## Sprint 5 yangiliklari (Bosqich 0 yakuni)
 
 ### Billing
+
 - 6 modul × 3 tarif (Start/Pro/Business) = 18 narx
 - 3 paket: Marketing Pack (-15%), Sales Pack (-15%), Full Ecosystem (-25%)
 - Yillik chegirma: 6 oy −10%, 12 oy −20%
@@ -210,18 +215,21 @@ GitHub environment "production" protection rules orqali manual approve so'raydi.
 - 7 kunlik bepul Pro+Full sinov
 
 ### Invoice
+
 - Bank o'tkazma orqali to'lov
 - PDF generatsiya (reportlab)
 - Email orqali yuborish (mock provider — SMTP wireup credentialsiz)
 - Admin tomonidan "to'langan" deb belgilash → subscription muddati avtomatik uzaytiriladi
 
 ### Grace period
+
 - 0–7 kun: banner ogohlantirishi
 - 7–30 kun: read-only (yangi yozishlar 402)
 - 30–90 kun: locked
 - 90+ kun: data arxivga (manual ish)
 
 ### Production-ready
+
 - `infra/docker-compose.prod.yml` + `nginx.conf` + SSL
 - `.github/workflows/deploy.yml` — build → GHCR → SSH deploy
 - `staging` va `production` GitHub environments
@@ -231,20 +239,27 @@ GitHub environment "production" protection rules orqali manual approve so'raydi.
 ## Bosqich 1 (Joriy)
 
 SMM MVP bo‘yicha quyidagilar allaqachon boshlangan:
-- Brendlar (multi-brand)
-- Bilimlar bazasi (knowledge_base + pgvector)
+
+- Brendlar (multi-brand + 5-step wizard)
+- Bilimlar bazasi (8 bo‘limli struktura + text/file/website/Instagram/AI chat import + pgvector)
 - Ijtimoiy akkauntlar (Telegram, Instagram, Facebook, YouTube read/test flows)
-- AI kontent draft generatsiya
-- Postlar (draft → schedule → publish-now)
+- AI Studio (3 variant + tezkor tahrir + AI chat + hashtag + reels script + 30 kunlik reja)
+- Content plan 3-view (`/smm/content-plan`: calendar/list/kanban + AI text import)
+- Postlar (draft → review → approve/reject → schedule/publish)
+- Publish hardening #1 (retry event log, manual retry reset, platform status sync)
+- Meta OAuth callback flow (`/settings/integrations/meta/callback` + start/finish API)
+- Meta production app review checklist (`docs/meta-app-review-checklist.md`)
+- Reviewer seed/runbook (`scripts/seed_smm_reviewer_demo.py` + `docs/smm-reviewer-environment.md`)
+- Reviewer readiness smoke-check (`scripts/check_smm_reviewer_readiness.py`)
+- Brand assets (CRUD/upload + `/smm/brand-assets`)
 - Kontent kalendar va analytics sahifalari
 
 Hali yakunlanadigan SMM MVP ishlari:
-- 5-step brand wizard
-- 8 bo‘limli structured knowledge base
-- Website/Instagram/AI chat import
-- 3 variantli AI Studio, hashtag, reels script, 30 kunlik reja
-- Approval workflow va brand assets
+
 - Real provider credentials/OAuth bilan production publishing
+  (hardening #1, Meta OAuth callback, approval checklist va reviewer seed/runbook bor;
+  real review submission hamda IG formatlari qolgan)
+- Real platform metrics ingestion va AI learning
 
 To'liq plan: [docs/roadmap/phase-1.md](docs/roadmap/phase-1.md)
 
@@ -260,6 +275,8 @@ To'liq plan: [docs/roadmap/phase-1.md](docs/roadmap/phase-1.md)
 - [docs/05-api-contracts.md](docs/05-api-contracts.md) — API endpointlar
 - [docs/06-ai-strategy.md](docs/06-ai-strategy.md) — AI integratsiya
 - [docs/07-security.md](docs/07-security.md) — Xavfsizlik
+- [docs/meta-app-review-checklist.md](docs/meta-app-review-checklist.md) — Meta app review checklist
+- [docs/smm-reviewer-environment.md](docs/smm-reviewer-environment.md) — reviewer staging runbook
 - [docs/modules/](docs/modules/) — Har modul spec'i
 - [docs/roadmap/](docs/roadmap/) — Bosqichma-bosqich reja
 - [docs/SPECS.pdf](docs/SPECS.pdf) — To'liq mahsulot spetsifikatsiyasi (80 sahifa)

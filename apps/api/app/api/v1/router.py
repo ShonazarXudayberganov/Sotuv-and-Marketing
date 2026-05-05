@@ -7,8 +7,10 @@ from app.api.v1.endpoints import (
     audit,
     auth,
     billing,
+    brand_assets,
     brands,
     content,
+    content_plan,
     crm,
     departments,
     health,
@@ -59,10 +61,19 @@ api_router.include_router(
 api_router.include_router(audit.router, prefix="/audit", tags=["audit"], dependencies=grace_guard)
 api_router.include_router(brands.router, prefix="/brands", tags=["smm"], dependencies=grace_guard)
 api_router.include_router(
+    brand_assets.brand_router, prefix="/brands", tags=["smm"], dependencies=grace_guard
+)
+api_router.include_router(
+    brand_assets.router, prefix="/brand-assets", tags=["smm"], dependencies=grace_guard
+)
+api_router.include_router(
     knowledge.router, prefix="/knowledge", tags=["smm"], dependencies=grace_guard
 )
 api_router.include_router(social.router, prefix="/social", tags=["smm"], dependencies=grace_guard)
 api_router.include_router(content.router, prefix="/ai", tags=["smm"], dependencies=grace_guard)
+api_router.include_router(
+    content_plan.router, prefix="/content-plan", tags=["smm"], dependencies=grace_guard
+)
 api_router.include_router(posts.router, prefix="/posts", tags=["smm"], dependencies=grace_guard)
 api_router.include_router(
     analytics.router, prefix="/analytics", tags=["smm"], dependencies=grace_guard

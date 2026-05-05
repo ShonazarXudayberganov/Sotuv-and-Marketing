@@ -64,7 +64,13 @@ async def client(engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
 
     async def override_get_db() -> AsyncIterator[AsyncSession]:
         async with factory() as session:
-            yield session
+            try:
+                yield session
+            except Exception:
+                await session.rollback()
+                raise
+            finally:
+                await session.rollback()
 
     async def override_get_tenant_session(
         request: Request,
@@ -83,6 +89,10 @@ async def client(engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
             except Exception:
                 await session.rollback()
                 raise
+            finally:
+                await session.rollback()
+                await session.execute(text("SET search_path TO public"))
+                await session.commit()
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_tenant_session] = override_get_tenant_session

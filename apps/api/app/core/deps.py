@@ -62,6 +62,10 @@ async def get_tenant_session(request: Request) -> AsyncIterator[AsyncSession]:
         except Exception:
             await session.rollback()
             raise
+        finally:
+            await session.rollback()
+            await session.execute(text("SET search_path TO public"))
+            await session.commit()
 
 
 async def get_current_user(

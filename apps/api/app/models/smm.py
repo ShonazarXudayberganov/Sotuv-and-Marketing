@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin, UUIDPKMixin
@@ -43,6 +43,24 @@ class BrandMembership(Base, UUIDPKMixin, TimestampMixin):
     )
     user_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
     role: Mapped[str] = mapped_column(String(30), default="manager", nullable=False)
+
+
+class BrandAsset(Base, UUIDPKMixin, TimestampMixin):
+    """Reusable brand media and style assets for content creation."""
+
+    __tablename__ = "brand_assets"
+
+    brand_id: Mapped[UUID] = mapped_column(
+        ForeignKey("brands.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    asset_type: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    file_url: Mapped[str | None] = mapped_column(Text)
+    content_type: Mapped[str | None] = mapped_column(String(120))
+    file_size: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    metadata_: Mapped[dict[str, object] | None] = mapped_column("metadata", JSON)
+    is_primary: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_by: Mapped[UUID] = mapped_column(nullable=False)
 
 
 class TenantIntegration(Base, UUIDPKMixin, TimestampMixin):
@@ -115,6 +133,30 @@ class ContentDraft(Base, UUIDPKMixin, TimestampMixin):
     created_by: Mapped[UUID] = mapped_column(nullable=False)
 
 
+class ContentPlanItem(Base, UUIDPKMixin, TimestampMixin):
+    """A planned content idea before or alongside a concrete social post."""
+
+    __tablename__ = "content_plans"
+
+    brand_id: Mapped[UUID] = mapped_column(
+        ForeignKey("brands.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    post_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("posts.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    platform: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    idea: Mapped[str] = mapped_column(Text, nullable=False)
+    goal: Mapped[str | None] = mapped_column(String(500))
+    cta: Mapped[str | None] = mapped_column(String(300))
+    status: Mapped[str] = mapped_column(String(20), default="idea", nullable=False, index=True)
+    planned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    source: Mapped[str] = mapped_column(String(30), default="manual", nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    metadata_: Mapped[dict[str, object] | None] = mapped_column("metadata", JSON)
+    created_by: Mapped[UUID] = mapped_column(nullable=False)
+
+
 class Post(Base, UUIDPKMixin, TimestampMixin):
     """Scheduled / published social-media post.
 
@@ -159,9 +201,33 @@ class PostPublication(Base, UUIDPKMixin, TimestampMixin):
     status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False, index=True)
     attempts: Mapped[int] = mapped_column(default=0, nullable=False)
     next_retry_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     external_post_id: Mapped[str | None] = mapped_column(String(120))
+    remote_status: Mapped[str | None] = mapped_column(String(40))
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    permanent_failure: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     last_error: Mapped[str | None] = mapped_column(String(1000))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PostPublicationEvent(Base, UUIDPKMixin, TimestampMixin):
+    """Append-only publish attempt/status history for one publication target."""
+
+    __tablename__ = "post_publication_events"
+
+    publication_id: Mapped[UUID] = mapped_column(
+        ForeignKey("post_publications.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    post_id: Mapped[UUID] = mapped_column(
+        ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    provider: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    event_type: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    status: Mapped[str | None] = mapped_column(String(40))
+    message: Mapped[str | None] = mapped_column(String(1000))
+    metadata_: Mapped[dict[str, object] | None] = mapped_column("metadata", JSON)
 
 
 class PostMetrics(Base, UUIDPKMixin, TimestampMixin):
@@ -194,11 +260,14 @@ class PostMetrics(Base, UUIDPKMixin, TimestampMixin):
 
 __all__ = [
     "Brand",
+    "BrandAsset",
     "BrandMembership",
     "BrandSocialAccount",
     "ContentDraft",
+    "ContentPlanItem",
     "Post",
     "PostMetrics",
     "PostPublication",
+    "PostPublicationEvent",
     "TenantIntegration",
 ]

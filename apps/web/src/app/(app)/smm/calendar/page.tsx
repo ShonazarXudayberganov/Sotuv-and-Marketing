@@ -29,6 +29,9 @@ type ViewMode = "month" | "week";
 
 const STATUS_TONE: Record<string, string> = {
   draft: "bg-[var(--surface-hover)] text-[var(--fg-muted)]",
+  review: "bg-[var(--warning-soft)] text-[var(--warning)]",
+  approved: "bg-[var(--success-soft)] text-[var(--success)]",
+  rejected: "bg-[var(--danger-soft)] text-[var(--danger)]",
   scheduled: "bg-[var(--info-soft)] text-[var(--info)]",
   publishing: "bg-[var(--primary-soft)] text-[var(--primary-soft-fg)]",
   published: "bg-[var(--success-soft)] text-[var(--success)]",
@@ -130,8 +133,8 @@ export default function CalendarPage() {
   };
 
   const handleDrop = (post: Post, targetDay: Date) => {
-    if (post.status !== "scheduled" && post.status !== "draft") {
-      toast.error("Faqat draft yoki rejalashtirilgan postni surish mumkin");
+    if (!["approved", "scheduled", "draft"].includes(post.status)) {
+      toast.error("Faqat draft, tasdiqlangan yoki rejalashtirilgan postni surish mumkin");
       return;
     }
     const prev = post.scheduled_at ? new Date(post.scheduled_at) : new Date();
@@ -376,16 +379,19 @@ function DayCell({
 
 const STATUS_ICONS = {
   published: CheckCircle2,
+  approved: CheckCircle2,
   scheduled: Clock,
+  review: Clock,
   publishing: Loader2,
   failed: AlertTriangle,
   partial: AlertTriangle,
+  rejected: XCircle,
   cancelled: XCircle,
   draft: CalendarDays,
 } as const;
 
 function PostChip({ post }: { post: Post }) {
-  const draggable = post.status === "scheduled" || post.status === "draft";
+  const draggable = ["approved", "scheduled", "draft"].includes(post.status);
   const tone = STATUS_TONE[post.status] ?? STATUS_TONE.draft;
   const Icon = STATUS_ICONS[post.status as keyof typeof STATUS_ICONS] ?? CalendarDays;
   const time = post.scheduled_at

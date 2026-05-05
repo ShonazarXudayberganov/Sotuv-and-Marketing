@@ -11,11 +11,15 @@ from app.models.smm import Post
 from app.schemas.post import (
     CalendarDay,
     CalendarOut,
+    PostApproveRequest,
     PostCreateRequest,
     PostDetailOut,
     PostOut,
+    PostRejectRequest,
     PostReschedule,
+    PostReviewRequest,
     PostStats,
+    PublicationEventOut,
     PublicationOut,
 )
 from app.services import audit_service, post_service
@@ -25,6 +29,12 @@ router = APIRouter()
 
 async def _detail(db: AsyncSession, post: Post) -> PostDetailOut:
     pubs = await post_service.list_publications(db, post.id)
+    publications: list[PublicationOut] = []
+    for publication in pubs:
+        events = await post_service.list_publication_events(db, publication.id)
+        item = PublicationOut.model_validate(publication)
+        item.events = [PublicationEventOut.model_validate(event) for event in events]
+        publications.append(item)
     return PostDetailOut(
         id=post.id,
         brand_id=post.brand_id,
@@ -38,7 +48,7 @@ async def _detail(db: AsyncSession, post: Post) -> PostDetailOut:
         last_error=post.last_error,
         created_at=post.created_at,
         updated_at=post.updated_at,
-        publications=[PublicationOut.model_validate(p) for p in pubs],
+        publications=publications,
     )
 
 
@@ -239,6 +249,94 @@ async def retry_post(
     return response
 
 
+@router.post("/{post_id}/submit-review", response_model=PostDetailOut)
+async def submit_post_for_review(
+    post_id: UUID,
+    payload: PostReviewRequest,
+    request: Request,
+    current: CurrentUser = Depends(require_permission("smm.write")),
+    db: AsyncSession = Depends(get_tenant_session),
+) -> PostDetailOut:
+    try:
+        post = await post_service.submit_for_review(db, post_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    await audit_service.record(
+        db,
+        user_id=current.id,
+        action="posts.submit_review",
+        resource_type="post",
+        resource_id=str(post_id),
+        metadata={"note": payload.note},
+        request=request,
+    )
+    response = await _detail(db, post)
+    await db.commit()
+    return response
+
+
+@router.post("/{post_id}/approve", response_model=PostDetailOut)
+async def approve_post(
+    post_id: UUID,
+    payload: PostApproveRequest,
+    request: Request,
+    current: CurrentUser = Depends(require_permission("smm.write")),
+    db: AsyncSession = Depends(get_tenant_session),
+) -> PostDetailOut:
+    try:
+        post = await post_service.approve(db, post_id, scheduled_at=payload.scheduled_at)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    await audit_service.record(
+        db,
+        user_id=current.id,
+        action="posts.approve",
+        resource_type="post",
+        resource_id=str(post_id),
+        metadata={
+            "note": payload.note,
+            "scheduled_at": payload.scheduled_at.isoformat() if payload.scheduled_at else None,
+            "final_status": post.status,
+        },
+        request=request,
+    )
+    response = await _detail(db, post)
+    await db.commit()
+    return response
+
+
+@router.post("/{post_id}/reject", response_model=PostDetailOut)
+async def reject_post(
+    post_id: UUID,
+    payload: PostRejectRequest,
+    request: Request,
+    current: CurrentUser = Depends(require_permission("smm.write")),
+    db: AsyncSession = Depends(get_tenant_session),
+) -> PostDetailOut:
+    try:
+        post = await post_service.reject(db, post_id, reason=payload.reason)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    await audit_service.record(
+        db,
+        user_id=current.id,
+        action="posts.reject",
+        resource_type="post",
+        resource_id=str(post_id),
+        metadata={"reason": payload.reason},
+        request=request,
+    )
+    response = await _detail(db, post)
+    await db.commit()
+    return response
+
+
 @router.post("/{post_id}/publish-now", response_model=PostDetailOut)
 async def publish_now(
     post_id: UUID,
@@ -249,7 +347,7 @@ async def publish_now(
     post = await post_service.get_post(db, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
-    if post.status not in {"draft", "scheduled", "failed", "partial"}:
+    if post.status not in {"draft", "scheduled", "approved", "failed", "partial"}:
         raise HTTPException(
             status_code=400,
             detail=f"Cannot publish a post in status '{post.status}'",
@@ -262,6 +360,30 @@ async def publish_now(
         resource_type="post",
         resource_id=str(post_id),
         metadata={"final_status": post.status},
+        request=request,
+    )
+    response = await _detail(db, post)
+    await db.commit()
+    return response
+
+
+@router.post("/{post_id}/sync-status", response_model=PostDetailOut)
+async def sync_post_status(
+    post_id: UUID,
+    request: Request,
+    current: CurrentUser = Depends(require_permission("smm.write")),
+    db: AsyncSession = Depends(get_tenant_session),
+) -> PostDetailOut:
+    post = await post_service.sync_post_status(db, post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    await audit_service.record(
+        db,
+        user_id=current.id,
+        action="posts.sync_status",
+        resource_type="post",
+        resource_id=str(post_id),
+        metadata={"status": post.status},
         request=request,
     )
     response = await _detail(db, post)

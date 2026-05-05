@@ -27,6 +27,7 @@ class KnowledgeDocument(Base, UUIDPKMixin, TimestampMixin):
         ForeignKey("brands.id", ondelete="CASCADE"), nullable=False, index=True
     )
     title: Mapped[str] = mapped_column(String(200), nullable=False)
+    section: Mapped[str] = mapped_column(String(40), default="brand_overview", nullable=False)
     source_type: Mapped[str] = mapped_column(String(20), nullable=False)
     source_url: Mapped[str | None] = mapped_column(String(500))
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)

@@ -44,12 +44,14 @@ Yuqori header'da brend tanlash dropdown.
 ### Brend yaratish wizard (5 qadam)
 
 **1. Asosiy:**
+
 - Nomi
 - Soha (dropdown)
 - Tavsif (textarea)
 - Logo
 
 **2. Bilimlar bazasini qanday to'ldirasiz:**
+
 - 📝 Qo'lda
 - 📄 Fayl yuklash (PDF/Word/Excel/PowerPoint)
 - 🌐 Saytdan parsing
@@ -57,18 +59,21 @@ Yuqori header'da brend tanlash dropdown.
 - 💬 AI bilan suhbat (savol-javob)
 
 **3. Ijtimoiy akkauntlarni ulash:**
+
 - Instagram Business (OAuth)
 - Facebook Page (OAuth)
 - Telegram channel (bot orqali)
 - YouTube channel (OAuth)
 
 **4. Brend assets:**
+
 - Logo (asosiy + variantlar)
 - Ranglar (HEX kod)
 - Fontlar (kelgusi posterlar uchun)
 - Vizual stil (referenslar)
 
 **5. Tayyor:**
+
 - "AI bazani tahlil qilmoqda... (~2 daqiqa)"
 - [Birinchi postni yaratish →]
 
@@ -80,20 +85,21 @@ Yuqori header'da brend tanlash dropdown.
 
 ### Bo'limlar
 
-| # | Bo'lim | Mazmun |
-|---|---|---|
-| 1 | Kompaniya haqida | Nomi, missiya, vizyon, tarixi, qadriyatlar, brend hikoyasi |
-| 2 | Mahsulot/Xizmatlar | Har biri: nomi, kategoriya, tavsif, narxi, afzalliklari, foto/video. CRM Mahsulot katalogi bilan **sinxron** |
-| 3 | Maqsadli auditoriya | Persona avatar(lar): yosh, jinsi, daromad, joylashuv, qiziqishlar, og'riq nuqtalari |
-| 4 | Brend ovozi (Tone of Voice) | Xarakter (3-5 sifat), ohanglar, stop-words, yozish uslubi, misol postlar |
-| 5 | Raqobatchilar | Har biri: nomi, akkauntlar, kuchli/zaif tomonlari |
-| 6 | FAQ | Savol-javob juftliklar (kontent g'oyalari uchun) |
-| 7 | Aktsiyalar va chegirmalar | Doimiy va vaqtinchalik (sana oralig'i) |
-| 8 | Manba materiallar | Brand book (PDF), eski reklama postlar, mediya |
+| #   | Bo'lim                      | Mazmun                                                                                                       |
+| --- | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 1   | Kompaniya haqida            | Nomi, missiya, vizyon, tarixi, qadriyatlar, brend hikoyasi                                                   |
+| 2   | Mahsulot/Xizmatlar          | Har biri: nomi, kategoriya, tavsif, narxi, afzalliklari, foto/video. CRM Mahsulot katalogi bilan **sinxron** |
+| 3   | Maqsadli auditoriya         | Persona avatar(lar): yosh, jinsi, daromad, joylashuv, qiziqishlar, og'riq nuqtalari                          |
+| 4   | Brend ovozi (Tone of Voice) | Xarakter (3-5 sifat), ohanglar, stop-words, yozish uslubi, misol postlar                                     |
+| 5   | Raqobatchilar               | Har biri: nomi, akkauntlar, kuchli/zaif tomonlari                                                            |
+| 6   | FAQ                         | Savol-javob juftliklar (kontent g'oyalari uchun)                                                             |
+| 7   | Aktsiyalar va chegirmalar   | Doimiy va vaqtinchalik (sana oralig'i)                                                                       |
+| 8   | Manba materiallar           | Brand book (PDF), eski reklama postlar, mediya                                                               |
 
 ### To'ldirish 4 yo'li
 
 **1. AI bilan suhbat:**
+
 ```
 AI: Salom! Avval kompaniyangiz nima qiladi va siz kimga sotasiz?
 User: Biz ayollar uchun salon ochganmiz, asosan 25-45 yosh ayollar...
@@ -103,6 +109,7 @@ User: Soch kesish, bo'yash, manikyur, qoshlar...
 ```
 
 **2. Fayl yuklash:**
+
 - PDF/Word/Excel/PowerPoint
 - AI tahlil qiladi
 - Kerakli ma'lumotlarni chiqarib oladi
@@ -110,12 +117,14 @@ User: Soch kesish, bo'yash, manikyur, qoshlar...
 - ✅ Tasdiqlash → bazaga qo'shiladi
 
 **3. Saytdan parsing:**
+
 - URL kiritiladi
 - AI sayt o'qib (web crawler — Bosqich 1 da oddiy fetch + parsing)
 - "Biz haqimizda", narxlar, xizmatlar, aloqa ekstrakt qilinadi
 - Foydalanuvchi tasdiqlaydi
 
 **4. Instagram import:**
+
 - Akkaunt ulangan bo'lishi kerak
 - Oxirgi 50-100 post tahlil
 - Brend ovozi, mavzular, asosiy ranglar (Vision API) ekstrakt
@@ -159,6 +168,7 @@ Eng muhim sahifa. Bu yerda kontent yaratiladi.
 ### Smart Wizard (faqat 2-3 savol)
 
 **1. Mavzu:** matn yozish yoki AI tezkor g'oyalardan tanlash:
+
 ```
 - Mahsulot/xizmat reklama
 - Bayram tabriki
@@ -169,6 +179,7 @@ Eng muhim sahifa. Bu yerda kontent yaratiladi.
 ```
 
 **2. Platforma va format:**
+
 ```
 ☑ Instagram   → ○ Post  ○ Reels  ○ Story
 ☑ Telegram    → matn + rasm
@@ -177,6 +188,7 @@ Eng muhim sahifa. Bu yerda kontent yaratiladi.
 ```
 
 **3. Maqsad:**
+
 - 🎯 Sotuv
 - 📢 Tanishtirish
 - 💬 Engagement
@@ -210,6 +222,7 @@ tafsilotlari, CTA stili.
 ### 3 ta variant
 
 AI default 3 variant yaratadi (boshqacha yondashuvlar bilan):
+
 1. **Qisqa va energichno** — 50-100 so'z
 2. **Hikoya tarzida** — 150-250 so'z
 3. **Ekspert maslahati** — list shaklida
@@ -227,6 +240,7 @@ AI default 3 variant yaratadi (boshqacha yondashuvlar bilan):
 ### Vizual kontent
 
 **Variant C strategiyasi (sizning tanlovingiz):**
+
 1. AI rasm prompti yaratadi → [🖼 AI'da yarating] → **GPT image** chaqiruvi
 2. Foydalanuvchi o'z rasmini yuklaydi
 3. Brend assets bazasidan tanlash
@@ -235,6 +249,7 @@ AI default 3 variant yaratadi (boshqacha yondashuvlar bilan):
 ### Hashtag avto-generatsiya
 
 30 ta hashtag (Instagram limiti):
+
 - Mahalliy (5-7): #toshkent #ozbekiston
 - Sohaviy (5-10): #sochstilist #salon
 - Mavzuviy (3-5)
@@ -277,6 +292,7 @@ AI default 3 variant yaratadi (boshqacha yondashuvlar bilan):
 Oylik grid. Har kun ostida nechta post (rangli ikonlar IG/TG/YT).
 
 Ranglar:
+
 - 🔵 Qoralama
 - 🟡 Rejalashtirilgan
 - 🔴 Tasdiqlash kutyapti
@@ -297,6 +313,7 @@ Filter va sort.
 ### AI 30 kunlik reja
 
 Wizard:
+
 1. Davr (hafta / 30 kun / 90 kun)
 2. Maqsadlar (multi-select: brend, sotuv, trafik, audience)
 3. Tezislar (ixtiyoriy: "yangi xizmat chiqaramiz")
@@ -305,6 +322,10 @@ Wizard:
 
 Natija: 30 ta g'oyalar ro'yxati. Foydalanuvchi tasdiqlaydi → birinchi 5-7 ta
 to'liq matn darhol, qolganlari 5-7 kun oldin (token tejash).
+
+Status: `content_plans` item modeli, CRUD API, AI reja matnini itemlarga import
+qilish, itemdan post yaratish va web UI'da calendar/list/kanban view mavjud.
+Keyingi hardening: to'liq wizard savollari va auto-generation scheduling.
 
 ---
 
@@ -325,6 +346,7 @@ to'liq matn darhol, qolganlari 5-7 kun oldin (token tejash).
 ### Cross-posting
 
 Bitta post → bir nechta platforma. Har birida avto-moslashish:
+
 - IG: to'liq matn + 30 hashtag
 - TG: matn + 5 hashtag
 - FB: matn (cropped 60 belgi preview)
@@ -341,6 +363,25 @@ taklif qiladi.
 ### Xato boshqaruvi
 
 Publish bo'lmasa retry: 5 daq → 30 daq → 1 soat. Status ⚠ + bildirishnoma + Telegram.
+
+2026-05-05 implementatsiya holati:
+
+- `post_publications` endi `last_attempt_at`, `remote_status`, `last_checked_at`,
+  `permanent_failure` maydonlarini saqlaydi.
+- `post_publication_events` append-only logi har publish urinish, retry, xato va
+  status sync natijasini yozadi.
+- `POST /api/v1/posts/:id/sync-status` published platform holatini qayta
+  tekshiradi; `/smm/posts` sahifasida platform tafsilotlari va oxirgi xato
+  ko'rinadi.
+- `POST /api/v1/integrations/meta_app/oauth/start` va
+  `POST /api/v1/integrations/meta_app/oauth/finish` qo'shildi; frontend callback
+  route `/settings/integrations/meta/callback` orqali Meta OAuth yakunlanadi.
+- Meta production checklist `docs/meta-app-review-checklist.md` ga kiritildi;
+  OAuth scope ro'yxatidan ishlatilmayotgan `business_management` olib tashlandi.
+- Reviewer staging oqimi uchun seed script va runbook qo'shildi:
+  `scripts/seed_smm_reviewer_demo.py` va `docs/smm-reviewer-environment.md`.
+- Meta token auth xatosida saqlangan `user_access_token` bo'lsa Page token qayta
+  olinadi va publish bir marta qayta uriniladi.
 
 ---
 
@@ -368,6 +409,7 @@ kim tasdiqlay oladi (rollar yoki konkret xodim).
 ```
 
 Modal ochilganda:
+
 - To'liq preview
 - Matn (read-only yoki edit imkoniyat)
 - [✅ Tasdiqlash] / [💬 Izoh va qaytarish] / [❌ Rad etish]
@@ -376,16 +418,16 @@ Modal ochilganda:
 
 ## 7. Tahlil (`/smm/analytics`)
 
-| Bo'lim | Tarkib |
-|---|---|
-| Yuqori KPI | Reach · Engagement Rate · Follower o'sishi · Saytga klik |
-| Vaqt grafigi | Har kun reach, engagement, followers (line chart) |
-| Eng yaxshi postlar | Top 10 (engagement bo'yicha) — thumbnail + statistika |
-| Eng yomon postlar | Past natija + AI "nima uchun" |
-| Format taqqoslash | Post vs Reels vs Story (bar chart) |
-| Vaqt heatmap | Kun × soat — qachon eng faol |
-| Hashtag samaradorligi | Yaxshi va kuchsiz hashtaglar |
-| AI Insights | "Hazil postlar 2.3x ko'p engagement" |
+| Bo'lim                | Tarkib                                                   |
+| --------------------- | -------------------------------------------------------- |
+| Yuqori KPI            | Reach · Engagement Rate · Follower o'sishi · Saytga klik |
+| Vaqt grafigi          | Har kun reach, engagement, followers (line chart)        |
+| Eng yaxshi postlar    | Top 10 (engagement bo'yicha) — thumbnail + statistika    |
+| Eng yomon postlar     | Past natija + AI "nima uchun"                            |
+| Format taqqoslash     | Post vs Reels vs Story (bar chart)                       |
+| Vaqt heatmap          | Kun × soat — qachon eng faol                             |
+| Hashtag samaradorligi | Yaxshi va kuchsiz hashtaglar                             |
+| AI Insights           | "Hazil postlar 2.3x ko'p engagement"                     |
 
 ### AI o'rganish (eng kuchli xususiyat)
 
@@ -396,12 +438,12 @@ moslab yaratadi (yaxshi natija bergan postlardan kontekst — RAG).
 async def generate_post_with_learning(brand_id: int, prompt: str):
     # Get top 10 best performing posts
     best_posts = await get_top_posts(brand_id, limit=10)
-    
+
     # Build context
     context = "Best performing posts examples:\n"
     for post in best_posts:
         context += f"- {post.content[:200]}... (engagement: {post.engagement})\n"
-    
+
     # Generate with examples in system prompt
     response = await claude.messages.create(
         model="claude-sonnet-4",
@@ -426,6 +468,7 @@ async def generate_post_with_learning(brand_id: int, prompt: str):
 ## 9. Raqobatchi tahlili (`/smm/competitors`) — Bosqich 4
 
 3-5 raqobatchi qo'shish (IG @, sayt, TG kanal). Haftalik tahlil:
+
 - Postlar soni
 - Engagement rate
 - Asosiy mavzular
@@ -446,6 +489,11 @@ ochiq postlardan like/comment/view).
 - Vizual stil (referenslar, mood board)
 - Tayyor shablonlar (post, story, reels)
 - Mediya zaxirasi (rasm, video — kelgusi postlar uchun)
+
+Status: backend `brand_assets` jadvali, `/api/v1/brand-assets` CRUD/upload API,
+`/api/v1/brands/:id/assets` contract endpointlari va web UI mavjud. Upload
+qilingan fayllar hozircha tenant ichida data URL sifatida saqlanadi; production
+storage/S3 keyingi hardening qismida ajratiladi.
 
 ---
 
@@ -471,6 +519,7 @@ To'liq: [../04-database-schema.md](../04-database-schema.md#smm-modul-jadvallari
 To'liq: [../05-api-contracts.md](../05-api-contracts.md#smm)
 
 Asosiy:
+
 - `/api/v1/brands`
 - `/api/v1/brands/:id/knowledge-base`
 - `/api/v1/ai/generate-content` (3 variant)
@@ -480,6 +529,9 @@ Asosiy:
 - `/api/v1/posts/:id/publish`
 - `/api/v1/posts/:id/schedule`
 - `/api/v1/posts/:id/metrics`
+- `/api/v1/brand-assets` (CRUD + filter)
+- `/api/v1/brand-assets/upload`
+- `/api/v1/brands/:id/assets` (contract list/upload/delete)
 
 ---
 
@@ -496,26 +548,28 @@ generate_hashtags.txt      # Hashtag generatsiya
 generate_reels_script.txt  # Reels ssenariy
 ```
 
-Har prompt — alohida fayl. Kod ichida emas.
+Target: har prompt alohida faylda saqlanadi. Hozir asosiy post prompti faylda,
+AI Studio yordamchi promptlarini alohida faylga chiqarish texnik qarz sifatida
+qoldi.
 
 ---
 
 ## Acceptance kriteriylari (Bosqich 1 — MVP)
 
-2026-05-03 holatiga ko‘ra bu ro‘yxat yakuniy target, quyidagi status bilan:
+2026-05-05 holatiga ko‘ra bu ro‘yxat yakuniy target, quyidagi status bilan:
 
-1. 🟡 Brend yaratish wizard (5 qadam) — Brand CRUD bor, wizard hali yo‘q
-2. 🟡 Bilimlar bazasi 8 bo‘lim, 4 to‘ldirish usuli — text/file + pgvector bor, structured sections/importlar hali yo‘q
-3. 🟡 AI Studio: 3 variant + AI chat + tezkor tahrir — draft generation bor, 3 variant/chat/quick edit hali yo‘q
-4. ⬜ Hashtag avto-generatsiya
-5. ⬜ AI 30 kunlik reja
-6. 🟡 Kontent rejasi (3 ko‘rinish) — posts calendar bor, to‘liq 3-view content plan hali yo‘q
-7. 🟡 Publishing: IG (post+Reels+Story) + TG + FB — Telegram/Meta test/publish flow bor, production OAuth va formatlar tugallanmagan
-8. ⬜ Tasdiqlash workflow (sozlanadigan)
+1. ✅ Brend yaratish wizard (5 qadam) — Brand CRUD + `/smm/brands` create/edit wizard bor
+2. ✅ Bilimlar bazasi 8 bo‘lim, 4+ to‘ldirish usuli — 8 section + progress UI + text/file/website/IG/AI chat import + pgvector bor
+3. ✅ AI Studio: 3 variant + AI chat + tezkor tahrir — API/UI bor, draftlar saqlanadi
+4. ✅ Hashtag avto-generatsiya — `/ai/generate-hashtags` + UI
+5. ✅ AI 30 kunlik reja — `/ai/generate-30-day-plan` + UI
+6. ✅ Kontent rejasi (3 ko‘rinish) — `/smm/content-plan` calendar/list/kanban, AI import va postga aylantirish bor
+7. 🟡 Publishing: IG (post+Reels+Story) + TG + FB — Telegram/Meta test/publish flow bor; retry event log, status sync, token refresh, Meta OAuth callback, app review checklist va reviewer seed/runbook bor; IG formatlari hamda real app review submission tugallanmagan
+8. ✅ Tasdiqlash workflow — review/approve/reject API + posts UI actionlari bor
 9. 🟡 Asosiy tahlil (post statistikasi, AI o‘rganish) — analytics bor, AI learning hali yo‘q
-10. ⬜ Brend assets boshqaruvi
+10. ✅ Brend assets boshqaruvi — CRUD/upload API + `/smm/brand-assets` UI bor
 11. 🟡 Multi-brand to‘g‘ri ishlaydi (chegaralash) — brand scope bor, membership/access boundary hardening kerak
-12. ✅ Test coverage ≥ 80% — backend coverage 83%+
+12. ✅ Test coverage ≥ 80% — backend coverage 83.05%
 
 ---
 

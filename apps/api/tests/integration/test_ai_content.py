@@ -96,6 +96,37 @@ async def test_generate_post_caches_identical_request(
     assert first.json()["id"] == second.json()["id"]
 
 
+async def test_generate_content_creates_three_variants(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+
+    resp = await client.post(
+        "/api/v1/ai/generate-content",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "platform": "instagram",
+            "user_goal": "Yangi xizmat uchun launch posti.",
+            "language": "uz",
+            "variants": 3,
+            "use_cache": False,
+        },
+    )
+
+    assert resp.status_code == 201, resp.text
+    drafts = resp.json()["drafts"]
+    assert len(drafts) == 3
+    assert [d["title"].split(" - ")[-1] for d in drafts] == [
+        "Variant A",
+        "Variant B",
+        "Variant C",
+    ]
+    assert {d["provider"] for d in drafts} == {"mock"}
+
+
 async def test_list_drafts_filters_by_brand_and_platform(
     client: AsyncClient, sample_register_payload: dict
 ):
@@ -182,6 +213,34 @@ async def test_update_draft_invalidates_cache(client: AsyncClient, sample_regist
     assert again.json()["id"] != draft_id
 
 
+async def test_improve_content_updates_draft(client: AsyncClient, sample_register_payload: dict):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+
+    create = await client.post(
+        "/api/v1/ai/generate-post",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "platform": "telegram",
+            "user_goal": "Yangi xizmat e'loni.",
+            "language": "uz",
+        },
+    )
+    draft = create.json()
+    improve = await client.post(
+        "/api/v1/ai/improve-content",
+        headers=headers,
+        json={"draft_id": draft["id"], "instruction": "Qisqartir va CTA ni kuchaytir"},
+    )
+
+    assert improve.status_code == 200, improve.text
+    assert improve.json()["id"] == draft["id"]
+    assert improve.json()["body"] != draft["body"]
+    assert improve.json()["tokens_used"] > draft["tokens_used"]
+
+
 async def test_delete_draft(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
@@ -228,6 +287,82 @@ async def test_usage_increments_after_generation(
     after = (await client.get("/api/v1/ai/usage", headers=headers)).json()
     assert after["tokens_used"] > before["tokens_used"]
     assert after["period"] == before["period"]
+
+
+async def test_ai_chat_returns_brand_scoped_answer(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers, "Chat Brand")
+
+    resp = await client.post(
+        "/api/v1/ai/chat",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "message": "Ushbu brend uchun post hook taklif qil",
+            "language": "uz",
+            "history": [{"role": "user", "content": "Sotuvga urg'u beramiz"}],
+        },
+    )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["provider"] == "mock"
+    assert body["text"]
+    assert body["tokens_used"] > 0
+
+
+async def test_hashtags_reels_and_plan_generators(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers, "Plan Brand")
+
+    hashtags = await client.post(
+        "/api/v1/ai/generate-hashtags",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "platform": "instagram",
+            "topic": "Bahor aksiyasi",
+            "language": "uz",
+            "count": 12,
+        },
+    )
+    assert hashtags.status_code == 200, hashtags.text
+    tags = hashtags.json()["hashtags"]
+    assert 1 <= len(tags) <= 12
+    assert all(tag.startswith("#") for tag in tags)
+
+    reels = await client.post(
+        "/api/v1/ai/generate-reels-script",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "topic": "Yangi xizmatni Reels orqali tanishtirish",
+            "language": "uz",
+            "duration_seconds": 30,
+        },
+    )
+    assert reels.status_code == 200, reels.text
+    assert reels.json()["text"]
+
+    plan = await client.post(
+        "/api/v1/ai/generate-30-day-plan",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "platform": "instagram",
+            "topic": "Bahor kampaniyasi",
+            "language": "uz",
+            "days": 30,
+        },
+    )
+    assert plan.status_code == 200, plan.text
+    assert plan.json()["tokens_used"] > 0
 
 
 async def test_stats_reflects_drafts_by_platform(

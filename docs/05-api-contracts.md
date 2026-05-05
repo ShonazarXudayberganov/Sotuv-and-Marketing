@@ -23,6 +23,7 @@ Authorization: Bearer <access_token>
 ### Response format
 
 **Success:**
+
 ```json
 {
   "data": { ... } | [ ... ],
@@ -31,11 +32,12 @@ Authorization: Bearer <access_token>
 ```
 
 **Error:**
+
 ```json
 {
   "detail": "Foydalanuvchi tilida xato",
   "code": "ERROR_CODE",
-  "field": "field_name",   // validation xatolari uchun
+  "field": "field_name", // validation xatolari uchun
   "trace_id": "uuid"
 }
 ```
@@ -44,22 +46,22 @@ Authorization: Bearer <access_token>
 
 ## Auth (`/api/v1/auth/*`)
 
-| Method | Endpoint | Tavsif |
-|---|---|---|
-| POST | `/auth/register` | Ro'yxatdan o'tish |
-| POST | `/auth/verify-phone` | SMS kod tasdiqlash |
-| POST | `/auth/login` | Kirish |
-| POST | `/auth/refresh` | Token yangilash |
-| POST | `/auth/logout` | Chiqish |
-| POST | `/auth/forgot-password` | Parolni tiklash |
-| POST | `/auth/reset-password` | Yangi parol o'rnatish |
-| GET | `/auth/oauth/google` | Google OAuth boshlash |
-| GET | `/auth/oauth/google/callback` | Google callback |
-| GET | `/auth/oauth/telegram` | Telegram OAuth |
-| POST | `/auth/2fa/enable` | 2FA yoqish |
-| POST | `/auth/2fa/verify` | 2FA tasdiqlash |
-| POST | `/auth/2fa/disable` | 2FA o'chirish |
-| GET | `/auth/me` | Joriy foydalanuvchi |
+| Method | Endpoint                      | Tavsif                |
+| ------ | ----------------------------- | --------------------- |
+| POST   | `/auth/register`              | Ro'yxatdan o'tish     |
+| POST   | `/auth/verify-phone`          | SMS kod tasdiqlash    |
+| POST   | `/auth/login`                 | Kirish                |
+| POST   | `/auth/refresh`               | Token yangilash       |
+| POST   | `/auth/logout`                | Chiqish               |
+| POST   | `/auth/forgot-password`       | Parolni tiklash       |
+| POST   | `/auth/reset-password`        | Yangi parol o'rnatish |
+| GET    | `/auth/oauth/google`          | Google OAuth boshlash |
+| GET    | `/auth/oauth/google/callback` | Google callback       |
+| GET    | `/auth/oauth/telegram`        | Telegram OAuth        |
+| POST   | `/auth/2fa/enable`            | 2FA yoqish            |
+| POST   | `/auth/2fa/verify`            | 2FA tasdiqlash        |
+| POST   | `/auth/2fa/disable`           | 2FA o'chirish         |
+| GET    | `/auth/me`                    | Joriy foydalanuvchi   |
 
 `/auth/forgot-password` SMS kod yuboradi va
 `{ verification_id, phone_masked, expires_in_seconds }` qaytaradi.
@@ -71,10 +73,12 @@ Authorization: Bearer <access_token>
 ## Foundation (`/api/v1/*`)
 
 ### Tenant
+
 - `GET    /tenant` — Joriy kompaniya ma'lumotlari
 - `PATCH  /tenant` — Yangilash
 
 ### Users
+
 - `GET    /users` — Xodimlar ro'yxati
 - `POST   /users` — Yangi xodim taklif qilish
 - `GET    /users/:id` — Detallar
@@ -83,12 +87,14 @@ Authorization: Bearer <access_token>
 - `POST   /users/:id/invite` — Qayta taklif
 
 ### Roles
+
 - `GET    /roles` — Rollar ro'yxati
 - `POST   /roles` — Custom rol yaratish
 - `PATCH  /roles/:id` — Tahrirlash
 - `DELETE /roles/:id` — O'chirish (faqat custom)
 
 ### Departments
+
 - `GET    /departments` — Tree ko'rinish
 - `POST   /departments` — Yangi
 - `PATCH  /departments/:id` — Tahrirlash
@@ -96,6 +102,7 @@ Authorization: Bearer <access_token>
 - `PATCH  /departments/:id/move` — Daraxtda ko'chirish
 
 ### Tasks
+
 - `GET    /tasks` — Filter, sort
 - `POST   /tasks` — Yaratish
 - `GET    /tasks/:id`
@@ -107,6 +114,7 @@ Authorization: Bearer <access_token>
 - `GET    /tasks/kanban`
 
 ### Notifications
+
 - `GET    /notifications`
 - `PATCH  /notifications/:id/read`
 - `POST   /notifications/mark-all-read`
@@ -114,6 +122,7 @@ Authorization: Bearer <access_token>
 - `PATCH  /notifications/settings`
 
 ### Billing
+
 - `GET    /billing/plan` — Joriy tarif
 - `POST   /billing/upgrade` — Yangilash
 - `GET    /billing/invoices`
@@ -121,9 +130,11 @@ Authorization: Bearer <access_token>
 - `POST   /billing/invoices/:id/pay` — Click/Payme/Uzum
 
 ### Audit
+
 - `GET    /audit?resource_type=...&resource_id=...`
 
 ### API Keys
+
 - `GET    /api-keys`
 - `POST   /api-keys`
 - `DELETE /api-keys/:id` — Revoke
@@ -133,6 +144,7 @@ Authorization: Bearer <access_token>
 ## CRM (`/api/v1/*`)
 
 ### Contacts
+
 - `GET    /contacts?search=&assignee=&score_min=&score_max=&...`
 - `POST   /contacts`
 - `GET    /contacts/:id`
@@ -145,6 +157,7 @@ Authorization: Bearer <access_token>
 - `GET    /contacts/:id/deals`
 
 ### Deals
+
 - `GET    /deals?pipeline=&stage=&assignee=&...`
 - `POST   /deals`
 - `GET    /deals/:id`
@@ -156,6 +169,7 @@ Authorization: Bearer <access_token>
 - `POST   /deals/:id/lose` — Yopish (yo'qotildi, reason bilan)
 
 ### Pipelines
+
 - `GET    /pipelines`
 - `POST   /pipelines`
 - `PATCH  /pipelines/:id`
@@ -164,6 +178,7 @@ Authorization: Bearer <access_token>
 - `PATCH  /pipelines/:id/stages` — Reorder
 
 ### Products
+
 - `GET    /products`
 - `POST   /products`
 - `GET    /products/:id`
@@ -171,10 +186,12 @@ Authorization: Bearer <access_token>
 - `DELETE /products/:id`
 
 ### Activities
+
 - `GET    /activities?contact_id=&deal_id=&type=`
 - `POST   /activities`
 
 ### Automations
+
 - `GET    /automations`
 - `POST   /automations`
 - `PATCH  /automations/:id`
@@ -187,6 +204,7 @@ Authorization: Bearer <access_token>
 ## SMM (`/api/v1/*`)
 
 ### Brands
+
 - `GET    /brands`
 - `POST   /brands`
 - `GET    /brands/:id`
@@ -194,6 +212,7 @@ Authorization: Bearer <access_token>
 - `DELETE /brands/:id`
 
 ### Knowledge Base
+
 - `GET    /brands/:id/knowledge-base`
 - `POST   /brands/:id/knowledge-base/section/:section`
 - `POST   /brands/:id/knowledge-base/upload-file`
@@ -202,33 +221,60 @@ Authorization: Bearer <access_token>
 - `POST   /brands/:id/knowledge-base/chat` — AI chat
 
 ### Social Accounts
+
 - `GET    /brands/:id/social-accounts`
 - `POST   /brands/:id/social-accounts/connect/:platform`
 - `DELETE /brands/:id/social-accounts/:account_id`
 
 ### AI Generation
+
 - `POST   /ai/generate-content` — 3 variant
 - `POST   /ai/improve-content` — tezkor tahrir
 - `POST   /ai/generate-hashtags`
 - `POST   /ai/generate-reels-script`
 - `POST   /ai/generate-30-day-plan`
 
+### Content Plan
+
+- `GET    /content-plan?brand_id=&status=&start=&end=`
+- `POST   /content-plan`
+- `PATCH  /content-plan/:item_id`
+- `DELETE /content-plan/:item_id`
+- `POST   /content-plan/import-text` — AI plan matnini dated itemlarga ajratish
+- `POST   /content-plan/:item_id/create-post` — plan itemdan post yaratish
+
 ### Posts
+
 - `GET    /posts?brand_id=&status=&date_from=&...`
 - `POST   /posts`
 - `GET    /posts/:id`
 - `PATCH  /posts/:id`
 - `DELETE /posts/:id`
-- `POST   /posts/:id/publish` — Darhol e'lon qilish
+- `POST   /posts/:id/publish-now` — Darhol e'lon qilish
+- `POST   /posts/:id/sync-status` — Platformadagi publish holatini qayta tekshirish
 - `POST   /posts/:id/schedule` — Rejaga kiritish
 - `POST   /posts/:id/approve`
 - `POST   /posts/:id/reject`
 - `GET    /posts/:id/metrics`
 - `GET    /posts/calendar?brand_id=&start=&end=`
 
+### Integrations
+
+- `GET    /integrations`
+- `PUT    /integrations/:provider`
+- `DELETE /integrations/:provider`
+- `POST   /integrations/meta_app/oauth/start`
+- `POST   /integrations/meta_app/oauth/finish`
+
 ### Brand Assets
+
+- `GET    /brand-assets?brand_id=&asset_type=`
+- `POST   /brand-assets` — URL/rang/referens asset yaratish
+- `POST   /brand-assets/upload` — Multipart upload
+- `PATCH  /brand-assets/:asset_id`
+- `DELETE /brand-assets/:asset_id`
 - `GET    /brands/:id/assets`
-- `POST   /brands/:id/assets` — Upload
+- `POST   /brands/:id/assets` — Multipart upload
 - `DELETE /brands/:id/assets/:asset_id`
 
 ---
@@ -236,6 +282,7 @@ Authorization: Bearer <access_token>
 ## Reklama (`/api/v1/*`)
 
 ### Campaigns
+
 - `GET    /campaigns?platform=&status=`
 - `POST   /campaigns`
 - `GET    /campaigns/:id`
@@ -247,17 +294,20 @@ Authorization: Bearer <access_token>
 - `POST   /campaigns/wizard` — 8-step wizard data
 
 ### Ad Sets / Ads
+
 - `GET    /ad-sets?campaign_id=`
 - `POST   /ad-sets`
 - `GET    /ads?ad_set_id=`
 - `POST   /ads`
 
 ### Audiences
+
 - `GET    /audiences`
 - `POST   /audiences`
 - `POST   /audiences/lookalike` — AI lookalike yaratish
 
 ### Lead Forms
+
 - `GET    /lead-forms`
 - `POST   /lead-forms`
 - `GET    /lead-forms/:id`
@@ -265,6 +315,7 @@ Authorization: Bearer <access_token>
 - `GET    /lead-forms/:id/leads`
 
 ### Landing Pages
+
 - `GET    /landing-pages`
 - `POST   /landing-pages`
 - `GET    /landing-pages/:id`
@@ -272,6 +323,7 @@ Authorization: Bearer <access_token>
 - `POST   /landing-pages/:id/publish`
 
 ### AI Optimizer
+
 - `GET    /campaigns/:id/recommendations`
 - `POST   /campaigns/:id/apply-recommendation`
 - `POST   /campaigns/:id/optimizer-mode` — off/recommend/auto/full
@@ -281,6 +333,7 @@ Authorization: Bearer <access_token>
 ## Inbox (`/api/v1/*`)
 
 ### Conversations
+
 - `GET    /conversations?channel=&status=&assignee=&...`
 - `GET    /conversations/:id`
 - `PATCH  /conversations/:id` — status, assignee, priority
@@ -289,17 +342,20 @@ Authorization: Bearer <access_token>
 - `POST   /conversations/:id/transfer` — boshqa xodimga
 
 ### Messages
+
 - `GET    /conversations/:id/messages?limit=50&before=`
 - `POST   /conversations/:id/messages`
 - `POST   /conversations/:id/messages/draft` — AI draft so'rash
 
 ### Templates
+
 - `GET    /templates`
 - `POST   /templates`
 - `PATCH  /templates/:id`
 - `DELETE /templates/:id`
 
 ### AI Settings
+
 - `GET    /inbox/ai-settings`
 - `PATCH  /inbox/ai-settings`
 
@@ -308,19 +364,23 @@ Authorization: Bearer <access_token>
 ## Hisobotlar (`/api/v1/*`)
 
 ### Dashboard
+
 - `GET    /reports/dashboard?period=`
 - `GET    /reports/dashboard/recommendations`
 
 ### Anomalies
+
 - `GET    /anomalies?severity=&type=&from=`
 - `POST   /anomalies/:id/acknowledge`
 
 ### AI Buddy
+
 - `POST   /ai-buddy/chat`
 - `GET    /ai-buddy/conversations`
 - `GET    /ai-buddy/conversations/:id`
 
 ### Goals
+
 - `GET    /goals?level=&owner=&period=`
 - `POST   /goals`
 - `PATCH  /goals/:id`
@@ -328,11 +388,13 @@ Authorization: Bearer <access_token>
 - `POST   /goals/:id/key-results`
 
 ### Forecasts
+
 - `GET    /forecasts/revenue?months=3|6|12`
 - `GET    /forecasts/leads`
 - `GET    /forecasts/ai-cost`
 
 ### Reports
+
 - `GET    /report-templates`
 - `POST   /reports/generate?template=&period=`
 - `GET    /reports/scheduled`
@@ -344,17 +406,20 @@ Authorization: Bearer <access_token>
 ## Integratsiyalar (`/api/v1/*`)
 
 ### Catalog
+
 - `GET    /integrations/catalog?category=&search=`
 - `GET    /integrations/catalog/:code`
 
 ### Active integrations
+
 - `GET    /integrations`
-- `POST   /integrations` — Connect
-- `DELETE /integrations/:id` — Disconnect
-- `POST   /integrations/:id/test`
-- `POST   /integrations/:id/sync`
+- `PUT    /integrations/:provider` — Connect yoki update
+- `DELETE /integrations/:provider` — Disconnect
+- `POST   /integrations/meta_app/oauth/start`
+- `POST   /integrations/meta_app/oauth/finish`
 
 ### Webhooks
+
 - `GET    /webhooks`
 - `POST   /webhooks`
 - `DELETE /webhooks/:id`
@@ -362,6 +427,7 @@ Authorization: Bearer <access_token>
 - `POST   /webhooks/:id/deliveries/:delivery_id/retry`
 
 ### Backup
+
 - `GET    /backups`
 - `POST   /backups` — Manual backup
 - `POST   /backups/:id/restore`
@@ -387,6 +453,7 @@ wss://api.nexus-ai.uz/ws/notifications?token=<access_token>
 ```
 
 Asosiy event'lar:
+
 - `message.new`
 - `conversation.updated`
 - `notification.new`
@@ -428,13 +495,13 @@ Playground: `https://api.nexus-ai.uz/graphql`
 
 Per endpoint group:
 
-| Group | Limit (Pro) | Limit (Business) |
-|---|---|---|
-| Auth | 10/min | 10/min |
-| Read (GET) | 1000/min | 10000/min |
-| Write (POST/PATCH) | 200/min | 2000/min |
-| AI generation | 60/min | 600/min |
-| Bulk import | 10/hour | 100/hour |
+| Group              | Limit (Pro) | Limit (Business) |
+| ------------------ | ----------- | ---------------- |
+| Auth               | 10/min      | 10/min           |
+| Read (GET)         | 1000/min    | 10000/min        |
+| Write (POST/PATCH) | 200/min     | 2000/min         |
+| AI generation      | 60/min      | 600/min          |
+| Bulk import        | 10/hour     | 100/hour         |
 
 Header'da: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`.
 

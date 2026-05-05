@@ -180,3 +180,45 @@ async def test_connect_missing_required_fields_400(
     )
     assert resp.status_code == 400
     assert "missing" in resp.json()["detail"].lower()
+
+
+async def test_meta_oauth_start_and_finish_in_mock_mode(
+    client: AsyncClient, sample_register_payload: dict, monkeypatch: pytest.MonkeyPatch
+):
+    monkeypatch.setenv("META_MOCK", "true")
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    redirect_uri = "http://localhost:3000/settings/integrations/meta/callback"
+
+    connect = await client.put(
+        "/api/v1/integrations/meta_app",
+        headers=headers,
+        json={"credentials": {"app_id": "123456", "app_secret": "secret-xyz"}},
+    )
+    assert connect.status_code == 200, connect.text
+    assert connect.json()["oauth_connected"] is False
+
+    start = await client.post(
+        "/api/v1/integrations/meta_app/oauth/start",
+        headers=headers,
+        json={"redirect_uri": redirect_uri},
+    )
+    assert start.status_code == 200, start.text
+    state = start.json()["state"]
+    assert "mock-meta-code" in start.json()["authorize_url"]
+
+    finish = await client.post(
+        "/api/v1/integrations/meta_app/oauth/finish",
+        headers=headers,
+        json={
+            "code": "mock-meta-code",
+            "state": state,
+            "redirect_uri": redirect_uri,
+        },
+    )
+    assert finish.status_code == 200, finish.text
+    body = finish.json()
+    assert body["connected"] is True
+    assert body["oauth_connected"] is True
+    assert body["display_value"] == "Mock Akme Page"
+    assert body["status_hint"] == "Meta OAuth ulangan"

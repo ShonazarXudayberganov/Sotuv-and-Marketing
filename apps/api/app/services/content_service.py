@@ -10,6 +10,7 @@ Posts (scheduled / published).
 from __future__ import annotations
 
 import hashlib
+import re
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
@@ -19,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.prompt_builder import build_prompt
 from app.models.smm import Brand, ContentDraft
-from app.services import ai_service
+from app.services import ai_service, knowledge_service
 
 SYSTEM_GUARDRAILS = (
     "You are NEXUS AI, an SMM copywriter. Always obey platform constraints, "
@@ -27,13 +28,67 @@ SYSTEM_GUARDRAILS = (
     "only with the post body — no preface, no markdown headers, no labels."
 )
 
+ASSISTANT_GUARDRAILS = (
+    "You are NEXUS AI's SMM assistant. Use the supplied brand and knowledge "
+    "context, avoid unsupported claims, and answer in the requested language. "
+    "Be concise, practical, and directly useful."
+)
+
 CACHE_TTL_HOURS = 24
+
+VARIANT_STYLES = (
+    "Variant A: short, energetic, 50-100 words, one strong CTA.",
+    "Variant B: story-led, emotional, 150-250 words, natural CTA.",
+    "Variant C: expert-advice angle, structured list, trust-building CTA.",
+    "Variant D: bold promo angle, urgency without false scarcity.",
+    "Variant E: educational carousel-style copy with clear takeaway.",
+)
 
 
 def _cache_key(brand_id: UUID, platform: str, language: str, user_goal: str) -> str:
     """Stable hash so identical requests within TTL reuse the cached draft."""
     norm = f"{brand_id}|{platform}|{language}|{user_goal.strip().lower()}"
     return hashlib.sha256(norm.encode()).hexdigest()[:48]
+
+
+async def _get_brand(db: AsyncSession, brand_id: UUID) -> Brand:
+    brand = await db.get(Brand, brand_id)
+    if brand is None:
+        raise ValueError("Brand not found")
+    return brand
+
+
+def _brand_context(brand: Brand) -> str:
+    languages = ", ".join(brand.languages or ["uz"])
+    return "\n".join(
+        [
+            f"Brand: {brand.name}",
+            f"Industry: {brand.industry or '-'}",
+            f"Voice: {brand.voice_tone or 'Friendly, professional'}",
+            f"Audience: {brand.target_audience or '-'}",
+            f"Languages: {languages}",
+        ]
+    )
+
+
+async def _rag_snippets(
+    db: AsyncSession, *, brand_id: UUID, query: str, top_k: int = 4
+) -> tuple[str, list[str]]:
+    if not query.strip():
+        return "(no relevant knowledge base context)", []
+    try:
+        hits = await knowledge_service.search(db, query=query, brand_id=brand_id, top_k=top_k)
+    except Exception:
+        return "(knowledge base search failed - proceed without it)", []
+    if not hits:
+        return "(no relevant knowledge base context)", []
+    lines: list[str] = []
+    chunk_ids: list[str] = []
+    for hit in hits:
+        chunk_ids.append(str(hit["chunk_id"]))
+        title = hit.get("document_title") or "-"
+        lines.append(f"[{title}] {str(hit['content']).strip()}")
+    return "\n\n".join(lines), chunk_ids
 
 
 async def _find_cached(db: AsyncSession, *, cache_key: str) -> ContentDraft | None:
@@ -63,9 +118,7 @@ async def generate_post(
     title: str | None = None,
     use_cache: bool = True,
 ) -> ContentDraft:
-    brand = await db.get(Brand, brand_id)
-    if brand is None:
-        raise ValueError("Brand not found")
+    brand = await _get_brand(db, brand_id)
 
     cache_key = _cache_key(brand_id, platform, language, user_goal)
 
@@ -97,6 +150,276 @@ async def generate_post(
     db.add(draft)
     await db.flush()
     return draft
+
+
+async def generate_variants(
+    db: AsyncSession,
+    *,
+    brand_id: UUID,
+    platform: str,
+    user_goal: str,
+    language: str,
+    user_id: UUID,
+    title: str | None = None,
+    variants: int = 3,
+    use_cache: bool = True,
+) -> list[ContentDraft]:
+    if variants < 1 or variants > len(VARIANT_STYLES):
+        raise ValueError(f"variants must be 1..{len(VARIANT_STYLES)}")
+
+    out: list[ContentDraft] = []
+    base_title = title.strip() if title else user_goal.strip()[:64]
+    for idx, style in enumerate(VARIANT_STYLES[:variants]):
+        letter = chr(ord("A") + idx)
+        variant_goal = f"{user_goal.strip()}\n\n{style}"
+        draft = await generate_post(
+            db,
+            brand_id=brand_id,
+            platform=platform,
+            user_goal=variant_goal,
+            language=language,
+            user_id=user_id,
+            title=f"{base_title} - Variant {letter}",
+            use_cache=use_cache,
+        )
+        out.append(draft)
+    return out
+
+
+async def improve_content(
+    db: AsyncSession,
+    *,
+    draft_id: UUID,
+    instruction: str,
+    user_id: UUID,
+    selected_text: str | None = None,
+) -> ContentDraft:
+    draft = await get_draft(db, draft_id)
+    if draft is None:
+        raise ValueError("Draft not found")
+    brand = await _get_brand(db, draft.brand_id)
+    target = (selected_text or draft.body).strip()
+    if not target:
+        raise ValueError("Draft body is empty")
+
+    rag_text, chunk_ids = await _rag_snippets(db, brand_id=brand.id, query=instruction)
+    selected_note = (
+        "The user selected this exact fragment. Return the FULL draft with only this "
+        "fragment improved where possible."
+        if selected_text
+        else "Return the FULL improved draft."
+    )
+    prompt = "\n\n".join(
+        [
+            _brand_context(brand),
+            f"Platform: {draft.platform}",
+            f"Language: {draft.language}",
+            f"Knowledge context:\n{rag_text}",
+            f"Current draft:\n{draft.body}",
+            f"Target text:\n{target}",
+            f"Instruction:\n{instruction.strip()}",
+            selected_note,
+            "No preface, no labels, no markdown fence.",
+        ]
+    )
+    response = await ai_service.complete(db, system=SYSTEM_GUARDRAILS, user=prompt, max_tokens=1400)
+
+    draft.body = response.text
+    draft.provider = response.provider
+    draft.model = response.model
+    draft.tokens_used = int(draft.tokens_used or 0) + response.total_tokens
+    draft.rag_chunk_ids = chunk_ids or draft.rag_chunk_ids
+    draft.cache_key = None
+    await db.flush()
+    return draft
+
+
+async def chat(
+    db: AsyncSession,
+    *,
+    brand_id: UUID,
+    message: str,
+    language: str,
+    history: list[dict[str, str]] | None = None,
+    draft_id: UUID | None = None,
+) -> dict[str, Any]:
+    brand = await _get_brand(db, brand_id)
+    draft = await get_draft(db, draft_id) if draft_id else None
+    if draft_id and draft is None:
+        raise ValueError("Draft not found")
+
+    rag_text, chunk_ids = await _rag_snippets(db, brand_id=brand_id, query=message)
+    history_lines = []
+    for item in (history or [])[-10:]:
+        role = item.get("role") or "user"
+        content = (item.get("content") or "").strip()
+        if content:
+            history_lines.append(f"{role}: {content}")
+    prompt = "\n\n".join(
+        [
+            _brand_context(brand),
+            f"Language: {language}",
+            f"Knowledge context:\n{rag_text}",
+            f"Current draft:\n{draft.body}" if draft else "Current draft: -",
+            "Recent chat:\n" + ("\n".join(history_lines) if history_lines else "-"),
+            f"User message:\n{message.strip()}",
+        ]
+    )
+    response = await ai_service.complete(
+        db, system=ASSISTANT_GUARDRAILS, user=prompt, max_tokens=1200
+    )
+    return {
+        "text": response.text,
+        "provider": response.provider,
+        "model": response.model,
+        "tokens_used": response.total_tokens,
+        "rag_chunk_ids": chunk_ids or None,
+    }
+
+
+def _extract_hashtags(text: str, *, count: int) -> list[str]:
+    seen: set[str] = set()
+    tags: list[str] = []
+    for raw in re.findall(r"#[\w'-]+", text.lower()):
+        tag = "#" + re.sub(r"[^a-z0-9_'-]", "", raw.removeprefix("#"))
+        if len(tag) <= 1 or tag in seen:
+            continue
+        seen.add(tag)
+        tags.append(tag)
+        if len(tags) >= count:
+            return tags
+    return tags
+
+
+def _fallback_hashtags(brand: Brand, topic: str, *, count: int) -> list[str]:
+    words = re.findall(r"[a-zA-Z0-9]+", f"{brand.name} {brand.industry or ''} {topic}".lower())
+    candidates = [f"#{word}" for word in words if len(word) > 2]
+    candidates.extend(["#uzbekiston", "#toshkent", "#nexusai", "#smm"])
+    out: list[str] = []
+    for tag in candidates:
+        if tag not in out:
+            out.append(tag)
+        if len(out) >= count:
+            break
+    return out
+
+
+async def generate_hashtags(
+    db: AsyncSession,
+    *,
+    brand_id: UUID,
+    platform: str,
+    topic: str,
+    language: str,
+    count: int,
+) -> dict[str, Any]:
+    brand = await _get_brand(db, brand_id)
+    rag_text, chunk_ids = await _rag_snippets(db, brand_id=brand_id, query=topic)
+    prompt = "\n\n".join(
+        [
+            _brand_context(brand),
+            f"Platform: {platform}",
+            f"Language: {language}",
+            f"Topic: {topic.strip()}",
+            f"Knowledge context:\n{rag_text}",
+            (
+                f"Generate exactly {count} relevant hashtags. Mix local, industry, "
+                "topic, and brand tags."
+            ),
+            "Return only hashtags separated by spaces.",
+        ]
+    )
+    response = await ai_service.complete(
+        db, system=ASSISTANT_GUARDRAILS, user=prompt, max_tokens=500
+    )
+    hashtags = _extract_hashtags(response.text, count=count)
+    for tag in _fallback_hashtags(brand, topic, count=count):
+        if len(hashtags) >= count:
+            break
+        if tag not in hashtags:
+            hashtags.append(tag)
+    return {
+        "text": " ".join(hashtags),
+        "hashtags": hashtags[:count],
+        "provider": response.provider,
+        "model": response.model,
+        "tokens_used": response.total_tokens,
+        "rag_chunk_ids": chunk_ids or None,
+    }
+
+
+async def generate_reels_script(
+    db: AsyncSession,
+    *,
+    brand_id: UUID,
+    topic: str,
+    language: str,
+    duration_seconds: int,
+) -> dict[str, Any]:
+    brand = await _get_brand(db, brand_id)
+    rag_text, chunk_ids = await _rag_snippets(db, brand_id=brand_id, query=topic)
+    prompt = "\n\n".join(
+        [
+            _brand_context(brand),
+            f"Language: {language}",
+            f"Duration: {duration_seconds} seconds",
+            f"Topic: {topic.strip()}",
+            f"Knowledge context:\n{rag_text}",
+            (
+                "Write a Reels/Shorts script with timecodes, hook, visual direction, "
+                "captions, and CTA."
+            ),
+            "Keep it production-ready and realistic for a small Uzbekistan business.",
+        ]
+    )
+    response = await ai_service.complete(
+        db, system=ASSISTANT_GUARDRAILS, user=prompt, max_tokens=1600
+    )
+    return {
+        "text": response.text,
+        "provider": response.provider,
+        "model": response.model,
+        "tokens_used": response.total_tokens,
+        "rag_chunk_ids": chunk_ids or None,
+    }
+
+
+async def generate_30_day_plan(
+    db: AsyncSession,
+    *,
+    brand_id: UUID,
+    platform: str,
+    topic: str,
+    language: str,
+    days: int,
+) -> dict[str, Any]:
+    brand = await _get_brand(db, brand_id)
+    rag_text, chunk_ids = await _rag_snippets(db, brand_id=brand_id, query=topic)
+    prompt = "\n\n".join(
+        [
+            _brand_context(brand),
+            f"Platform: {platform}",
+            f"Language: {language}",
+            f"Planning horizon: {days} days",
+            f"Topic/focus: {topic.strip()}",
+            f"Knowledge context:\n{rag_text}",
+            (
+                "Create a day-by-day content plan. For each day include: day number, "
+                "format, topic, goal, caption angle, and CTA."
+            ),
+            "Keep the plan compact enough to scan in a dashboard.",
+        ]
+    )
+    response = await ai_service.complete(
+        db, system=ASSISTANT_GUARDRAILS, user=prompt, max_tokens=2200
+    )
+    return {
+        "text": response.text,
+        "provider": response.provider,
+        "model": response.model,
+        "tokens_used": response.total_tokens,
+        "rag_chunk_ids": chunk_ids or None,
+    }
 
 
 async def list_drafts(
@@ -172,9 +495,15 @@ async def stats(db: AsyncSession) -> dict[str, Any]:
 
 
 __all__ = [
+    "chat",
     "delete_draft",
+    "generate_30_day_plan",
+    "generate_hashtags",
     "generate_post",
+    "generate_reels_script",
+    "generate_variants",
     "get_draft",
+    "improve_content",
     "list_drafts",
     "stats",
     "toggle_star",

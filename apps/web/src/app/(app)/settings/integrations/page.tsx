@@ -2,8 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bot, Check, ExternalLink, Eye, EyeOff, Mail, Plug, Sparkles, X } from "lucide-react";
-import { useState, type ComponentType } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { toast } from "sonner";
 
 import { Can } from "@/components/shared/can";
@@ -51,6 +52,9 @@ const FIELD_LABELS: Record<string, { label: string; type?: string; placeholder?:
 
 export default function IntegrationsPage() {
   const qc = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [editing, setEditing] = useState<IntegrationProvider | null>(null);
 
   const { data: integrations = [], isLoading } = useQuery({
@@ -82,6 +86,26 @@ export default function IntegrationsPage() {
     },
     onError: (e) => toast.error(extractApiError(e)),
   });
+
+  const startMetaOAuth = useMutation({
+    mutationFn: () => {
+      const redirectUri = `${window.location.origin}/settings/integrations/meta/callback`;
+      return integrationsApi.startMetaOAuth(redirectUri);
+    },
+    onSuccess: (res) => {
+      window.location.href = res.authorize_url;
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  useEffect(() => {
+    const oauth = searchParams.get("oauth");
+    const message = searchParams.get("message");
+    if (!oauth) return;
+    if (oauth === "meta-success") toast.success("Meta OAuth yakunlandi");
+    if (oauth === "meta-error") toast.error(message || "Meta OAuth tugamadi");
+    router.replace(pathname);
+  }, [pathname, router, searchParams]);
 
   const grouped = integrations.reduce<Record<string, IntegrationProvider[]>>((acc, i) => {
     (acc[i.category] = acc[i.category] ?? []).push(i);
@@ -147,6 +171,10 @@ export default function IntegrationsPage() {
                       provider={p}
                       onConnect={() => setEditing(p)}
                       onDisconnect={() => disconnect.mutate(p.provider)}
+                      onAuthorizeMeta={
+                        p.provider === "meta_app" ? () => startMetaOAuth.mutate() : undefined
+                      }
+                      oauthLoading={startMetaOAuth.isPending}
                     />
                   ))}
                 </div>
@@ -163,10 +191,14 @@ function ProviderCard({
   provider,
   onConnect,
   onDisconnect,
+  onAuthorizeMeta,
+  oauthLoading,
 }: {
   provider: IntegrationProvider;
   onConnect: () => void;
   onDisconnect: () => void;
+  onAuthorizeMeta?: () => void;
+  oauthLoading?: boolean;
 }) {
   return (
     <Card className="group flex flex-col gap-3 p-4 transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]">
@@ -217,6 +249,9 @@ function ProviderCard({
                   {FIELD_LABELS[k]?.label ?? k}: {v}
                 </p>
               ))}
+            {provider.status_hint ? (
+              <p className="text-[11px] text-[var(--fg-subtle)]">{provider.status_hint}</p>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -231,6 +266,17 @@ function ProviderCard({
           >
             {provider.connected ? "O'zgartirish" : "Ulash"}
           </Button>
+          {provider.provider === "meta_app" && provider.connected ? (
+            <Button
+              variant={provider.oauth_connected ? "secondary" : "primary"}
+              size="sm"
+              onClick={onAuthorizeMeta}
+              loading={oauthLoading}
+              className="flex-1"
+            >
+              {provider.oauth_connected ? "Meta OAuth yangilash" : "Meta OAuth"}
+            </Button>
+          ) : null}
           {provider.connected ? (
             <Button
               variant="ghost"

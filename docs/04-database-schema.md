@@ -456,29 +456,53 @@ CREATE TABLE post_metrics (
 
 -- Content plans
 CREATE TABLE content_plans (
-  id SERIAL PRIMARY KEY,
-  brand_id INT REFERENCES brands(id),
-  name VARCHAR(200),
-  starts_at DATE,
-  ends_at DATE,
-  goals JSONB,
-  topics JSONB,
-  format_distribution JSONB,
-  status VARCHAR(20),  -- 'draft', 'active', 'completed'
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  brand_id UUID NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+  post_id UUID REFERENCES posts(id) ON DELETE SET NULL,
+  platform VARCHAR(30) NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  idea TEXT NOT NULL,
+  goal VARCHAR(500),
+  cta VARCHAR(300),
+  status VARCHAR(20) NOT NULL DEFAULT 'idea', -- 'idea', 'draft', 'review', 'approved', 'scheduled', 'published'
+  planned_at TIMESTAMPTZ,
+  source VARCHAR(30) NOT NULL DEFAULT 'manual',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  metadata JSONB,
+  created_by UUID NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Brand assets
 CREATE TABLE brand_assets (
-  id SERIAL PRIMARY KEY,
-  brand_id INT REFERENCES brands(id) ON DELETE CASCADE,
-  type VARCHAR(20),  -- 'logo', 'image', 'video', 'template', 'font'
-  name VARCHAR(200),
-  file_url VARCHAR(500),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  brand_id UUID NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+  asset_type VARCHAR(30) NOT NULL, -- 'logo', 'image', 'video', 'template', 'font', 'color', 'reference'
+  name VARCHAR(160) NOT NULL,
+  file_url TEXT,
+  content_type VARCHAR(120),
+  file_size INTEGER NOT NULL DEFAULT 0,
   metadata JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+  created_by UUID NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```
+
+2026-05-05 real tenant schema qo'shimchalari:
+
+- `post_publications`:
+  - `last_attempt_at TIMESTAMPTZ`
+  - `remote_status VARCHAR(40)`
+  - `last_checked_at TIMESTAMPTZ`
+  - `permanent_failure BOOLEAN NOT NULL DEFAULT FALSE`
+- `post_publication_events`:
+  - `publication_id`, `post_id`, `provider`, `event_type`, `status`, `message`,
+    `metadata`, `created_at`, `updated_at`
+  - publish attempt, retry schedule, failed/success va status sync tarixini
+    append-only formatda saqlaydi.
 
 ---
 
@@ -773,7 +797,7 @@ CREATE TABLE backups (
 def run_migrations_online():
     # 1. Public schema migration
     run_public_migrations()
-    
+
     # 2. Per-tenant schema migrations
     tenants = get_all_tenants()
     for tenant in tenants:

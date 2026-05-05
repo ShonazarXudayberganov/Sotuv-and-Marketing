@@ -8,12 +8,15 @@ from app.models.marketplace import WebhookDelivery, WebhookEndpoint
 from app.models.reports import SavedReport
 from app.models.smm import (
     Brand,
+    BrandAsset,
     BrandMembership,
     BrandSocialAccount,
     ContentDraft,
+    ContentPlanItem,
     Post,
     PostMetrics,
     PostPublication,
+    PostPublicationEvent,
     TenantIntegration,
 )
 from app.models.tenant import Tenant
@@ -39,12 +42,14 @@ __all__ = [
     "AutoReplyConfig",
     "Base",
     "Brand",
+    "BrandAsset",
     "BrandMembership",
     "BrandSocialAccount",
     "Campaign",
     "Contact",
     "ContactActivity",
     "ContentDraft",
+    "ContentPlanItem",
     "Conversation",
     "Deal",
     "Department",
@@ -59,6 +64,7 @@ __all__ = [
     "Post",
     "PostMetrics",
     "PostPublication",
+    "PostPublicationEvent",
     "Role",
     "SavedReport",
     "Subscription",

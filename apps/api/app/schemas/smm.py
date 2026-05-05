@@ -63,6 +63,8 @@ class IntegrationProvider(BaseModel):
     label_custom: str | None
     display_value: str | None
     masked_values: dict[str, str]
+    oauth_connected: bool = False
+    status_hint: str | None = None
     last_verified_at: str | None
     last_error: str | None
     updated_at: str | None
@@ -72,3 +74,19 @@ class IntegrationConnectRequest(BaseModel):
     label: str | None = Field(default=None, max_length=100)
     credentials: dict[str, Any]
     metadata: dict[str, Any] | None = None
+
+
+class MetaOAuthStartRequest(BaseModel):
+    redirect_uri: str = Field(min_length=8, max_length=500)
+
+
+class MetaOAuthStartResponse(BaseModel):
+    authorize_url: str
+    redirect_uri: str
+    state: str
+
+
+class MetaOAuthFinishRequest(BaseModel):
+    code: str = Field(min_length=3, max_length=2000)
+    state: str = Field(min_length=8, max_length=500)
+    redirect_uri: str = Field(min_length=8, max_length=500)

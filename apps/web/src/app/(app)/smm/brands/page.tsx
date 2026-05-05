@@ -3,12 +3,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
   Globe,
+  ImageIcon,
+  Languages,
   MoreHorizontal,
+  Palette,
   PenSquare,
   Plus,
   Sparkles,
   Star,
+  Target,
   Trash2,
   X,
 } from "lucide-react";
@@ -41,6 +48,14 @@ const LANGS: { code: string; label: string }[] = [
   { code: "ru", label: "Русский" },
   { code: "en", label: "English" },
 ];
+
+const BRAND_WIZARD_STEPS = [
+  { title: "Asosiy", icon: PenSquare },
+  { title: "Auditoriya", icon: Target },
+  { title: "Ovoz", icon: Sparkles },
+  { title: "Vizual", icon: Palette },
+  { title: "Yakun", icon: Languages },
+] as const;
 
 export default function BrandsPage() {
   const qc = useQueryClient();
@@ -285,14 +300,31 @@ function BrandForm({
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [industry, setIndustry] = useState(initial?.industry ?? "");
+  const [logoUrl, setLogoUrl] = useState(initial?.logo_url ?? "");
   const [voiceTone, setVoiceTone] = useState(initial?.voice_tone ?? "");
   const [targetAudience, setTargetAudience] = useState(initial?.target_audience ?? "");
   const [primaryColor, setPrimaryColor] = useState(initial?.primary_color ?? "");
   const [languages, setLanguages] = useState<string[]>(initial?.languages ?? ["uz"]);
   const [isDefault, setIsDefault] = useState(initial?.is_default ?? false);
+  const [step, setStep] = useState(0);
 
   const toggleLang = (code: string) =>
     setLanguages((l) => (l.includes(code) ? l.filter((x) => x !== code) : [...l, code]));
+
+  const payload: BrandCreate = {
+    name: name.trim(),
+    description: description || null,
+    industry: industry || null,
+    logo_url: logoUrl || null,
+    voice_tone: voiceTone || null,
+    target_audience: targetAudience || null,
+    primary_color: primaryColor || null,
+    languages,
+    ...(initial ? {} : { is_default: isDefault }),
+  };
+
+  const canGoNext = step !== 0 || name.trim().length >= 2;
+  const isLastStep = step === BRAND_WIZARD_STEPS.length - 1;
 
   return (
     <motion.div
@@ -312,131 +344,264 @@ function BrandForm({
             <X className="h-4 w-4" />
           </button>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Brend nomi" required>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Akme Beauty"
-                autoFocus
-              />
-            </FormField>
-            <FormField label="Soha" hint="Masalan: salon-klinika, restoran, IT">
-              <Input
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                placeholder="salon-klinika"
-              />
-            </FormField>
+        <CardContent className="space-y-5">
+          <div className="grid gap-2 sm:grid-cols-5">
+            {BRAND_WIZARD_STEPS.map((item, index) => {
+              const Icon = item.icon;
+              const active = step === index;
+              const done = step > index;
+              return (
+                <button
+                  key={item.title}
+                  type="button"
+                  onClick={() => setStep(index)}
+                  className={cn(
+                    "flex h-12 items-center justify-center gap-2 rounded-lg border px-2 text-[12px] font-medium transition-colors",
+                    active
+                      ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary-soft-fg)]"
+                      : "border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] hover:border-[var(--primary)] hover:text-[var(--fg)]",
+                  )}
+                >
+                  {done ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
+                  <span className="truncate">{item.title}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <FormField
-            label="Tavsif"
-            hint="Brend haqida 1-2 jumla. AI shu kontekstdan foydalanadi."
-          >
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Toshkent va viloyatlarda 5 ta filiali bor go'zallik salonlari tarmog'i…"
-              className="flex min-h-[72px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] shadow-[var(--shadow-xs)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-            />
-          </FormField>
+          <div className="min-h-[292px]">
+            {step === 0 ? (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField label="Brend nomi" required>
+                    <Input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Akme Beauty"
+                      autoFocus
+                    />
+                  </FormField>
+                  <FormField label="Soha" hint="Masalan: salon-klinika, restoran, IT">
+                    <Input
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                      placeholder="salon-klinika"
+                    />
+                  </FormField>
+                </div>
 
-          <FormField label="Ovoz va uslub" hint="AI kontent yaratganda shu uslubda yozadi">
-            <Input
-              value={voiceTone}
-              onChange={(e) => setVoiceTone(e.target.value)}
-              placeholder="Iliq, professional, ehtiyotkor"
-            />
-          </FormField>
-
-          <FormField label="Maqsadli auditoriya">
-            <textarea
-              value={targetAudience}
-              onChange={(e) => setTargetAudience(e.target.value)}
-              placeholder="25-45 yosh ayollar, o'rta va o'rtadan yuqori daromadli, Toshkent shahri…"
-              className="flex min-h-[60px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] shadow-[var(--shadow-xs)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
-            />
-          </FormField>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Asosiy rang (HEX)" hint="Avatar va aksent uchun">
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={primaryColor || "#16a34a"}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="h-9 w-12 cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface)]"
-                />
-                <Input
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  placeholder="#16a34a"
-                />
+                <FormField
+                  label="Tavsif"
+                  hint="Brend haqida 1-2 jumla. AI shu kontekstdan foydalanadi."
+                >
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Toshkent va viloyatlarda 5 ta filiali bor go'zallik salonlari tarmog'i..."
+                    className="flex min-h-[132px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] shadow-[var(--shadow-xs)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+                  />
+                </FormField>
               </div>
-            </FormField>
+            ) : null}
 
-            <FormField label="Tillar">
-              <div className="flex flex-wrap gap-1.5">
-                {LANGS.map((l) => {
-                  const active = languages.includes(l.code);
-                  return (
+            {step === 1 ? (
+              <div className="space-y-4">
+                <FormField label="Maqsadli auditoriya">
+                  <textarea
+                    value={targetAudience}
+                    onChange={(e) => setTargetAudience(e.target.value)}
+                    placeholder="25-45 yosh ayollar, o'rta va o'rtadan yuqori daromadli, Toshkent shahri..."
+                    className="flex min-h-[220px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] shadow-[var(--shadow-xs)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+                  />
+                </FormField>
+              </div>
+            ) : null}
+
+            {step === 2 ? (
+              <div className="space-y-4">
+                <FormField
+                  label="Ovoz va uslub"
+                  hint="AI kontent yaratganda shu uslubda yozadi"
+                >
+                  <textarea
+                    value={voiceTone}
+                    onChange={(e) => setVoiceTone(e.target.value)}
+                    placeholder="Iliq, professional, ehtiyotkor. Murakkab terminlarsiz, foyda va ishonchga urg'u beradi."
+                    className="flex min-h-[168px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] shadow-[var(--shadow-xs)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+                  />
+                </FormField>
+                <div className="flex flex-wrap gap-2">
+                  {["professional", "samimiy", "premium", "sodda", "ishonchli"].map((tone) => (
                     <button
-                      key={l.code}
+                      key={tone}
                       type="button"
-                      onClick={() => toggleLang(l.code)}
-                      className={cn(
-                        "rounded-md border px-2.5 py-1 text-[12px] transition-colors",
-                        active
-                          ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary-soft-fg)]"
-                          : "border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--primary)]",
-                      )}
+                      onClick={() =>
+                        setVoiceTone((value) =>
+                          value.toLowerCase().includes(tone)
+                            ? value
+                            : [value, tone].filter(Boolean).join(", "),
+                        )
+                      }
+                      className="rounded-md border border-[var(--border)] px-2.5 py-1 text-[12px] text-[var(--fg-muted)] transition-colors hover:border-[var(--primary)] hover:text-[var(--fg)]"
                     >
-                      {l.label}
+                      {tone}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </FormField>
+            ) : null}
+
+            {step === 3 ? (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField label="Asosiy rang (HEX)" hint="Avatar va aksent uchun">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={primaryColor || "#16a34a"}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        className="h-9 w-12 cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface)]"
+                      />
+                      <Input
+                        value={primaryColor}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        placeholder="#16a34a"
+                      />
+                    </div>
+                  </FormField>
+                  <FormField label="Logo URL">
+                    <div className="relative">
+                      <ImageIcon className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--fg-subtle)]" />
+                      <Input
+                        value={logoUrl}
+                        onChange={(e) => setLogoUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="pl-9"
+                      />
+                    </div>
+                  </FormField>
+                </div>
+
+                <div className="flex min-h-[118px] items-center gap-4 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+                  <div
+                    className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl text-xl font-bold"
+                    style={{
+                      background: primaryColor || "var(--primary-soft)",
+                      color: primaryColor ? "white" : "var(--primary-soft-fg)",
+                    }}
+                  >
+                    {name[0]?.toUpperCase() || "N"}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[var(--fg)]">
+                      {name || "Yangi brend"}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-[var(--fg-subtle)]">
+                      {industry || "soha tanlanmagan"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {step === 4 ? (
+              <div className="space-y-4">
+                <FormField label="Tillar">
+                  <div className="flex flex-wrap gap-1.5">
+                    {LANGS.map((l) => {
+                      const active = languages.includes(l.code);
+                      return (
+                        <button
+                          key={l.code}
+                          type="button"
+                          onClick={() => toggleLang(l.code)}
+                          className={cn(
+                            "rounded-md border px-2.5 py-1 text-[12px] transition-colors",
+                            active
+                              ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary-soft-fg)]"
+                              : "border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--primary)]",
+                          )}
+                        >
+                          {l.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </FormField>
+
+                {initial ? null : (
+                  <label className="flex items-center gap-2 text-[13px] text-[var(--fg)]">
+                    <input
+                      type="checkbox"
+                      checked={isDefault}
+                      onChange={(e) => setIsDefault(e.target.checked)}
+                      className="h-4 w-4 accent-[var(--primary)]"
+                    />
+                    Asosiy brend qilish
+                  </label>
+                )}
+
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+                  <div className="grid gap-3 text-sm sm:grid-cols-2">
+                    <SummaryItem label="Nomi" value={name || "Kiritilmagan"} />
+                    <SummaryItem label="Soha" value={industry || "Kiritilmagan"} />
+                    <SummaryItem
+                      label="Tillar"
+                      value={languages.length ? languages.join(", ") : "Tanlanmagan"}
+                    />
+                    <SummaryItem label="Rang" value={primaryColor || "Tanlanmagan"} />
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
 
-          <label className="flex items-center gap-2 text-[13px] text-[var(--fg)]">
-            <input
-              type="checkbox"
-              checked={isDefault}
-              onChange={(e) => setIsDefault(e.target.checked)}
-              className="h-4 w-4 accent-[var(--primary)]"
-            />
-            Asosiy brend qilish
-          </label>
-
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button variant="ghost" onClick={onCancel}>
-              Bekor qilish
-            </Button>
+          <div className="flex flex-col gap-2 border-t border-[var(--border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
             <Button
-              onClick={() =>
-                name.trim() &&
-                onSubmit({
-                  name: name.trim(),
-                  description: description || null,
-                  industry: industry || null,
-                  voice_tone: voiceTone || null,
-                  target_audience: targetAudience || null,
-                  primary_color: primaryColor || null,
-                  languages,
-                  is_default: isDefault,
-                })
-              }
-              loading={loading}
-              disabled={!name.trim()}
+              variant="outline"
+              onClick={() => setStep((value) => Math.max(0, value - 1))}
+              disabled={step === 0}
             >
-              {initial ? "Saqlash" : "Yaratish"}
+              <ChevronLeft /> Orqaga
             </Button>
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="ghost" onClick={onCancel}>
+                Bekor qilish
+              </Button>
+              {isLastStep ? (
+                <Button
+                  onClick={() => name.trim() && onSubmit(payload)}
+                  loading={loading}
+                  disabled={!name.trim() || languages.length === 0}
+                >
+                  {initial ? "Saqlash" : "Yaratish"}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() =>
+                    canGoNext &&
+                    setStep((value) => Math.min(BRAND_WIZARD_STEPS.length - 1, value + 1))
+                  }
+                  disabled={!canGoNext}
+                >
+                  Keyingi <ChevronRight />
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
     </motion.div>
+  );
+}
+
+function SummaryItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
+        {label}
+      </p>
+      <p className="mt-0.5 truncate text-[13px] text-[var(--fg)]">{value}</p>
+    </div>
   );
 }

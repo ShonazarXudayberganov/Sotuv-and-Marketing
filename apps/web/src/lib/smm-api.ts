@@ -1,5 +1,11 @@
 import { apiClient } from "./api-client";
-import type { Brand, BrandCreate, IntegrationConnect, IntegrationProvider } from "./types";
+import type {
+  Brand,
+  BrandCreate,
+  IntegrationConnect,
+  IntegrationProvider,
+  MetaOAuthStartResponse,
+} from "./types";
 
 export const brandsApi = {
   async list(): Promise<Brand[]> {
@@ -41,5 +47,25 @@ export const integrationsApi = {
   },
   async disconnect(provider: string): Promise<void> {
     await apiClient.delete(`/integrations/${provider}`);
+  },
+  async startMetaOAuth(redirectUri: string): Promise<MetaOAuthStartResponse> {
+    const { data } = await apiClient.post<MetaOAuthStartResponse>(
+      "/integrations/meta_app/oauth/start",
+      {
+        redirect_uri: redirectUri,
+      },
+    );
+    return data;
+  },
+  async finishMetaOAuth(payload: {
+    code: string;
+    state: string;
+    redirect_uri: string;
+  }): Promise<IntegrationProvider> {
+    const { data } = await apiClient.post<IntegrationProvider>(
+      "/integrations/meta_app/oauth/finish",
+      payload,
+    );
+    return data;
   },
 };

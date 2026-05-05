@@ -62,6 +62,8 @@ export default function SocialAccountsPage() {
   const youtubeIntegration = integrations.find((i) => i.provider === "youtube");
   const telegramConnected = telegramIntegration?.connected ?? false;
   const metaConnected = metaIntegration?.connected ?? false;
+  const metaOAuthConnected = metaIntegration?.oauth_connected ?? false;
+  const metaReady = metaConnected && metaOAuthConnected;
   const youtubeConnected = youtubeIntegration?.connected ?? false;
 
   const { data: botInfo } = useQuery({
@@ -168,7 +170,7 @@ export default function SocialAccountsPage() {
               <Button
                 size="default"
                 onClick={() => setLinking("meta")}
-                disabled={!metaConnected || brands.length === 0}
+                disabled={!metaReady || brands.length === 0}
               >
                 <Plus /> Facebook / Instagram
               </Button>
@@ -202,7 +204,15 @@ export default function SocialAccountsPage() {
           provider="meta"
           connected={metaConnected}
           title="Meta (Facebook + Instagram)"
-          subtitle={metaConnected ? "App ulangan" : "App tokeni o'rnatilmagan"}
+          subtitle={
+            metaConnected
+              ? (metaIntegration?.status_hint ?? "Meta OAuth ulangan")
+              : "App ID va Secret o'rnatilmagan"
+          }
+          actionHref={
+            metaConnected && !metaOAuthConnected ? "/settings/integrations" : undefined
+          }
+          actionLabel={metaConnected && !metaOAuthConnected ? "Meta OAuth" : undefined}
         />
         <ProviderStatus
           provider="youtube"
@@ -227,6 +237,7 @@ export default function SocialAccountsPage() {
         <MetaLinkForm
           brands={brands}
           defaultBrandId={brands.find((b) => b.is_default)?.id ?? brands[0]?.id ?? ""}
+          oauthConnected={metaOAuthConnected}
           onCancel={() => setLinking(null)}
           onSubmit={(args) => linkMeta.mutate(args)}
           loading={linkMeta.isPending}
@@ -312,12 +323,12 @@ export default function SocialAccountsPage() {
               icon={Link2}
               title="Hech qanday akkaunt ulanmagan"
               description={
-                telegramConnected || metaConnected
+                telegramConnected || metaReady
                   ? "Yuqoridagi tugmalar orqali Telegram, Facebook yoki Instagram qo'shing."
-                  : "Avval sozlamalardan Telegram bot tokeni yoki Meta app credentials'ni kiriting."
+                  : "Avval sozlamalardan Telegram bot tokeni yoki Meta OAuth'ni tayyorlang."
               }
               action={
-                !telegramConnected && !metaConnected ? (
+                !telegramConnected && !metaReady ? (
                   <Button asChild variant="secondary">
                     <Link href="/settings/integrations">Sozlamalar</Link>
                   </Button>
@@ -350,12 +361,16 @@ function ProviderStatus({
   title,
   subtitle,
   mocked,
+  actionHref,
+  actionLabel,
 }: {
   provider: "telegram" | "meta" | "youtube";
   connected: boolean;
   title: string;
   subtitle: string;
   mocked?: boolean;
+  actionHref?: string;
+  actionLabel?: string;
 }) {
   const Icon = provider === "telegram" ? Send : provider === "youtube" ? Youtube : Facebook;
   if (!connected) {
@@ -384,9 +399,15 @@ function ProviderStatus({
         </div>
         <p className="mt-0.5 truncate text-[11px] text-[var(--fg-subtle)]">{subtitle}</p>
       </div>
-      <Badge variant="success">
-        <CheckCircle2 className="h-2.5 w-2.5" /> Faol
-      </Badge>
+      {actionHref && actionLabel ? (
+        <Button asChild variant="secondary" size="sm">
+          <Link href={actionHref}>{actionLabel}</Link>
+        </Button>
+      ) : (
+        <Badge variant="success">
+          <CheckCircle2 className="h-2.5 w-2.5" /> Faol
+        </Badge>
+      )}
     </div>
   );
 }
@@ -517,12 +538,14 @@ function TelegramLinkForm({
 function MetaLinkForm({
   brands,
   defaultBrandId,
+  oauthConnected,
   onCancel,
   onSubmit,
   loading,
 }: {
   brands: Brand[];
   defaultBrandId: string;
+  oauthConnected: boolean;
   onCancel: () => void;
   onSubmit: (args: {
     brandId: string;
@@ -538,6 +561,7 @@ function MetaLinkForm({
   const { data: pages = [], isLoading } = useQuery({
     queryKey: ["meta", "pages"],
     queryFn: socialApi.metaListPages,
+    enabled: oauthConnected,
   });
 
   const selected = pages.find((p) => p.id === pageId) ?? null;
@@ -577,7 +601,11 @@ function MetaLinkForm({
             : "Botingiz boshqaradigan sahifalar ro'yxati. Instagram uchun sahifaga IG Business akkaunt biriktirilgan bo'lishi shart."
         }
       >
-        {pages.length === 0 && !isLoading ? (
+        {!oauthConnected ? (
+          <p className="rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-subtle)] p-4 text-center text-[12px] text-[var(--fg-muted)]">
+            Avval [Meta OAuth] ni yakunlang. So&apos;ng sahifalar shu yerda chiqadi.
+          </p>
+        ) : pages.length === 0 && !isLoading ? (
           <p className="rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-subtle)] p-4 text-center text-[12px] text-[var(--fg-muted)]">
             Sahifalar topilmadi. Meta app credentials va sahifaga ruxsatni tekshiring.
           </p>
@@ -618,7 +646,9 @@ function MetaLinkForm({
         onCancel={onCancel}
         onSubmit={() => brandId && pageId && onSubmit({ brandId, pageId, target })}
         loading={loading}
-        disabled={!brandId || !pageId || (target === "instagram" && igDisabled)}
+        disabled={
+          !oauthConnected || !brandId || !pageId || (target === "instagram" && igDisabled)
+        }
         cta="Ulash"
       />
     </FormCard>

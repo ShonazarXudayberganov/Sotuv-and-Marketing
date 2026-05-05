@@ -54,6 +54,8 @@ async def get_db() -> AsyncIterator[AsyncSession]:
         except Exception:
             await session.rollback()
             raise
+        finally:
+            await session.rollback()
 
 
 async def get_tenant_db(tenant_schema: str) -> AsyncIterator[AsyncSession]:
@@ -70,6 +72,10 @@ async def get_tenant_db(tenant_schema: str) -> AsyncIterator[AsyncSession]:
         except Exception:
             await session.rollback()
             raise
+        finally:
+            await session.rollback()
+            await session.execute(text("SET search_path TO public"))
+            await session.commit()
 
 
 async def dispose_engine() -> None:

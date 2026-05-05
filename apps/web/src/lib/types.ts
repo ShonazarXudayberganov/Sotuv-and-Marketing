@@ -305,6 +305,8 @@ export interface IntegrationProvider {
   label_custom: string | null;
   display_value: string | null;
   masked_values: Record<string, string>;
+  oauth_connected: boolean;
+  status_hint: string | null;
   last_verified_at: string | null;
   last_error: string | null;
   updated_at: string | null;
@@ -316,12 +318,65 @@ export interface IntegrationConnect {
   metadata?: Record<string, unknown>;
 }
 
+export interface MetaOAuthStartResponse {
+  authorize_url: string;
+  redirect_uri: string;
+  state: string;
+}
+
+// ─────────── Brand assets / Sprint 1.8 ───────────
+
+export type BrandAssetType =
+  | "logo"
+  | "image"
+  | "video"
+  | "template"
+  | "font"
+  | "color"
+  | "reference";
+
+export interface BrandAsset {
+  id: string;
+  brand_id: string;
+  asset_type: BrandAssetType | string;
+  name: string;
+  file_url: string | null;
+  content_type: string | null;
+  file_size: number;
+  metadata: Record<string, unknown> | null;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BrandAssetCreate {
+  brand_id: string;
+  asset_type: BrandAssetType | string;
+  name: string;
+  file_url?: string | null;
+  content_type?: string | null;
+  file_size?: number;
+  metadata?: Record<string, unknown> | null;
+  is_primary?: boolean;
+}
+
+export interface BrandAssetUpdate {
+  asset_type?: BrandAssetType | string;
+  name?: string;
+  file_url?: string | null;
+  content_type?: string | null;
+  file_size?: number;
+  metadata?: Record<string, unknown> | null;
+  is_primary?: boolean;
+}
+
 // ─────────── Knowledge Base / Sprint 1.2 ───────────
 
 export interface KnowledgeDocument {
   id: string;
   brand_id: string;
   title: string;
+  section: string;
   source_type: string;
   source_url: string | null;
   chunk_count: number;
@@ -334,6 +389,18 @@ export interface KnowledgeDocument {
 export interface KnowledgeStats {
   documents: number;
   chunks: number;
+  sections_total: number;
+  sections_completed: number;
+}
+
+export interface KnowledgeSection {
+  key: string;
+  label: string;
+  description: string;
+  document_count: number;
+  ready_count: number;
+  chunk_count: number;
+  completed: boolean;
 }
 
 export interface KnowledgeSearchHit {
@@ -355,8 +422,30 @@ export interface KnowledgeSearchResponse {
 export interface TextDocumentCreate {
   brand_id: string;
   title: string;
+  section?: string;
   text: string;
   source_url?: string | null;
+}
+
+export interface WebsiteImportPayload {
+  brand_id: string;
+  url: string;
+  title?: string | null;
+  section?: string;
+}
+
+export interface InstagramImportPayload {
+  brand_id: string;
+  account_id?: string | null;
+  title?: string | null;
+  section?: string;
+}
+
+export interface AIChatImportPayload {
+  brand_id: string;
+  prompt: string;
+  title?: string | null;
+  section?: string;
 }
 
 // ─────────── Social accounts / Sprint 1.3 ───────────
@@ -467,6 +556,68 @@ export interface GeneratePostRequest {
   use_cache?: boolean;
 }
 
+export interface GenerateContentRequest extends GeneratePostRequest {
+  variants?: number;
+}
+
+export interface GenerateContentResponse {
+  drafts: ContentDraft[];
+}
+
+export interface ImproveContentRequest {
+  draft_id: string;
+  instruction: string;
+  selected_text?: string | null;
+}
+
+export interface AIChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface AIChatRequest {
+  brand_id: string;
+  message: string;
+  draft_id?: string | null;
+  history?: AIChatMessage[];
+  language?: string;
+}
+
+export interface AITextResponse {
+  text: string;
+  provider: string | null;
+  model: string | null;
+  tokens_used: number;
+  rag_chunk_ids?: string[] | null;
+}
+
+export interface GenerateHashtagsRequest {
+  brand_id: string;
+  platform: ContentPlatform | string;
+  topic: string;
+  language: string;
+  count?: number;
+}
+
+export interface HashtagResponse extends AITextResponse {
+  hashtags: string[];
+}
+
+export interface GenerateReelsScriptRequest {
+  brand_id: string;
+  topic: string;
+  language: string;
+  duration_seconds?: number;
+}
+
+export interface GeneratePlanRequest {
+  brand_id: string;
+  platform: ContentPlatform | string;
+  topic: string;
+  language: string;
+  days?: number;
+}
+
 export interface AIUsage {
   period: string;
   tokens_used: number;
@@ -483,6 +634,9 @@ export interface ContentStats {
 
 export type PostStatus =
   | "draft"
+  | "review"
+  | "approved"
+  | "rejected"
   | "scheduled"
   | "publishing"
   | "published"
@@ -498,11 +652,28 @@ export interface PostPublication {
   status: string;
   attempts: number;
   next_retry_at: string | null;
+  last_attempt_at: string | null;
   external_post_id: string | null;
+  remote_status: string | null;
+  last_checked_at: string | null;
+  permanent_failure: boolean;
   last_error: string | null;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+  events: PostPublicationEvent[];
+}
+
+export interface PostPublicationEvent {
+  id: string;
+  publication_id: string;
+  post_id: string;
+  provider: string;
+  event_type: string;
+  status: string | null;
+  message: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
 }
 
 export interface Post {
@@ -534,6 +705,19 @@ export interface PostCreateRequest {
   draft_id?: string | null;
 }
 
+export interface PostReviewRequest {
+  note?: string | null;
+}
+
+export interface PostApproveRequest {
+  note?: string | null;
+  scheduled_at?: string | null;
+}
+
+export interface PostRejectRequest {
+  reason: string;
+}
+
 export interface PostStats {
   total: number;
   by_status: Record<string, number>;
@@ -548,6 +732,77 @@ export interface CalendarResponse {
   start: string;
   end: string;
   days: CalendarDay[];
+}
+
+// ─────────── Content plan / Sprint 1.8 ───────────
+
+export type ContentPlanStatus =
+  | "idea"
+  | "draft"
+  | "review"
+  | "approved"
+  | "scheduled"
+  | "published";
+
+export interface ContentPlanItem {
+  id: string;
+  brand_id: string;
+  post_id: string | null;
+  platform: ContentPlatform | string;
+  title: string;
+  idea: string;
+  goal: string | null;
+  cta: string | null;
+  status: ContentPlanStatus | string;
+  planned_at: string | null;
+  source: string;
+  sort_order: number;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContentPlanItemCreate {
+  brand_id: string;
+  platform: ContentPlatform | string;
+  title: string;
+  idea: string;
+  goal?: string | null;
+  cta?: string | null;
+  status?: ContentPlanStatus | string;
+  planned_at?: string | null;
+  source?: string;
+  sort_order?: number;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface ContentPlanItemUpdate {
+  platform?: ContentPlatform | string;
+  title?: string;
+  idea?: string;
+  goal?: string | null;
+  cta?: string | null;
+  status?: ContentPlanStatus | string;
+  planned_at?: string | null;
+  sort_order?: number;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface ContentPlanImportTextRequest {
+  brand_id: string;
+  platform: ContentPlatform | string;
+  topic?: string | null;
+  text: string;
+  start_date: string;
+}
+
+export interface ContentPlanImportResult {
+  items: ContentPlanItem[];
+}
+
+export interface ContentPlanCreatePostRequest {
+  social_account_ids: string[];
+  scheduled_at?: string | null;
 }
 
 // ─────────── Analytics / Sprint 1.9 ───────────

@@ -2,8 +2,11 @@ import { apiClient } from "./api-client";
 import type {
   CalendarResponse,
   Post,
+  PostApproveRequest,
   PostCreateRequest,
   PostDetail,
+  PostRejectRequest,
+  PostReviewRequest,
   PostStats,
 } from "./types";
 
@@ -50,8 +53,24 @@ export const postsApi = {
     const { data } = await apiClient.post<PostDetail>(`/posts/${id}/retry`);
     return data;
   },
+  async submitReview(id: string, payload: PostReviewRequest = {}): Promise<PostDetail> {
+    const { data } = await apiClient.post<PostDetail>(`/posts/${id}/submit-review`, payload);
+    return data;
+  },
+  async approve(id: string, payload: PostApproveRequest = {}): Promise<PostDetail> {
+    const { data } = await apiClient.post<PostDetail>(`/posts/${id}/approve`, payload);
+    return data;
+  },
+  async reject(id: string, payload: PostRejectRequest): Promise<PostDetail> {
+    const { data } = await apiClient.post<PostDetail>(`/posts/${id}/reject`, payload);
+    return data;
+  },
   async publishNow(id: string): Promise<PostDetail> {
     const { data } = await apiClient.post<PostDetail>(`/posts/${id}/publish-now`);
+    return data;
+  },
+  async syncStatus(id: string): Promise<PostDetail> {
+    const { data } = await apiClient.post<PostDetail>(`/posts/${id}/sync-status`);
     return data;
   },
   async calendar(

@@ -267,6 +267,28 @@ TENANT_DDL: tuple[str, ...] = (
     CREATE INDEX IF NOT EXISTS ix_brand_memberships_user ON brand_memberships(user_id)
     """,
     """
+    CREATE TABLE IF NOT EXISTS brand_assets (
+        id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        brand_id       uuid NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+        asset_type     varchar(30) NOT NULL,
+        name           varchar(160) NOT NULL,
+        file_url       text,
+        content_type   varchar(120),
+        file_size      integer NOT NULL DEFAULT 0,
+        metadata       jsonb,
+        is_primary     boolean NOT NULL DEFAULT false,
+        created_by     uuid NOT NULL,
+        created_at     timestamptz NOT NULL DEFAULT now(),
+        updated_at     timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_brand_assets_brand ON brand_assets(brand_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_brand_assets_type ON brand_assets(asset_type)
+    """,
+    """
     CREATE TABLE IF NOT EXISTS tenant_integrations (
         id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         provider              varchar(50) NOT NULL UNIQUE,
@@ -289,6 +311,7 @@ TENANT_DDL: tuple[str, ...] = (
         id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         brand_id      uuid NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
         title         varchar(200) NOT NULL,
+        section       varchar(40) NOT NULL DEFAULT 'brand_overview',
         source_type   varchar(20) NOT NULL,
         source_url    varchar(500),
         raw_text      text NOT NULL,
@@ -303,6 +326,14 @@ TENANT_DDL: tuple[str, ...] = (
     """
     CREATE INDEX IF NOT EXISTS ix_knowledge_documents_brand
         ON knowledge_documents(brand_id)
+    """,
+    """
+    ALTER TABLE IF EXISTS knowledge_documents
+        ADD COLUMN IF NOT EXISTS section varchar(40) NOT NULL DEFAULT 'brand_overview'
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_knowledge_documents_section
+        ON knowledge_documents(section)
     """,
     """
     CREATE TABLE IF NOT EXISTS knowledge_chunks (
@@ -412,6 +443,35 @@ TENANT_DDL: tuple[str, ...] = (
         ON posts(scheduled_at) WHERE status = 'scheduled'
     """,
     """
+    CREATE TABLE IF NOT EXISTS content_plans (
+        id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        brand_id      uuid NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+        post_id       uuid REFERENCES posts(id) ON DELETE SET NULL,
+        platform      varchar(30) NOT NULL,
+        title         varchar(200) NOT NULL,
+        idea          text NOT NULL,
+        goal          varchar(500),
+        cta           varchar(300),
+        status        varchar(20) NOT NULL DEFAULT 'idea',
+        planned_at    timestamptz,
+        source        varchar(30) NOT NULL DEFAULT 'manual',
+        sort_order    integer NOT NULL DEFAULT 0,
+        metadata      jsonb,
+        created_by    uuid NOT NULL,
+        created_at    timestamptz NOT NULL DEFAULT now(),
+        updated_at    timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_content_plans_brand ON content_plans(brand_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_content_plans_status ON content_plans(status)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_content_plans_planned_at ON content_plans(planned_at)
+    """,
+    """
     CREATE TABLE IF NOT EXISTS post_publications (
         id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         post_id             uuid NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
@@ -421,12 +481,32 @@ TENANT_DDL: tuple[str, ...] = (
         status              varchar(20) NOT NULL DEFAULT 'pending',
         attempts            integer NOT NULL DEFAULT 0,
         next_retry_at       timestamptz,
+        last_attempt_at     timestamptz,
         external_post_id    varchar(120),
+        remote_status       varchar(40),
+        last_checked_at     timestamptz,
+        permanent_failure   boolean NOT NULL DEFAULT false,
         last_error          varchar(1000),
         completed_at        timestamptz,
         created_at          timestamptz NOT NULL DEFAULT now(),
         updated_at          timestamptz NOT NULL DEFAULT now()
     )
+    """,
+    """
+    ALTER TABLE IF EXISTS post_publications
+        ADD COLUMN IF NOT EXISTS last_attempt_at timestamptz
+    """,
+    """
+    ALTER TABLE IF EXISTS post_publications
+        ADD COLUMN IF NOT EXISTS remote_status varchar(40)
+    """,
+    """
+    ALTER TABLE IF EXISTS post_publications
+        ADD COLUMN IF NOT EXISTS last_checked_at timestamptz
+    """,
+    """
+    ALTER TABLE IF EXISTS post_publications
+        ADD COLUMN IF NOT EXISTS permanent_failure boolean NOT NULL DEFAULT false
     """,
     """
     CREATE INDEX IF NOT EXISTS ix_post_publications_post
@@ -439,6 +519,32 @@ TENANT_DDL: tuple[str, ...] = (
     """
     CREATE INDEX IF NOT EXISTS ix_post_publications_status
         ON post_publications(status)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS post_publication_events (
+        id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        publication_id  uuid NOT NULL REFERENCES post_publications(id) ON DELETE CASCADE,
+        post_id         uuid NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+        provider        varchar(30) NOT NULL,
+        event_type      varchar(40) NOT NULL,
+        status          varchar(40),
+        message         varchar(1000),
+        metadata        jsonb,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        updated_at      timestamptz NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_post_publication_events_publication
+        ON post_publication_events(publication_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_post_publication_events_post
+        ON post_publication_events(post_id)
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_post_publication_events_type
+        ON post_publication_events(event_type)
     """,
     """
     CREATE TABLE IF NOT EXISTS post_metrics (

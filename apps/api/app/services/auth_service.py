@@ -286,7 +286,8 @@ async def refresh(session: AsyncSession, refresh_token: str) -> str:
             session, schema_name=tenant.schema_name, jti=jti
         )
         await session.commit()
-        await session.execute(text("SET search_path TO public"))
+        await session.execute(text("RESET search_path"))
+        await session.commit()
         if not active:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session revoked")
 
@@ -365,7 +366,8 @@ async def revoke_refresh(session: AsyncSession, refresh_token: str) -> None:
     await session.execute(text(f"SET search_path TO {validate_schema_name(schema)}, public"))
     await session_service.revoke_jti(session, jti)
     await session.commit()
-    await session.execute(text("SET search_path TO public"))
+    await session.execute(text("RESET search_path"))
+    await session.commit()
 
 
 async def _issue_auth_bundle(
@@ -393,7 +395,8 @@ async def _issue_auth_bundle(
         request=request,
     )
     await session.commit()
-    await session.execute(text("SET search_path TO public"))
+    await session.execute(text("RESET search_path"))
+    await session.commit()
 
     return AuthBundle(
         access_token=access,

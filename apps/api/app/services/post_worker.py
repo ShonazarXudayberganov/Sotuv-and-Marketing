@@ -48,7 +48,7 @@ async def _process_schema(schema: str) -> None:
         logger.info("Worker[%s]: claimed %d post(s) for publishing", safe, len(due))
         for post in due:
             try:
-                await post_service.publish_now(session, post)
+                await post_service.publish_now(session, post, force=False)
             except Exception:
                 logger.exception("Worker[%s]: publish_now crashed for %s", safe, post.id)
                 post.status = "failed"

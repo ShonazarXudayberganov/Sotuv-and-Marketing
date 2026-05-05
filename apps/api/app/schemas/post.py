@@ -6,6 +6,20 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+class PublicationEventOut(BaseModel):
+    id: UUID
+    publication_id: UUID
+    post_id: UUID
+    provider: str
+    event_type: str
+    status: str | None
+    message: str | None
+    metadata: dict[str, object] | None = Field(default=None, validation_alias="metadata_")
+    created_at: datetime
+
+    model_config = {"from_attributes": True, "populate_by_name": True}
+
+
 class PublicationOut(BaseModel):
     id: UUID
     post_id: UUID
@@ -14,11 +28,16 @@ class PublicationOut(BaseModel):
     status: str
     attempts: int
     next_retry_at: datetime | None
+    last_attempt_at: datetime | None
     external_post_id: str | None
+    remote_status: str | None
+    last_checked_at: datetime | None
+    permanent_failure: bool
     last_error: str | None
     completed_at: datetime | None
     created_at: datetime
     updated_at: datetime
+    events: list[PublicationEventOut] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
@@ -56,6 +75,19 @@ class PostCreateRequest(BaseModel):
 
 class PostReschedule(BaseModel):
     scheduled_at: datetime | None = None
+
+
+class PostReviewRequest(BaseModel):
+    note: str | None = Field(default=None, max_length=1000)
+
+
+class PostApproveRequest(BaseModel):
+    note: str | None = Field(default=None, max_length=1000)
+    scheduled_at: datetime | None = None
+
+
+class PostRejectRequest(BaseModel):
+    reason: str = Field(min_length=2, max_length=1000)
 
 
 class PostStats(BaseModel):

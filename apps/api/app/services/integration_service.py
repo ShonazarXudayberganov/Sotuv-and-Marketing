@@ -48,7 +48,8 @@ PROVIDERS: dict[str, dict[str, Any]] = {
         "label": "Meta (Facebook + Instagram)",
         "category": "social",
         "description": "Instagram Business va Facebook Page postlash",
-        "secret_fields": ["app_id", "app_secret", "page_access_token"],
+        "secret_fields": ["app_id", "app_secret"],
+        "optional_secret_fields": ["user_access_token", "page_access_token"],
         "display_field": "page_name",
         "docs_url": "https://developers.facebook.com",
     },
@@ -152,22 +153,23 @@ async def upsert(
         raise UnknownProviderError(f"Unknown provider: {provider}")
 
     spec = PROVIDERS[provider]
-    missing = [f for f in spec["secret_fields"] if not credentials.get(f)]
+    required_fields = spec.get("required_fields") or spec["secret_fields"]
+    missing = [f for f in required_fields if not credentials.get(f)]
     if missing:
         raise ValueError(f"Required fields missing: {', '.join(missing)}")
 
-    existing = (
-        (await db.execute(select(TenantIntegration).where(TenantIntegration.provider == provider)))
-        .scalars()
-        .first()
+    existing = await get_record(db, provider)
+    existing_credentials = (
+        decrypt_credentials(existing.credentials_encrypted) if existing is not None else {}
     )
+    merged_credentials = {**existing_credentials, **credentials}
 
-    encrypted = encrypt_credentials(credentials)
+    encrypted = encrypt_credentials(merged_credentials)
 
     if existing is not None:
         existing.credentials_encrypted = encrypted
         existing.label = label or existing.label
-        existing.metadata_ = metadata
+        existing.metadata_ = metadata if metadata is not None else existing.metadata_
         existing.is_active = True
         existing.last_error = None
         rec = existing
@@ -185,12 +187,16 @@ async def upsert(
     return rec
 
 
-async def get_credentials(db: AsyncSession, provider: str) -> dict[str, Any] | None:
-    row = (
+async def get_record(db: AsyncSession, provider: str) -> TenantIntegration | None:
+    return (
         (await db.execute(select(TenantIntegration).where(TenantIntegration.provider == provider)))
         .scalars()
         .first()
     )
+
+
+async def get_credentials(db: AsyncSession, provider: str) -> dict[str, Any] | None:
+    row = await get_record(db, provider)
     if row is None or not row.is_active:
         return None
     return decrypt_credentials(row.credentials_encrypted)
@@ -207,6 +213,8 @@ async def list_with_status(db: AsyncSession) -> list[dict[str, Any]]:
         connected = rec is not None and rec.is_active
         public_display: str | None = None
         masked: dict[str, str] = {}
+        oauth_connected = False
+        status_hint: str | None = None
         if connected and rec is not None:
             try:
                 creds = decrypt_credentials(rec.credentials_encrypted)
@@ -217,6 +225,15 @@ async def list_with_status(db: AsyncSession) -> list[dict[str, Any]]:
             display_key = spec.get("display_field")
             if display_key:
                 public_display = creds.get(display_key)
+            if key == "meta_app":
+                oauth_connected = bool(
+                    creds.get("user_access_token") or creds.get("page_access_token")
+                )
+                status_hint = (
+                    "Meta OAuth ulangan"
+                    if oauth_connected
+                    else "OAuth orqali sahifa ruxsatini yakunlash kerak"
+                )
 
         out.append(
             {
@@ -232,6 +249,8 @@ async def list_with_status(db: AsyncSession) -> list[dict[str, Any]]:
                 "label_custom": rec.label if rec else None,
                 "display_value": public_display,
                 "masked_values": masked,
+                "oauth_connected": oauth_connected,
+                "status_hint": status_hint,
                 "last_verified_at": rec.last_verified_at.isoformat()
                 if rec and rec.last_verified_at
                 else None,
@@ -243,11 +262,7 @@ async def list_with_status(db: AsyncSession) -> list[dict[str, Any]]:
 
 
 async def disconnect(db: AsyncSession, provider: str) -> bool:
-    row = (
-        (await db.execute(select(TenantIntegration).where(TenantIntegration.provider == provider)))
-        .scalars()
-        .first()
-    )
+    row = await get_record(db, provider)
     if row is None:
         return False
     await db.delete(row)
@@ -258,11 +273,7 @@ async def disconnect(db: AsyncSession, provider: str) -> bool:
 async def mark_verified(
     db: AsyncSession, provider: str, *, ok: bool, error: str | None = None
 ) -> None:
-    row = (
-        (await db.execute(select(TenantIntegration).where(TenantIntegration.provider == provider)))
-        .scalars()
-        .first()
-    )
+    row = await get_record(db, provider)
     if row is None:
         return
     row.last_verified_at = datetime.now(UTC) if ok else row.last_verified_at

@@ -17,7 +17,7 @@ pytestmark = pytest.mark.asyncio
 
 
 def _code_for(phone: str) -> str:
-    for sent_phone, message in MockSMSProvider.sent:
+    for sent_phone, message in reversed(MockSMSProvider.sent):
         if sent_phone == phone:
             match = re.search(r"\b(\d{4,8})\b", message)
             if match:

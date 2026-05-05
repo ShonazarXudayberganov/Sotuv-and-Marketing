@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from httpx import AsyncClient
 
+from app.services import publisher_service
 from app.services.sms import MockSMSProvider
 
 # Disable the in-process worker so tests drive publishes deterministically.
@@ -101,6 +102,88 @@ async def test_create_post_without_schedule_starts_in_draft(
     assert create.json()["status"] == "draft"
 
 
+async def test_submit_review_approve_then_publish(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    account_id = await _link_telegram(client, headers, brand_id)
+
+    create = await client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "body": "Approval orqali e'lon qilinadigan post",
+            "social_account_ids": [account_id],
+        },
+    )
+    post_id = create.json()["id"]
+
+    review = await client.post(
+        f"/api/v1/posts/{post_id}/submit-review",
+        headers=headers,
+        json={"note": "Tekshiruvga yuborildi"},
+    )
+    assert review.status_code == 200, review.text
+    assert review.json()["status"] == "review"
+
+    blocked_publish = await client.post(f"/api/v1/posts/{post_id}/publish-now", headers=headers)
+    assert blocked_publish.status_code == 400
+
+    approve = await client.post(
+        f"/api/v1/posts/{post_id}/approve",
+        headers=headers,
+        json={"note": "Tasdiqlandi"},
+    )
+    assert approve.status_code == 200, approve.text
+    assert approve.json()["status"] == "approved"
+
+    publish = await client.post(f"/api/v1/posts/{post_id}/publish-now", headers=headers)
+    assert publish.status_code == 200, publish.text
+    assert publish.json()["status"] == "published"
+
+
+async def test_reject_post_then_resubmit_for_review(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    account_id = await _link_telegram(client, headers, brand_id)
+
+    create = await client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "body": "Qayta ishlanadigan post",
+            "social_account_ids": [account_id],
+        },
+    )
+    post_id = create.json()["id"]
+
+    await client.post(f"/api/v1/posts/{post_id}/submit-review", headers=headers, json={})
+    reject = await client.post(
+        f"/api/v1/posts/{post_id}/reject",
+        headers=headers,
+        json={"reason": "CTA aniq emas"},
+    )
+    assert reject.status_code == 200, reject.text
+    assert reject.json()["status"] == "rejected"
+    assert reject.json()["last_error"] == "CTA aniq emas"
+
+    resubmit = await client.post(
+        f"/api/v1/posts/{post_id}/submit-review",
+        headers=headers,
+        json={"note": "CTA tuzatildi"},
+    )
+    assert resubmit.status_code == 200, resubmit.text
+    assert resubmit.json()["status"] == "review"
+    assert resubmit.json()["last_error"] is None
+
+
 async def test_publish_now_marks_post_published(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
@@ -125,6 +208,70 @@ async def test_publish_now_marks_post_published(client: AsyncClient, sample_regi
     assert body["published_at"] is not None
     assert body["publications"][0]["status"] == "published"
     assert body["publications"][0]["external_post_id"]
+    assert body["publications"][0]["remote_status"] == "published"
+    assert body["publications"][0]["events"][0]["event_type"] == "published"
+
+
+async def test_transient_publish_failure_schedules_retry_and_event(
+    client: AsyncClient, sample_register_payload: dict, monkeypatch: pytest.MonkeyPatch
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    account_id = await _link_telegram(client, headers, brand_id)
+
+    async def fail_publish(*args, **kwargs):
+        raise publisher_service.PublishError("Provider timeout")
+
+    monkeypatch.setattr(publisher_service, "publish", fail_publish)
+    create = await client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "body": "Retry qilinadigan post",
+            "social_account_ids": [account_id],
+        },
+    )
+    post_id = create.json()["id"]
+
+    publish = await client.post(f"/api/v1/posts/{post_id}/publish-now", headers=headers)
+    assert publish.status_code == 200, publish.text
+    body = publish.json()
+    publication = body["publications"][0]
+    assert body["status"] == "scheduled"
+    assert publication["status"] == "pending"
+    assert publication["attempts"] == 1
+    assert publication["next_retry_at"] is not None
+    assert publication["events"][0]["event_type"] == "retry_scheduled"
+
+
+async def test_sync_status_records_publication_check(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    account_id = await _link_telegram(client, headers, brand_id)
+
+    create = await client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "body": "Sync qilinadigan post",
+            "social_account_ids": [account_id],
+        },
+    )
+    post_id = create.json()["id"]
+    await client.post(f"/api/v1/posts/{post_id}/publish-now", headers=headers)
+
+    sync = await client.post(f"/api/v1/posts/{post_id}/sync-status", headers=headers)
+    assert sync.status_code == 200, sync.text
+    publication = sync.json()["publications"][0]
+    assert publication["remote_status"] == "sent"
+    assert publication["last_checked_at"] is not None
+    assert publication["events"][0]["event_type"] == "status_synced"
 
 
 async def test_cancel_scheduled_post(client: AsyncClient, sample_register_payload: dict):

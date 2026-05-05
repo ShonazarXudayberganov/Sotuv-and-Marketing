@@ -8,10 +8,13 @@ import re
 import pytest
 from httpx import AsyncClient
 
+from app.services import knowledge_service
 from app.services.sms import MockSMSProvider
 
 # Force deterministic embeddings — no real OpenAI calls during tests.
+os.environ["AI_MOCK"] = "true"
 os.environ["EMBEDDINGS_MOCK"] = "true"
+os.environ["META_MOCK"] = "true"
 
 pytestmark = pytest.mark.asyncio
 
@@ -56,6 +59,140 @@ async def test_text_upload_creates_chunks(client: AsyncClient, sample_register_p
     assert body["embed_status"] == "ready"
     assert body["chunk_count"] >= 1
     assert body["title"] == "Welcome guide"
+    assert body["section"] == "brand_overview"
+
+
+async def test_sections_progress_tracks_eight_sections(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers, "Akme")
+
+    for section, title in (
+        ("products_services", "Services"),
+        ("faq", "FAQ"),
+    ):
+        resp = await client.post(
+            "/api/v1/knowledge/documents/text",
+            headers=headers,
+            json={
+                "brand_id": brand_id,
+                "section": section,
+                "title": title,
+                "text": f"{title} content for knowledge base.",
+            },
+        )
+        assert resp.status_code == 201, resp.text
+        assert resp.json()["section"] == section
+
+    sections = (
+        await client.get(f"/api/v1/knowledge/sections?brand_id={brand_id}", headers=headers)
+    ).json()
+    assert len(sections) == 8
+    by_key = {section["key"]: section for section in sections}
+    assert by_key["products_services"]["completed"] is True
+    assert by_key["faq"]["completed"] is True
+    assert by_key["brand_overview"]["completed"] is False
+
+    stats = (
+        await client.get(f"/api/v1/knowledge/stats?brand_id={brand_id}", headers=headers)
+    ).json()
+    assert stats["sections_total"] == 8
+    assert stats["sections_completed"] == 2
+
+    only_faq = (
+        await client.get(
+            f"/api/v1/knowledge/documents?brand_id={brand_id}&section=faq", headers=headers
+        )
+    ).json()
+    assert len(only_faq) == 1
+    assert only_faq[0]["title"] == "FAQ"
+
+
+async def test_website_import_creates_section_document(
+    client: AsyncClient, sample_register_payload: dict, monkeypatch: pytest.MonkeyPatch
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers, "Akme")
+
+    async def fake_fetch(url: str) -> tuple[str, str | None]:
+        assert url == "https://akme.example/"
+        return "Akme salon services, working hours and booking policy.", "Akme home"
+
+    monkeypatch.setattr(knowledge_service, "fetch_website_text", fake_fetch)
+
+    resp = await client.post(
+        "/api/v1/knowledge/import/website",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "section": "policies_processes",
+            "url": "https://akme.example/",
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["source_type"] == "website"
+    assert body["section"] == "policies_processes"
+    assert body["title"] == "Akme home"
+
+
+async def test_ai_chat_import_creates_document(client: AsyncClient, sample_register_payload: dict):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers, "Akme")
+
+    resp = await client.post(
+        "/api/v1/knowledge/import/ai-chat",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "section": "faq",
+            "title": "AI FAQ",
+            "prompt": "Salon har kuni 10:00 dan 22:00 gacha ishlaydi. Yozilish telefon orqali.",
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["source_type"] == "ai_chat"
+    assert body["section"] == "faq"
+    assert body["title"] == "AI FAQ"
+
+
+async def test_instagram_import_uses_linked_account(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers, "Akme")
+
+    linked = await client.post(
+        "/api/v1/social/meta/link",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "page_id": "100000000000001",
+            "target": "instagram",
+        },
+    )
+    assert linked.status_code == 201, linked.text
+
+    resp = await client.post(
+        "/api/v1/knowledge/import/instagram",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "account_id": linked.json()["id"],
+            "section": "social_proof",
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["source_type"] == "instagram"
+    assert body["section"] == "social_proof"
+    assert body["title"].startswith("Instagram @")
 
 
 async def test_empty_text_returns_400(client: AsyncClient, sample_register_payload: dict):

@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Calendar,
   CalendarDays,
+  ChevronDown,
   CheckCircle2,
   Clock,
   Loader2,
@@ -40,6 +41,8 @@ import type {
   ContentDraft,
   Post,
   PostCreateRequest,
+  PostDetail,
+  PostPublication,
   PostStatus,
   SocialAccount,
 } from "@/lib/types";
@@ -48,6 +51,9 @@ import { cn } from "@/lib/utils";
 const STATUS_FILTERS: { key: PostStatus | "all"; label: string }[] = [
   { key: "all", label: "Hammasi" },
   { key: "draft", label: "Draft" },
+  { key: "review", label: "Review" },
+  { key: "approved", label: "Tasdiq" },
+  { key: "rejected", label: "Rad" },
   { key: "scheduled", label: "Rejalashtirilgan" },
   { key: "published", label: "E'lon qilingan" },
   { key: "failed", label: "Xatolik" },
@@ -59,6 +65,7 @@ export default function PostsPage() {
   const [brandFilter, setBrandFilter] = useState<string | "all">("all");
   const [statusFilter, setStatusFilter] = useState<PostStatus | "all">("all");
   const [scheduling, setScheduling] = useState(false);
+  const [rejectingPost, setRejectingPost] = useState<Post | null>(null);
 
   const { data: brands = [] } = useQuery({
     queryKey: ["brands"],
@@ -110,6 +117,44 @@ export default function PostsPage() {
     onError: (e) => toast.error(extractApiError(e)),
   });
 
+  const syncStatus = useMutation({
+    mutationFn: (id: string) => postsApi.syncStatus(id),
+    onSuccess: () => {
+      toast.success("Platform holati yangilandi");
+      qc.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  const submitReview = useMutation({
+    mutationFn: (id: string) => postsApi.submitReview(id),
+    onSuccess: () => {
+      toast.success("Reviewga yuborildi");
+      qc.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  const approve = useMutation({
+    mutationFn: (id: string) => postsApi.approve(id),
+    onSuccess: () => {
+      toast.success("Post tasdiqlandi");
+      qc.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
+  const reject = useMutation({
+    mutationFn: (args: { id: string; reason: string }) =>
+      postsApi.reject(args.id, { reason: args.reason }),
+    onSuccess: () => {
+      toast.success("Post rad etildi");
+      setRejectingPost(null);
+      qc.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (e) => toast.error(extractApiError(e)),
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -156,10 +201,25 @@ export default function PostsPage() {
         />
       ) : null}
 
+      {rejectingPost ? (
+        <RejectPostModal
+          post={rejectingPost}
+          loading={reject.isPending}
+          onCancel={() => setRejectingPost(null)}
+          onReject={(reason) => reject.mutate({ id: rejectingPost.id, reason })}
+        />
+      ) : null}
+
       {/* Stats overview */}
       {stats ? (
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <SummaryTile label="Jami" value={stats.total} icon={Send} />
+          <SummaryTile
+            label="Review"
+            value={stats.by_status.review ?? 0}
+            icon={Clock}
+            tone="warning"
+          />
           <SummaryTile
             label="Rejalashtirilgan"
             value={stats.by_status.scheduled ?? 0}
@@ -250,6 +310,10 @@ export default function PostsPage() {
                   onPublishNow={() => publishNow.mutate(p.id)}
                   onCancel={() => cancel.mutate(p.id)}
                   onRetry={() => retry.mutate(p.id)}
+                  onSubmitReview={() => submitReview.mutate(p.id)}
+                  onApprove={() => approve.mutate(p.id)}
+                  onReject={() => setRejectingPost(p)}
+                  onSyncStatus={() => syncStatus.mutate(p.id)}
                 />
               ))}
             </div>
@@ -269,16 +333,18 @@ function SummaryTile({
   label: string;
   value: number;
   icon: typeof Send;
-  tone?: "success" | "danger" | "info";
+  tone?: "success" | "danger" | "info" | "warning";
 }) {
   const toneClass =
     tone === "success"
       ? "text-[var(--success)]"
       : tone === "danger"
         ? "text-[var(--danger)]"
-        : tone === "info"
-          ? "text-[var(--info)]"
-          : "text-[var(--primary)]";
+        : tone === "warning"
+          ? "text-[var(--warning)]"
+          : tone === "info"
+            ? "text-[var(--info)]"
+            : "text-[var(--primary)]";
   return (
     <div className="flex items-start justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-xs)]">
       <div className="min-w-0">
@@ -323,72 +389,246 @@ function PostRow({
   onPublishNow,
   onCancel,
   onRetry,
+  onSubmitReview,
+  onApprove,
+  onReject,
+  onSyncStatus,
 }: {
   post: Post;
   brand?: Brand;
   onPublishNow: () => void;
   onCancel: () => void;
   onRetry: () => void;
+  onSubmitReview: () => void;
+  onApprove: () => void;
+  onReject: () => void;
+  onSyncStatus: () => void;
 }) {
-  const canPublishNow = ["draft", "scheduled", "failed", "partial"].includes(post.status);
-  const canCancel = ["draft", "scheduled"].includes(post.status);
+  const [expanded, setExpanded] = useState(false);
+  const { data: detail, isLoading: detailLoading } = useQuery({
+    queryKey: ["posts", post.id, "detail"],
+    queryFn: () => postsApi.get(post.id),
+    enabled: expanded,
+  });
+  const canSubmitReview = ["draft", "rejected"].includes(post.status);
+  const canApprove = post.status === "review";
+  const canReject = post.status === "review";
+  const canPublishNow = ["draft", "approved", "scheduled", "failed", "partial"].includes(
+    post.status,
+  );
+  const canCancel = ["draft", "review", "approved", "rejected", "scheduled"].includes(
+    post.status,
+  );
   const canRetry = ["failed", "partial"].includes(post.status);
+  const canSync = ["published", "partial"].includes(post.status);
 
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-4 transition-colors hover:border-[var(--primary)]">
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-[13px] font-medium text-[var(--fg)]">
-            {post.title || post.body.slice(0, 60).trim() + (post.body.length > 60 ? "…" : "")}
-          </p>
-          <PostStatusBadge status={post.status} />
-        </div>
-        <p className="mt-1 line-clamp-2 text-[12px] text-[var(--fg-muted)]">{post.body}</p>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--fg-subtle)]">
-          <span>{brand?.name ?? "—"}</span>
-          {post.scheduled_at ? (
-            <span className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {new Date(post.scheduled_at).toLocaleString("uz-UZ")}
-            </span>
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-4 transition-colors hover:border-[var(--primary)]">
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-[13px] font-medium text-[var(--fg)]">
+              {post.title ||
+                post.body.slice(0, 60).trim() + (post.body.length > 60 ? "…" : "")}
+            </p>
+            <PostStatusBadge status={post.status} />
+          </div>
+          <p className="mt-1 line-clamp-2 text-[12px] text-[var(--fg-muted)]">{post.body}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--fg-subtle)]">
+            <span>{brand?.name ?? "—"}</span>
+            {post.scheduled_at ? (
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {new Date(post.scheduled_at).toLocaleString("uz-UZ")}
+              </span>
+            ) : null}
+            {post.published_at ? (
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                {new Date(post.published_at).toLocaleString("uz-UZ")}
+              </span>
+            ) : null}
+          </div>
+          {post.last_error ? (
+            <p className="mt-1 text-[11px] text-[var(--danger)]">{post.last_error}</p>
           ) : null}
-          {post.published_at ? (
-            <span className="flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3" />
-              {new Date(post.published_at).toLocaleString("uz-UZ")}
-            </span>
-          ) : null}
         </div>
-        {post.last_error ? (
-          <p className="mt-1 text-[11px] text-[var(--danger)]">{post.last_error}</p>
-        ) : null}
+        <Can permission="smm.write">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+            <Button variant="ghost" size="sm" onClick={() => setExpanded((v) => !v)}>
+              <ChevronDown
+                className={cn("transition-transform", expanded ? "rotate-180" : "")}
+              />
+              Holat
+            </Button>
+            {canSubmitReview ? (
+              <Button variant="secondary" size="sm" onClick={onSubmitReview}>
+                <Send /> Review
+              </Button>
+            ) : null}
+            {canApprove ? (
+              <Button variant="secondary" size="sm" onClick={onApprove}>
+                <CheckCircle2 /> Tasdiq
+              </Button>
+            ) : null}
+            {canReject ? (
+              <Button variant="ghost" size="sm" onClick={onReject}>
+                <XCircle /> Rad
+              </Button>
+            ) : null}
+            {canRetry ? (
+              <Button variant="secondary" size="sm" onClick={onRetry}>
+                <RefreshCw /> Retry
+              </Button>
+            ) : null}
+            {canSync ? (
+              <Button variant="ghost" size="sm" onClick={onSyncStatus}>
+                <RefreshCw /> Sync
+              </Button>
+            ) : null}
+            {canPublishNow ? (
+              <Button variant="ghost" size="sm" onClick={onPublishNow}>
+                <Zap /> Hozir
+              </Button>
+            ) : null}
+            {canCancel ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                aria-label="Bekor"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--fg-subtle)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            ) : null}
+          </div>
+        </Can>
       </div>
-      <Can permission="smm.write">
-        <div className="flex shrink-0 items-center gap-1">
-          {canRetry ? (
-            <Button variant="secondary" size="sm" onClick={onRetry}>
-              <RefreshCw /> Retry
-            </Button>
-          ) : null}
-          {canPublishNow ? (
-            <Button variant="ghost" size="sm" onClick={onPublishNow}>
-              <Zap /> Hozir
-            </Button>
-          ) : null}
-          {canCancel ? (
-            <button
-              type="button"
-              onClick={onCancel}
-              aria-label="Bekor"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--fg-subtle)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          ) : null}
-        </div>
-      </Can>
+      {expanded ? (
+        <PublicationPanel
+          detail={detail}
+          loading={detailLoading}
+          fallbackStatus={post.status}
+        />
+      ) : null}
     </div>
   );
+}
+
+function PublicationPanel({
+  detail,
+  loading,
+  fallbackStatus,
+}: {
+  detail?: PostDetail;
+  loading: boolean;
+  fallbackStatus: string;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-3 flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[12px] text-[var(--fg-muted)]">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Platform holati olinmoqda
+      </div>
+    );
+  }
+
+  if (!detail) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 space-y-2 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[12px] font-medium text-[var(--fg)]">Platform publish holati</p>
+        <PostStatusBadge status={detail.status || fallbackStatus} />
+      </div>
+      <div className="grid gap-2 lg:grid-cols-2">
+        {detail.publications.map((publication) => (
+          <PublicationItem key={publication.id} publication={publication} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PublicationItem({ publication }: { publication: PostPublication }) {
+  const latest = publication.events[0];
+  return (
+    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <ProviderBadge provider={publication.provider} />
+          <PublicationStatusBadge status={publication.status} />
+          {publication.remote_status ? (
+            <span className="rounded-sm bg-[var(--info-soft)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--info)]">
+              {publication.remote_status}
+            </span>
+          ) : null}
+        </div>
+        <span className="text-[11px] text-[var(--fg-subtle)]">
+          Urinish: {publication.attempts}
+        </span>
+      </div>
+      <div className="mt-2 grid gap-1 text-[11px] text-[var(--fg-muted)]">
+        {publication.external_post_id ? <span>ID: {publication.external_post_id}</span> : null}
+        {publication.next_retry_at ? (
+          <span>
+            Keyingi retry: {new Date(publication.next_retry_at).toLocaleString("uz-UZ")}
+          </span>
+        ) : null}
+        {publication.last_checked_at ? (
+          <span>
+            Oxirgi sync: {new Date(publication.last_checked_at).toLocaleString("uz-UZ")}
+          </span>
+        ) : null}
+        {publication.last_error ? (
+          <span className="text-[var(--danger)]">{publication.last_error}</span>
+        ) : null}
+      </div>
+      {latest ? (
+        <div className="mt-2 border-t border-[var(--border)] pt-2 text-[11px] text-[var(--fg-subtle)]">
+          <span className="font-medium text-[var(--fg-muted)]">
+            {eventLabel(latest.event_type)}
+          </span>
+          {latest.message ? <span>: {latest.message}</span> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ProviderBadge({ provider }: { provider: string }) {
+  return (
+    <span className="rounded-sm border border-[var(--border)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--fg-muted)] uppercase">
+      {provider}
+    </span>
+  );
+}
+
+function PublicationStatusBadge({ status }: { status: string }) {
+  const variant: "success" | "danger" | "primary" | "warning" =
+    status === "published"
+      ? "success"
+      : status === "failed"
+        ? "danger"
+        : status === "publishing"
+          ? "primary"
+          : "warning";
+  return <Badge variant={variant}>{status}</Badge>;
+}
+
+function eventLabel(eventType: string) {
+  const labels: Record<string, string> = {
+    manual_retry: "Manual retry",
+    publish_attempt: "Publish urinish",
+    publish_failed: "Publish xato",
+    published: "E'lon qilindi",
+    retry_scheduled: "Retry rejalandi",
+    status_sync_failed: "Sync xato",
+    status_sync_skipped: "Sync o'tkazildi",
+    status_synced: "Sync yangilandi",
+  };
+  return labels[eventType] ?? eventType;
 }
 
 function PostStatusBadge({ status }: { status: string }) {
@@ -416,6 +656,27 @@ function PostStatusBadge({ status }: { status: string }) {
   if (status === "draft") {
     return <Badge variant="default">Draft</Badge>;
   }
+  if (status === "review") {
+    return (
+      <Badge variant="warning">
+        <Clock className="h-2.5 w-2.5" /> Review
+      </Badge>
+    );
+  }
+  if (status === "approved") {
+    return (
+      <Badge variant="success">
+        <CheckCircle2 className="h-2.5 w-2.5" /> Tasdiq
+      </Badge>
+    );
+  }
+  if (status === "rejected") {
+    return (
+      <Badge variant="danger">
+        <XCircle className="h-2.5 w-2.5" /> Rad
+      </Badge>
+    );
+  }
   if (status === "failed") {
     return (
       <Badge variant="danger">
@@ -438,6 +699,71 @@ function PostStatusBadge({ status }: { status: string }) {
     );
   }
   return <Badge variant="default">{status}</Badge>;
+}
+
+function RejectPostModal({
+  post,
+  loading,
+  onCancel,
+  onReject,
+}: {
+  post: Post;
+  loading: boolean;
+  onCancel: () => void;
+  onReject: (reason: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+  const canReject = reason.trim().length >= 2;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Postni rad etish</CardTitle>
+            <p className="mt-0.5 text-[12px] text-[var(--fg-muted)]">
+              {post.title ?? post.body.slice(0, 80)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            aria-label="Yopish"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--fg-subtle)] hover:bg-[var(--surface-hover)] hover:text-[var(--fg)]"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <FormField label="Sabab" required>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Masalan: CTA aniq emas, matnni qisqartirish kerak"
+              className="flex min-h-[100px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] shadow-[var(--shadow-xs)] focus-visible:border-[var(--primary)] focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+            />
+          </FormField>
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="ghost" onClick={onCancel}>
+              Bekor qilish
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => onReject(reason.trim())}
+              disabled={!canReject}
+              loading={loading}
+            >
+              <XCircle /> Rad etish
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
 }
 
 function ScheduleModal({
