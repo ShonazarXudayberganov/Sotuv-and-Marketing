@@ -408,52 +408,49 @@ async def ensure_brand_data(
 
 async def amain() -> int:
     args = parse_args()
-    user, tenant, created = await ensure_owner(
-        email=args.email.strip().lower(),
-        password=args.password,
-        full_name=args.full_name.strip(),
-        phone=args.phone.strip(),
-        company_name=args.company_name.strip(),
-        industry=args.industry.strip(),
-    )
-    brand = await ensure_brand_data(
-        tenant_schema=tenant.schema_name,
-        user_id=user.id,
-        brand_name=args.brand_name.strip(),
-        company_name=args.company_name.strip(),
-        industry=args.industry.strip(),
-        meta_app_id=args.meta_app_id.strip(),
-        meta_app_secret=args.meta_app_secret.strip(),
-    )
+    try:
+        user, tenant, created = await ensure_owner(
+            email=args.email.strip().lower(),
+            password=args.password,
+            full_name=args.full_name.strip(),
+            phone=args.phone.strip(),
+            company_name=args.company_name.strip(),
+            industry=args.industry.strip(),
+        )
+        brand = await ensure_brand_data(
+            tenant_schema=tenant.schema_name,
+            user_id=user.id,
+            brand_name=args.brand_name.strip(),
+            company_name=args.company_name.strip(),
+            industry=args.industry.strip(),
+            meta_app_id=args.meta_app_id.strip(),
+            meta_app_secret=args.meta_app_secret.strip(),
+        )
 
-    print("Reviewer demo tenant tayyorlandi.")
-    print(f"created_user={created}")
-    print(f"tenant_name={tenant.name}")
-    print(f"tenant_schema={tenant.schema_name}")
-    print(f"login_email={user.email}")
-    print(f"login_password={args.password}")
-    print(f"brand_name={brand['brand_name']}")
-    print(f"brand_id={brand['brand_id']}")
-    print(f"assets_created={brand['assets_created']}")
-    print(f"drafts_created={brand['drafts_created']}")
-    print(f"plan_created={brand['plan_created']}")
-    print(f"meta_app_seeded={brand['meta_connected']}")
-    print(f"web_login_url={args.app_base_url.rstrip('/')}/login")
-    print(f"integrations_url={args.app_base_url.rstrip('/')}/settings/integrations")
-    print(f"social_url={args.app_base_url.rstrip('/')}/smm/social")
-    print(f"posts_url={args.app_base_url.rstrip('/')}/smm/posts")
-    return 0
+        print("Reviewer demo tenant tayyorlandi.")
+        print(f"created_user={created}")
+        print(f"tenant_name={tenant.name}")
+        print(f"tenant_schema={tenant.schema_name}")
+        print(f"login_email={user.email}")
+        print(f"login_password={args.password}")
+        print(f"brand_name={brand['brand_name']}")
+        print(f"brand_id={brand['brand_id']}")
+        print(f"assets_created={brand['assets_created']}")
+        print(f"drafts_created={brand['drafts_created']}")
+        print(f"plan_created={brand['plan_created']}")
+        print(f"meta_app_seeded={brand['meta_connected']}")
+        print(f"web_login_url={args.app_base_url.rstrip('/')}/login")
+        print(f"integrations_url={args.app_base_url.rstrip('/')}/settings/integrations")
+        print(f"social_url={args.app_base_url.rstrip('/')}/smm/social")
+        print(f"posts_url={args.app_base_url.rstrip('/')}/smm/posts")
+        return 0
+    finally:
+        if _deps.cache_info().currsize > 0:
+            await _deps()["dispose_engine"]()
 
 
 def main() -> int:
-    try:
-        return asyncio.run(amain())
-    finally:
-        if _deps.cache_info().currsize > 0:
-            try:
-                asyncio.run(_deps()["dispose_engine"]())
-            except RuntimeError:
-                pass
+    return asyncio.run(amain())
 
 
 if __name__ == "__main__":
