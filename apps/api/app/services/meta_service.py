@@ -465,6 +465,63 @@ async def get_published_object(
     )
 
 
+async def get_post_metrics(
+    db: AsyncSession,
+    *,
+    provider: str,
+    object_id: str,
+    access_token: str,
+) -> dict[str, int]:
+    """Fetch engagement counters for a published Meta object.
+
+    Returns only the counters Meta can provide directly for the object. Callers can
+    merge these with local fallbacks for unavailable metrics like views/reach.
+    """
+    if _is_mock_mode():
+        seed = f"{provider}:{object_id}"
+        base = abs(hash(seed))
+        return {
+            "likes": 10 + (base % 90),
+            "comments": 2 + (base % 20),
+            "shares": 1 + (base % 12) if provider == "facebook" else 0,
+        }
+
+    if provider == "facebook":
+        data = await _call(
+            "GET",
+            f"{GRAPH_API_BASE}/{object_id}",
+            params={
+                "access_token": access_token,
+                "fields": "shares,comments.summary(true).limit(0),reactions.summary(true).limit(0)",
+            },
+        )
+        comments = ((data.get("comments") or {}).get("summary") or {}).get("total_count") or 0
+        reactions = ((data.get("reactions") or {}).get("summary") or {}).get("total_count") or 0
+        shares = ((data.get("shares") or {}).get("count")) or 0
+        return {
+            "likes": int(reactions),
+            "comments": int(comments),
+            "shares": int(shares),
+        }
+
+    if provider == "instagram":
+        data = await _call(
+            "GET",
+            f"{GRAPH_API_BASE}/{object_id}",
+            params={
+                "access_token": access_token,
+                "fields": "like_count,comments_count",
+            },
+        )
+        return {
+            "likes": int(data.get("like_count") or 0),
+            "comments": int(data.get("comments_count") or 0),
+            "shares": 0,
+        }
+
+    raise MetaError(f"Unsupported Meta metrics provider: {provider}")
+
+
 async def get_instagram_profile_snapshot(
     db: AsyncSession,
     *,
@@ -498,6 +555,7 @@ __all__ = [
     "exchange_oauth_code",
     "get_instagram_business_account",
     "get_instagram_profile_snapshot",
+    "get_post_metrics",
     "get_published_object",
     "list_pages",
     "publish_facebook_post",

@@ -65,6 +65,16 @@ async def _make_brand(client: AsyncClient, headers: dict) -> str:
     return resp.json()["id"]
 
 
+async def _link_instagram(client: AsyncClient, headers: dict, brand_id: str) -> str:
+    pages = (await client.get("/api/v1/social/meta/pages", headers=headers)).json()
+    resp = await client.post(
+        "/api/v1/social/meta/link",
+        headers=headers,
+        json={"brand_id": brand_id, "page_id": pages[0]["id"], "target": "instagram"},
+    )
+    return resp.json()["id"]
+
+
 async def test_overview_zero_when_no_metrics(client: AsyncClient, sample_register_payload: dict):
     bundle = await _bootstrap(client, sample_register_payload)
     headers = {"Authorization": f"Bearer {bundle['access_token']}"}
@@ -125,6 +135,49 @@ async def test_timeseries_returns_per_day_buckets(
     assert len(rows) >= 1
     # Posts published today should land in a single bucket
     assert sum(r["posts"] for r in rows) >= 2
+
+
+async def test_snapshot_prefers_meta_metrics_when_available(
+    client: AsyncClient,
+    sample_register_payload: dict,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from app.services import meta_service
+
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    account_id = await _link_instagram(client, headers, brand_id)
+
+    create = await client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "body": "Instagram analytics test",
+            "content_format": "feed",
+            "media_urls": ["https://example.com/feed.jpg"],
+            "social_account_ids": [account_id],
+        },
+    )
+    post_id = create.json()["id"]
+    await client.post(f"/api/v1/posts/{post_id}/publish-now", headers=headers)
+
+    async def fake_metrics(db, *, provider: str, object_id: str, access_token: str):
+        assert provider == "instagram"
+        assert object_id
+        assert access_token
+        return {"likes": 77, "comments": 9, "shares": 0}
+
+    monkeypatch.setattr(meta_service, "get_post_metrics", fake_metrics)
+
+    snap = await client.post("/api/v1/analytics/snapshot", headers=headers)
+    assert snap.status_code == 200, snap.text
+
+    overview = (await client.get("/api/v1/analytics/overview", headers=headers)).json()
+    assert overview["total_posts"] == 1
+    assert overview["total_likes"] == 77
+    assert overview["total_comments"] == 9
 
 
 async def test_timeseries_rejects_bad_days(client: AsyncClient, sample_register_payload: dict):

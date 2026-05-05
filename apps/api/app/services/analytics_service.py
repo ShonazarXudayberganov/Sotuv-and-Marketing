@@ -21,7 +21,8 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.smm import Post, PostMetrics, PostPublication
+from app.models.smm import BrandSocialAccount, Post, PostMetrics, PostPublication
+from app.services import meta_service
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,48 @@ async def _published_publications(
     return [(pub, post) for pub, post in rows]
 
 
+async def _resolve_metrics(
+    db: AsyncSession,
+    *,
+    publication: PostPublication,
+    post: Post,
+    sampled_at: datetime,
+) -> dict[str, int]:
+    seed = f"{publication.id}:{publication.external_post_id or ''}:{sampled_at.date().isoformat()}"
+    metrics = _synth_metrics(seed)
+
+    if publication.provider not in {"facebook", "instagram"}:
+        return metrics
+    if not publication.external_post_id:
+        return metrics
+
+    account = await db.get(BrandSocialAccount, publication.social_account_id)
+    token = str(((account.metadata_ or {}) if account else {}).get("page_token") or "").strip()
+    if not token:
+        return metrics
+
+    try:
+        pulled = await meta_service.get_post_metrics(
+            db,
+            provider=publication.provider,
+            object_id=publication.external_post_id,
+            access_token=token,
+        )
+    except Exception as exc:
+        logger.warning(
+            "Analytics metrics pull failed for %s publication %s: %s",
+            publication.provider,
+            publication.id,
+            exc,
+        )
+        return metrics
+
+    for key, value in pulled.items():
+        if key in metrics:
+            metrics[key] = max(0, int(value))
+    return metrics
+
+
 async def record_snapshot(db: AsyncSession, *, brand_id: UUID | None = None) -> int:
     """Refresh the latest metrics row per published publication.
 
@@ -71,8 +114,7 @@ async def record_snapshot(db: AsyncSession, *, brand_id: UUID | None = None) -> 
     now = datetime.now(UTC)
     inserted = 0
     for pub, post in pairs:
-        seed = f"{pub.id}:{pub.external_post_id or ''}:{now.date().isoformat()}"
-        metrics = _synth_metrics(seed)
+        metrics = await _resolve_metrics(db, publication=pub, post=post, sampled_at=now)
         db.add(
             PostMetrics(
                 publication_id=pub.id,

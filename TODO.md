@@ -115,6 +115,10 @@
     - [x] Media-type aware Meta adapters: feed image/video, Reels, Story publish flows.
     - [ ] Real production smoke: Meta Graph API bilan feed video / reels / story publish verifikatsiyasi.
 - [ ] SMM analyticsga real platform metrics ingestion.
+  - [x] Meta publication snapshotda real engagement counterlarni olishga urinish
+        (`likes`, `comments`, `shares`) va qolgan providerlarda synthetic fallback.
+  - [ ] Meta views/reach real insight metrics.
+  - [ ] YouTube va Telegram real metrics ingestion.
 
 ### CRM / Inbox Qarzlari
 
