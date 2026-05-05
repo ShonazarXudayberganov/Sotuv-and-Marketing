@@ -40,6 +40,8 @@ RETRY_DELAYS_MINUTES = (5, 30, 60)
 MAX_ATTEMPTS = len(RETRY_DELAYS_MINUTES) + 1  # 4 total attempts
 
 PENDING_PUBLICATION_STATUSES = {"pending", "publishing"}
+POST_CONTENT_FORMATS = frozenset({"standard", "feed", "reels", "story"})
+INSTAGRAM_SPECIAL_FORMATS = frozenset({"feed", "reels", "story"})
 
 
 def _now() -> datetime:
@@ -54,6 +56,10 @@ def _next_retry_at(attempts: int) -> datetime | None:
 
 
 PUBLISH_HARDENING_DDL: tuple[str, ...] = (
+    """
+    ALTER TABLE IF EXISTS posts
+        ADD COLUMN IF NOT EXISTS content_format varchar(20) NOT NULL DEFAULT 'standard'
+    """,
     """
     ALTER TABLE IF EXISTS post_publications
         ADD COLUMN IF NOT EXISTS last_attempt_at timestamptz
@@ -166,6 +172,25 @@ def _roll_up_post_status(post: Post, publications: Sequence[PostPublication]) ->
         post.last_error = None
 
 
+def _normalize_content_format(
+    accounts: Sequence[BrandSocialAccount],
+    content_format: str | None,
+    media_urls: list[str] | None,
+) -> str:
+    providers = {account.provider for account in accounts}
+    normalized = (content_format or "").strip().lower()
+    if not normalized:
+        return "feed" if providers == {"instagram"} else "standard"
+    if normalized not in POST_CONTENT_FORMATS:
+        allowed = ", ".join(sorted(POST_CONTENT_FORMATS))
+        raise ValueError(f"Unsupported post format. Allowed: {allowed}")
+    if normalized in INSTAGRAM_SPECIAL_FORMATS and providers != {"instagram"}:
+        raise ValueError("Instagram-specific formats require only Instagram accounts")
+    if normalized in INSTAGRAM_SPECIAL_FORMATS and not (media_urls or []):
+        raise ValueError("Instagram feed/reels/story formats require at least one media_url")
+    return normalized
+
+
 async def create_post(
     db: AsyncSession,
     *,
@@ -173,6 +198,7 @@ async def create_post(
     body: str,
     title: str | None,
     media_urls: list[str] | None,
+    content_format: str | None,
     social_account_ids: Sequence[UUID],
     scheduled_at: datetime | None,
     user_id: UUID,
@@ -202,6 +228,8 @@ async def create_post(
         if draft is None or draft.brand_id != brand_id:
             raise ValueError("Draft not found for brand")
 
+    normalized_format = _normalize_content_format(accounts, content_format, media_urls)
+
     # status = scheduled if scheduled_at is set; otherwise draft.
     status = "scheduled" if scheduled_at is not None else "draft"
 
@@ -211,6 +239,7 @@ async def create_post(
         title=title,
         body=body,
         media_urls=media_urls or None,
+        content_format=normalized_format,
         status=status,
         scheduled_at=scheduled_at,
         created_by=user_id,
@@ -712,7 +741,9 @@ async def stats(db: AsyncSession, brand_id: UUID | None = None) -> dict[str, Any
 
 
 __all__ = [
+    "INSTAGRAM_SPECIAL_FORMATS",
     "MAX_ATTEMPTS",
+    "POST_CONTENT_FORMATS",
     "RETRY_DELAYS_MINUTES",
     "approve",
     "cancel",

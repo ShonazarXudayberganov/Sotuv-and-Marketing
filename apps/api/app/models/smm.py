@@ -177,6 +177,7 @@ class Post(Base, UUIDPKMixin, TimestampMixin):
     title: Mapped[str | None] = mapped_column(String(200))
     body: Mapped[str] = mapped_column(Text, nullable=False)
     media_urls: Mapped[list[str] | None] = mapped_column(JSON)
+    content_format: Mapped[str] = mapped_column(String(20), default="standard", nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="draft", nullable=False, index=True)
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

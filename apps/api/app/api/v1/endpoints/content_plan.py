@@ -54,6 +54,7 @@ async def _post_detail(db: AsyncSession, post_id: UUID) -> PostDetailOut:
         title=post.title,
         body=post.body,
         media_urls=post.media_urls,
+        content_format=post.content_format,
         status=post.status,
         scheduled_at=post.scheduled_at,
         published_at=post.published_at,

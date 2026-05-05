@@ -644,6 +644,8 @@ export type PostStatus =
   | "failed"
   | "cancelled";
 
+export type PostContentFormat = "standard" | "feed" | "reels" | "story";
+
 export interface PostPublication {
   id: string;
   post_id: string;
@@ -683,6 +685,7 @@ export interface Post {
   title: string | null;
   body: string;
   media_urls: string[] | null;
+  content_format: PostContentFormat;
   status: PostStatus | string;
   scheduled_at: string | null;
   published_at: string | null;
@@ -700,6 +703,7 @@ export interface PostCreateRequest {
   body: string;
   title?: string | null;
   media_urls?: string[] | null;
+  content_format?: PostContentFormat | null;
   social_account_ids: string[];
   scheduled_at?: string | null;
   draft_id?: string | null;

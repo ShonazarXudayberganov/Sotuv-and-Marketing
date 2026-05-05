@@ -54,6 +54,16 @@ async def _link_telegram(client: AsyncClient, headers: dict, brand_id: str) -> s
     return resp.json()["id"]
 
 
+async def _link_instagram(client: AsyncClient, headers: dict, brand_id: str) -> str:
+    pages = (await client.get("/api/v1/social/meta/pages", headers=headers)).json()
+    resp = await client.post(
+        "/api/v1/social/meta/link",
+        headers=headers,
+        json={"brand_id": brand_id, "page_id": pages[0]["id"], "target": "instagram"},
+    )
+    return resp.json()["id"]
+
+
 async def test_create_scheduled_post_creates_publications(
     client: AsyncClient, sample_register_payload: dict
 ):
@@ -100,6 +110,74 @@ async def test_create_post_without_schedule_starts_in_draft(
     )
     assert create.status_code == 201
     assert create.json()["status"] == "draft"
+
+
+async def test_create_instagram_post_defaults_to_feed_format(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    account_id = await _link_instagram(client, headers, brand_id)
+
+    create = await client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "body": "Instagram feed post",
+            "media_urls": ["https://example.com/feed.jpg"],
+            "social_account_ids": [account_id],
+        },
+    )
+    assert create.status_code == 201, create.text
+    assert create.json()["content_format"] == "feed"
+
+
+async def test_instagram_special_formats_require_only_instagram_accounts(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    telegram_id = await _link_telegram(client, headers, brand_id)
+    instagram_id = await _link_instagram(client, headers, brand_id)
+
+    create = await client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "body": "Mixed publish",
+            "content_format": "story",
+            "media_urls": ["https://example.com/story.jpg"],
+            "social_account_ids": [telegram_id, instagram_id],
+        },
+    )
+    assert create.status_code == 400
+    assert "Instagram-specific formats" in create.text
+
+
+async def test_instagram_reels_require_media_url(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    instagram_id = await _link_instagram(client, headers, brand_id)
+
+    create = await client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "body": "Instagram reels post",
+            "content_format": "reels",
+            "social_account_ids": [instagram_id],
+        },
+    )
+    assert create.status_code == 400
+    assert "require at least one media_url" in create.text
 
 
 async def test_submit_review_approve_then_publish(
@@ -210,6 +288,35 @@ async def test_publish_now_marks_post_published(client: AsyncClient, sample_regi
     assert body["publications"][0]["external_post_id"]
     assert body["publications"][0]["remote_status"] == "published"
     assert body["publications"][0]["events"][0]["event_type"] == "published"
+
+
+async def test_instagram_story_publish_is_marked_failed_until_adapter_exists(
+    client: AsyncClient, sample_register_payload: dict
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    account_id = await _link_instagram(client, headers, brand_id)
+
+    create = await client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "body": "Story publish",
+            "content_format": "story",
+            "media_urls": ["https://example.com/story.jpg"],
+            "social_account_ids": [account_id],
+        },
+    )
+    post_id = create.json()["id"]
+
+    publish = await client.post(f"/api/v1/posts/{post_id}/publish-now", headers=headers)
+    assert publish.status_code == 200, publish.text
+    body = publish.json()
+    assert body["status"] == "failed"
+    assert body["publications"][0]["status"] == "failed"
+    assert "not implemented yet" in (body["publications"][0]["last_error"] or "")
 
 
 async def test_transient_publish_failure_schedules_retry_and_event(

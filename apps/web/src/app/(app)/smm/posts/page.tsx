@@ -40,6 +40,7 @@ import type {
   Brand,
   ContentDraft,
   Post,
+  PostContentFormat,
   PostCreateRequest,
   PostDetail,
   PostPublication,
@@ -432,6 +433,7 @@ function PostRow({
                 post.body.slice(0, 60).trim() + (post.body.length > 60 ? "…" : "")}
             </p>
             <PostStatusBadge status={post.status} />
+            <PostFormatBadge format={post.content_format} />
           </div>
           <p className="mt-1 line-clamp-2 text-[12px] text-[var(--fg-muted)]">{post.body}</p>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--fg-subtle)]">
@@ -617,6 +619,18 @@ function PublicationStatusBadge({ status }: { status: string }) {
   return <Badge variant={variant}>{status}</Badge>;
 }
 
+function PostFormatBadge({ format }: { format: PostContentFormat }) {
+  const label =
+    format === "feed"
+      ? "IG Feed"
+      : format === "reels"
+        ? "IG Reels"
+        : format === "story"
+          ? "IG Story"
+          : "Standart";
+  return <Badge variant="outline">{label}</Badge>;
+}
+
 function eventLabel(eventType: string) {
   const labels: Record<string, string> = {
     manual_retry: "Manual retry",
@@ -780,7 +794,9 @@ function ScheduleModal({
   const [draftId, setDraftId] = useState<string | null>(null);
   const [body, setBody] = useState("");
   const [title, setTitle] = useState("");
+  const [mediaUrl, setMediaUrl] = useState("");
   const [accountIds, setAccountIds] = useState<string[]>([]);
+  const [contentFormat, setContentFormat] = useState<PostContentFormat>("standard");
   const [scheduleMode, setScheduleMode] = useState<"now" | "later">("later");
   const [scheduledLocal, setScheduledLocal] = useState<string>("");
 
@@ -814,6 +830,32 @@ function ScheduleModal({
   const toggleAccount = (id: string) =>
     setAccountIds((arr) => (arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id]));
 
+  const selectedAccounts = useMemo(
+    () => accounts.filter((acc: SocialAccount) => accountIds.includes(acc.id)),
+    [accountIds, accounts],
+  );
+  const selectedProviders = useMemo(
+    () => new Set(selectedAccounts.map((acc: SocialAccount) => acc.provider)),
+    [selectedAccounts],
+  );
+  const instagramOnly =
+    selectedProviders.size > 0 &&
+    selectedProviders.size === 1 &&
+    selectedProviders.has("instagram");
+  const hasInstagram = selectedProviders.has("instagram");
+  const effectiveContentFormat: PostContentFormat = instagramOnly
+    ? contentFormat === "standard"
+      ? "feed"
+      : contentFormat
+    : "standard";
+  const needsMedia = instagramOnly && effectiveContentFormat !== "standard";
+
+  const chooseFormat = (next: PostContentFormat) => {
+    if (next === "standard" || instagramOnly) {
+      setContentFormat(next);
+    }
+  };
+
   const applyDraft = (d: ContentDraft) => {
     setDraftId(d.id);
     setBody(d.body);
@@ -824,6 +866,7 @@ function ScheduleModal({
     brandId &&
     body.trim().length > 0 &&
     accountIds.length > 0 &&
+    (!needsMedia || mediaUrl.trim().length > 0) &&
     (scheduleMode === "now" || scheduledISO !== null);
 
   return (
@@ -906,6 +949,55 @@ function ScheduleModal({
             />
           </FormField>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              label="Format"
+              hint={
+                instagramOnly
+                  ? "Instagram publish turi"
+                  : "Mixed yoki non-Instagram postlar standart formatda saqlanadi"
+              }
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <FilterPill
+                  active={effectiveContentFormat === "standard"}
+                  onClick={() => chooseFormat("standard")}
+                  label="Standart"
+                />
+                <FilterPill
+                  active={effectiveContentFormat === "feed"}
+                  onClick={() => chooseFormat("feed")}
+                  label="Feed"
+                />
+                <FilterPill
+                  active={effectiveContentFormat === "reels"}
+                  onClick={() => chooseFormat("reels")}
+                  label="Reels"
+                />
+                <FilterPill
+                  active={effectiveContentFormat === "story"}
+                  onClick={() => chooseFormat("story")}
+                  label="Story"
+                />
+              </div>
+            </FormField>
+            <FormField
+              label="Media URL"
+              hint={
+                hasInstagram
+                  ? "Instagram publish uchun public rasm/video URL kerak"
+                  : "Telegram/Facebook text postlar uchun ixtiyoriy"
+              }
+              required={needsMedia}
+            >
+              <Input
+                value={mediaUrl}
+                onChange={(e) => setMediaUrl(e.target.value)}
+                placeholder="https://example.com/media.jpg"
+              />
+            </FormField>
+          </div>
+
           <FormField label="Kanallar" required hint="Bir nechta tanlash mumkin">
             {accounts.length === 0 ? (
               <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--bg-subtle)] p-3 text-center text-[12px] text-[var(--fg-muted)]">
@@ -985,6 +1077,8 @@ function ScheduleModal({
                   brand_id: brandId,
                   body: body.trim(),
                   title: title.trim() || null,
+                  media_urls: mediaUrl.trim() ? [mediaUrl.trim()] : null,
+                  content_format: effectiveContentFormat,
                   social_account_ids: accountIds,
                   scheduled_at: scheduledISO,
                   draft_id: draftId,

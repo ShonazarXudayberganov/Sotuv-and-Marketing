@@ -423,6 +423,7 @@ TENANT_DDL: tuple[str, ...] = (
         title           varchar(200),
         body            text NOT NULL,
         media_urls      jsonb,
+        content_format  varchar(20) NOT NULL DEFAULT 'standard',
         status          varchar(20) NOT NULL DEFAULT 'draft',
         scheduled_at    timestamptz,
         published_at    timestamptz,
@@ -441,6 +442,10 @@ TENANT_DDL: tuple[str, ...] = (
     """
     CREATE INDEX IF NOT EXISTS ix_posts_scheduled_at
         ON posts(scheduled_at) WHERE status = 'scheduled'
+    """,
+    """
+    ALTER TABLE IF EXISTS posts
+        ADD COLUMN IF NOT EXISTS content_format varchar(20) NOT NULL DEFAULT 'standard'
     """,
     """
     CREATE TABLE IF NOT EXISTS content_plans (

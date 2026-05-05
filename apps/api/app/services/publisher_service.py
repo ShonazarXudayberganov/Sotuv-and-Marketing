@@ -113,6 +113,10 @@ async def _publish_instagram(
     media = media_list[0] if media_list else None
     if not media:
         raise PermanentPublishError("Instagram requires at least one media_url")
+    if post.content_format in {"reels", "story"}:
+        raise PermanentPublishError(
+            f"Instagram {post.content_format} publishing is not implemented yet"
+        )
     try:
         result = await meta_service.publish_instagram_post(
             db,

@@ -111,6 +111,8 @@
   - [x] Reviewer demo seed script + staging runbook.
   - [ ] Production reviewer environment + real Meta app review submission.
   - [ ] IG formatlari: feed image/video, Reels, Story variantlari.
+    - [x] Post contract: `content_format` (`feed` / `reels` / `story`) va create UI.
+    - [ ] Media-type aware Meta adapters: feed image/video, Reels, Story publish flows.
 - [ ] SMM analyticsga real platform metrics ingestion.
 
 ### CRM / Inbox Qarzlari

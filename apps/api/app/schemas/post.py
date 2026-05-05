@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+
+PostContentFormat = Literal["standard", "feed", "reels", "story"]
 
 
 class PublicationEventOut(BaseModel):
@@ -49,6 +52,7 @@ class PostOut(BaseModel):
     title: str | None
     body: str
     media_urls: list[str] | None
+    content_format: PostContentFormat
     status: str
     scheduled_at: datetime | None
     published_at: datetime | None
@@ -68,6 +72,7 @@ class PostCreateRequest(BaseModel):
     body: str = Field(min_length=1, max_length=10000)
     title: str | None = Field(default=None, max_length=200)
     media_urls: list[str] | None = None
+    content_format: PostContentFormat | None = None
     social_account_ids: list[UUID] = Field(min_length=1)
     scheduled_at: datetime | None = None
     draft_id: UUID | None = None

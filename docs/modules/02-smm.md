@@ -565,7 +565,7 @@ chiqarildi va render helper orqali yuklanadi.
 4. ✅ Hashtag avto-generatsiya — `/ai/generate-hashtags` + UI
 5. ✅ AI 30 kunlik reja — `/ai/generate-30-day-plan` + UI
 6. ✅ Kontent rejasi (3 ko‘rinish) — `/smm/content-plan` calendar/list/kanban, AI import va postga aylantirish bor
-7. 🟡 Publishing: IG (post+Reels+Story) + TG + FB — Telegram/Meta test/publish flow bor; retry event log, status sync, token refresh, Meta OAuth callback, app review checklist va reviewer seed/runbook bor; IG formatlari hamda real app review submission tugallanmagan
+7. 🟡 Publishing: IG (post+Reels+Story) + TG + FB — Telegram/Meta test/publish flow bor; retry event log, status sync, token refresh, Meta OAuth callback, app review checklist va reviewer seed/runbook bor; post `content_format` contracti (`feed/reels/story`) va create UI qo‘shildi, lekin IG format adapterlari hamda real app review submission tugallanmagan
 8. ✅ Tasdiqlash workflow — review/approve/reject API + posts UI actionlari bor
 9. 🟡 Asosiy tahlil (post statistikasi, AI o‘rganish) — analytics bor, AI learning hali yo‘q
 10. ✅ Brend assets boshqaruvi — CRUD/upload API + `/smm/brand-assets` UI bor

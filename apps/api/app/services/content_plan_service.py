@@ -281,6 +281,7 @@ async def create_post_from_item(
         body="\n\n".join(body_parts),
         title=item.title,
         media_urls=None,
+        content_format="standard",
         social_account_ids=social_account_ids,
         scheduled_at=scheduled_at,
         user_id=user_id,
