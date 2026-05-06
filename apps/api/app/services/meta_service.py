@@ -522,6 +522,81 @@ async def get_post_metrics(
     raise MetaError(f"Unsupported Meta metrics provider: {provider}")
 
 
+async def get_post_insights(
+    db: AsyncSession,
+    *,
+    provider: str,
+    object_id: str,
+    access_token: str,
+    content_format: str = "feed",
+) -> dict[str, int]:
+    """Fetch view/reach style insights for a published Meta object when available."""
+    if _is_mock_mode():
+        seed = f"insights:{provider}:{content_format}:{object_id}"
+        base = abs(hash(seed))
+        return {
+            "views": 500 + (base % 5000),
+            "reach": 400 + (base % 4500),
+        }
+
+    if provider == "instagram":
+        metrics = ["impressions", "reach"]
+        if content_format in {"reels", "story"}:
+            metrics.append("video_views")
+        data = await _call(
+            "GET",
+            f"{GRAPH_API_BASE}/{object_id}/insights",
+            params={
+                "access_token": access_token,
+                "metric": ",".join(metrics),
+            },
+        )
+        values: dict[str, int] = {"views": 0, "reach": 0}
+        for item in data.get("data") or []:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name") or "")
+            raw_value = item.get("values")
+            if isinstance(raw_value, list) and raw_value:
+                first = raw_value[0]
+                value = int((first or {}).get("value") or 0) if isinstance(first, dict) else 0
+            else:
+                value = int(item.get("value") or 0)
+            if name == "reach":
+                values["reach"] = value
+            elif name in {"impressions", "video_views"}:
+                values["views"] = max(values["views"], value)
+        return values
+
+    if provider == "facebook":
+        data = await _call(
+            "GET",
+            f"{GRAPH_API_BASE}/{object_id}/insights",
+            params={
+                "access_token": access_token,
+                "metric": "post_impressions,post_impressions_unique",
+            },
+        )
+        values: dict[str, int] = {"views": 0, "reach": 0}
+        for item in data.get("data") or []:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name") or "")
+            raw_value = item.get("values")
+            if isinstance(raw_value, list) and raw_value:
+                first = raw_value[0]
+                value = int((first or {}).get("value") or 0) if isinstance(first, dict) else 0
+            else:
+                value = int(item.get("value") or 0)
+            if name == "post_impressions":
+                values["views"] = value
+            elif name == "post_impressions_unique":
+                values["reach"] = value
+        return values
+
+    raise MetaError(f"Unsupported Meta insights provider: {provider}")
+
+
 async def get_instagram_profile_snapshot(
     db: AsyncSession,
     *,
@@ -555,6 +630,7 @@ __all__ = [
     "exchange_oauth_code",
     "get_instagram_business_account",
     "get_instagram_profile_snapshot",
+    "get_post_insights",
     "get_post_metrics",
     "get_published_object",
     "list_pages",

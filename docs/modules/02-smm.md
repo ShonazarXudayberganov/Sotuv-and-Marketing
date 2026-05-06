@@ -567,7 +567,7 @@ chiqarildi va render helper orqali yuklanadi.
 6. ✅ Kontent rejasi (3 ko‘rinish) — `/smm/content-plan` calendar/list/kanban, AI import va postga aylantirish bor
 7. 🟡 Publishing: IG (post+Reels+Story) + TG + FB — Telegram/Meta test/publish flow bor; retry event log, status sync, token refresh, Meta OAuth callback, app review checklist va reviewer seed/runbook bor; post `content_format` contracti (`feed/reels/story`), create UI va Meta adapterda format-aware container payload qo‘shildi; real Meta smoke verification va app review submission hali tugallanmagan
 8. ✅ Tasdiqlash workflow — review/approve/reject API + posts UI actionlari bor
-9. 🟡 Asosiy tahlil (post statistikasi, AI o‘rganish) — analytics bor; Meta publication snapshot uchun real `likes/comments/shares` pull qo‘shildi, lekin real `views/reach`, YouTube/Telegram metrics va AI learning hali yo‘q
+9. 🟡 Asosiy tahlil (post statistikasi, AI o‘rganish) — analytics bor; Meta publication snapshot uchun real `likes/comments/shares` va `views/reach` pull qo‘shildi, lekin YouTube/Telegram metrics va AI learning hali yo‘q
 10. ✅ Brend assets boshqaruvi — CRUD/upload API + `/smm/brand-assets` UI bor
 11. 🟡 Multi-brand to‘g‘ri ishlaydi (chegaralash) — brand scope bor, membership/access boundary hardening kerak
 12. ✅ Test coverage ≥ 80% — backend coverage 83.05%

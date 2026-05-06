@@ -117,7 +117,7 @@
 - [ ] SMM analyticsga real platform metrics ingestion.
   - [x] Meta publication snapshotda real engagement counterlarni olishga urinish
         (`likes`, `comments`, `shares`) va qolgan providerlarda synthetic fallback.
-  - [ ] Meta views/reach real insight metrics.
+  - [x] Meta views/reach real insight metricsga urinish (`insights` endpoint) va fallback.
   - [ ] YouTube va Telegram real metrics ingestion.
 
 ### CRM / Inbox Qarzlari

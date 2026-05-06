@@ -169,13 +169,27 @@ async def test_snapshot_prefers_meta_metrics_when_available(
         assert access_token
         return {"likes": 77, "comments": 9, "shares": 0}
 
+    async def fake_insights(
+        db,
+        *,
+        provider: str,
+        object_id: str,
+        access_token: str,
+        content_format: str,
+    ):
+        assert provider == "instagram"
+        assert content_format == "feed"
+        return {"views": 1234, "reach": 987}
+
     monkeypatch.setattr(meta_service, "get_post_metrics", fake_metrics)
+    monkeypatch.setattr(meta_service, "get_post_insights", fake_insights)
 
     snap = await client.post("/api/v1/analytics/snapshot", headers=headers)
     assert snap.status_code == 200, snap.text
 
     overview = (await client.get("/api/v1/analytics/overview", headers=headers)).json()
     assert overview["total_posts"] == 1
+    assert overview["total_views"] == 1234
     assert overview["total_likes"] == 77
     assert overview["total_comments"] == 9
 

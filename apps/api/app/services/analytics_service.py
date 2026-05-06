@@ -99,6 +99,27 @@ async def _resolve_metrics(
     for key, value in pulled.items():
         if key in metrics:
             metrics[key] = max(0, int(value))
+
+    try:
+        insights = await meta_service.get_post_insights(
+            db,
+            provider=publication.provider,
+            object_id=publication.external_post_id,
+            access_token=token,
+            content_format=post.content_format,
+        )
+    except Exception as exc:
+        logger.warning(
+            "Analytics insights pull failed for %s publication %s: %s",
+            publication.provider,
+            publication.id,
+            exc,
+        )
+        return metrics
+
+    for key, value in insights.items():
+        if key in metrics:
+            metrics[key] = max(0, int(value))
     return metrics
 
 
