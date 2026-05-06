@@ -118,7 +118,8 @@
   - [x] Meta publication snapshotda real engagement counterlarni olishga urinish
         (`likes`, `comments`, `shares`) va qolgan providerlarda synthetic fallback.
   - [x] Meta views/reach real insight metricsga urinish (`insights` endpoint) va fallback.
-  - [ ] YouTube va Telegram real metrics ingestion.
+  - [x] YouTube video stats pull (`views`, `likes`, `comments`) snapshot pipeline’ga ulanadi.
+  - [ ] Telegram real metrics/readback ingestion.
 
 ### CRM / Inbox Qarzlari
 

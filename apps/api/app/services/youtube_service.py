@@ -196,6 +196,43 @@ async def list_recent_videos(
     return out
 
 
+async def get_video_stats(db: AsyncSession, *, video_id: str) -> dict[str, Any]:
+    """Return stats for a single YouTube video."""
+    if _is_mock_mode():
+        row = _mock_videos(video_id, 1)[0]
+        return {
+            "id": row["id"],
+            "view_count": row["view_count"],
+            "like_count": row["like_count"],
+            "comment_count": row["comment_count"],
+        }
+    api_key = await _api_key(db)
+    if not api_key:
+        raise YouTubeError("YouTube api_key is not configured")
+
+    details = await _call(
+        "videos",
+        {
+            "part": "statistics",
+            "id": video_id,
+            "key": api_key,
+        },
+    )
+    items = details.get("items") or []
+    if not items:
+        raise YouTubeError("Video not found")
+    item = items[0]
+    if not isinstance(item, dict):
+        raise YouTubeError("Unexpected video item shape")
+    stats = item.get("statistics") or {}
+    return {
+        "id": item.get("id") or video_id,
+        "view_count": int(stats.get("viewCount") or 0),
+        "like_count": int(stats.get("likeCount") or 0),
+        "comment_count": int(stats.get("commentCount") or 0),
+    }
+
+
 async def aggregate_stats(db: AsyncSession, *, channel_id: str) -> dict[str, int | str]:
     """Quick channel-wide stats for a dashboard card."""
     channel = await get_channel(db, channel_id=channel_id)
@@ -212,5 +249,6 @@ __all__ = [
     "YouTubeError",
     "aggregate_stats",
     "get_channel",
+    "get_video_stats",
     "list_recent_videos",
 ]

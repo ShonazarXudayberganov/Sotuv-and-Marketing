@@ -22,7 +22,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.smm import BrandSocialAccount, Post, PostMetrics, PostPublication
-from app.services import meta_service
+from app.services import meta_service, youtube_service
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +69,26 @@ async def _resolve_metrics(
 ) -> dict[str, int]:
     seed = f"{publication.id}:{publication.external_post_id or ''}:{sampled_at.date().isoformat()}"
     metrics = _synth_metrics(seed)
+
+    if publication.provider == "youtube":
+        if not publication.external_post_id:
+            return metrics
+        try:
+            pulled = await youtube_service.get_video_stats(
+                db,
+                video_id=publication.external_post_id,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Analytics metrics pull failed for youtube publication %s: %s",
+                publication.id,
+                exc,
+            )
+            return metrics
+        metrics["views"] = max(0, int(pulled.get("view_count") or metrics["views"]))
+        metrics["likes"] = max(0, int(pulled.get("like_count") or metrics["likes"]))
+        metrics["comments"] = max(0, int(pulled.get("comment_count") or metrics["comments"]))
+        return metrics
 
     if publication.provider not in {"facebook", "instagram"}:
         return metrics

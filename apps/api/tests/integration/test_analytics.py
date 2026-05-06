@@ -8,6 +8,7 @@ import re
 import pytest
 from httpx import AsyncClient
 
+from app.services.publisher_service import PublishResult
 from app.services.sms import MockSMSProvider
 
 # Disable worker; mock providers + AI keep the suite deterministic.
@@ -71,6 +72,15 @@ async def _link_instagram(client: AsyncClient, headers: dict, brand_id: str) -> 
         "/api/v1/social/meta/link",
         headers=headers,
         json={"brand_id": brand_id, "page_id": pages[0]["id"], "target": "instagram"},
+    )
+    return resp.json()["id"]
+
+
+async def _link_youtube(client: AsyncClient, headers: dict, brand_id: str) -> str:
+    resp = await client.post(
+        "/api/v1/social/youtube/link",
+        headers=headers,
+        json={"brand_id": brand_id, "handle": "@akme"},
     )
     return resp.json()["id"]
 
@@ -192,6 +202,61 @@ async def test_snapshot_prefers_meta_metrics_when_available(
     assert overview["total_views"] == 1234
     assert overview["total_likes"] == 77
     assert overview["total_comments"] == 9
+
+
+async def test_snapshot_prefers_youtube_video_stats_when_available(
+    client: AsyncClient,
+    sample_register_payload: dict,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from app.services import publisher_service, youtube_service
+
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    account_id = await _link_youtube(client, headers, brand_id)
+
+    create = await client.post(
+        "/api/v1/posts",
+        headers=headers,
+        json={
+            "brand_id": brand_id,
+            "body": "YouTube analytics test",
+            "social_account_ids": [account_id],
+        },
+    )
+    post_id = create.json()["id"]
+
+    async def fake_publish(db, *, account, post):
+        return PublishResult(
+            external_post_id="yt-video-123",
+            raw={"id": "yt-video-123"},
+            remote_status="published",
+        )
+
+    async def fake_video_stats(db, *, video_id: str):
+        assert video_id == "yt-video-123"
+        return {
+            "id": video_id,
+            "view_count": 4321,
+            "like_count": 222,
+            "comment_count": 18,
+        }
+
+    monkeypatch.setattr(publisher_service, "publish", fake_publish)
+    monkeypatch.setattr(youtube_service, "get_video_stats", fake_video_stats)
+
+    publish = await client.post(f"/api/v1/posts/{post_id}/publish-now", headers=headers)
+    assert publish.status_code == 200, publish.text
+
+    snap = await client.post("/api/v1/analytics/snapshot", headers=headers)
+    assert snap.status_code == 200, snap.text
+
+    overview = (await client.get("/api/v1/analytics/overview", headers=headers)).json()
+    assert overview["total_posts"] == 1
+    assert overview["total_views"] == 4321
+    assert overview["total_likes"] == 222
+    assert overview["total_comments"] == 18
 
 
 async def test_timeseries_rejects_bad_days(client: AsyncClient, sample_register_payload: dict):
