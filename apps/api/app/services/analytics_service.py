@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -69,6 +70,20 @@ async def _resolve_metrics(
 ) -> dict[str, int]:
     seed = f"{publication.id}:{publication.external_post_id or ''}:{sampled_at.date().isoformat()}"
     metrics = _synth_metrics(seed)
+
+    if publication.provider == "telegram":
+        if os.getenv("TELEGRAM_MOCK", "false").lower() in {"1", "true", "yes"}:
+            return metrics
+        # Telegram Bot API doesn't expose channel post view counters/engagement
+        # through the HTTP bot methods we use, so production snapshots stay
+        # honest instead of inventing values.
+        return {
+            "views": 0,
+            "likes": 0,
+            "comments": 0,
+            "shares": 0,
+            "reach": 0,
+        }
 
     if publication.provider == "youtube":
         if not publication.external_post_id:

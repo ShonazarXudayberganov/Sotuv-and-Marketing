@@ -119,7 +119,9 @@
         (`likes`, `comments`, `shares`) va qolgan providerlarda synthetic fallback.
   - [x] Meta views/reach real insight metricsga urinish (`insights` endpoint) va fallback.
   - [x] YouTube video stats pull (`views`, `likes`, `comments`) snapshot pipeline’ga ulanadi.
-  - [ ] Telegram real metrics/readback ingestion.
+  - [x] Telegram production snapshot synthetic metrics to‘qimaydi; `TELEGRAM_MOCK=false`
+        bo‘lsa Bot API cheklovi sabab nol metric qaytaradi.
+  - [ ] Telegram real metrics/readback ingestion (Bot API yetarli emas; MTProto yoki tashqi analytics import kerak).
 
 ### CRM / Inbox Qarzlari
 

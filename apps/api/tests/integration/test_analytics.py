@@ -15,6 +15,7 @@ from app.services.sms import MockSMSProvider
 os.environ["POST_WORKER_DISABLED"] = "true"
 os.environ["TELEGRAM_MOCK"] = "true"
 os.environ["META_MOCK"] = "true"
+os.environ["YOUTUBE_MOCK"] = "true"
 os.environ["AI_MOCK"] = "true"
 
 pytestmark = pytest.mark.asyncio
@@ -115,6 +116,36 @@ async def test_snapshot_then_overview_aggregates(
     assert overview["engagement_rate"] > 0
     assert "telegram" in overview["by_platform"]
     assert overview["by_platform"]["telegram"]["posts"] == 3
+
+
+async def test_snapshot_keeps_telegram_metrics_zero_without_mock(
+    client: AsyncClient,
+    sample_register_payload: dict,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    bundle = await _bootstrap(client, sample_register_payload)
+    headers = {"Authorization": f"Bearer {bundle['access_token']}"}
+    brand_id = await _make_brand(client, headers)
+    await _seed_published_post(client, headers, brand_id, "Telegram production metrics honesty")
+
+    monkeypatch.setenv("TELEGRAM_MOCK", "false")
+
+    snap = await client.post("/api/v1/analytics/snapshot", headers=headers)
+    assert snap.status_code == 200, snap.text
+
+    overview = (await client.get("/api/v1/analytics/overview", headers=headers)).json()
+    assert overview["total_posts"] == 1
+    assert overview["total_views"] == 0
+    assert overview["total_likes"] == 0
+    assert overview["total_comments"] == 0
+    assert overview["total_shares"] == 0
+    assert overview["by_platform"]["telegram"] == {
+        "posts": 1,
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+    }
 
 
 async def test_top_posts_sorted_by_engagement(client: AsyncClient, sample_register_payload: dict):
