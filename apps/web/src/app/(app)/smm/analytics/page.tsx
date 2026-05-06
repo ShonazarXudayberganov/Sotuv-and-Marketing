@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
+  Database,
   Eye,
   Heart,
   Lightbulb,
@@ -27,6 +28,7 @@ import { brandsApi } from "@/lib/smm-api";
 import type {
   AnalyticsInsights,
   AnalyticsOverview,
+  AnalyticsPlatformBucket,
   AnalyticsTimePoint,
   OptimalCell,
   TopPost,
@@ -141,6 +143,7 @@ export default function AnalyticsPage() {
       ) : (
         <>
           {overview ? <KPIGrid overview={overview} /> : null}
+          {overview ? <SourceStatusCard overview={overview} /> : null}
           {insights ? <InsightsCard insights={insights} /> : null}
           {ts.length > 0 ? <TimeseriesCard data={ts} days={days} onDays={setDays} /> : null}
           <div className="grid gap-6 lg:grid-cols-2">
@@ -223,6 +226,70 @@ function KpiTile({
       >
         <Icon className="h-4 w-4" />
       </div>
+    </div>
+  );
+}
+
+function SourceStatusCard({ overview }: { overview: AnalyticsOverview }) {
+  const rows = Object.entries(overview.by_platform);
+  if (rows.length === 0) return null;
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center gap-2">
+        <Database className="h-4 w-4 text-[var(--primary)]" />
+        <CardTitle>Metric manbasi</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {rows.map(([platform, bucket]) => (
+            <SourceRow key={platform} platform={platform} bucket={bucket} />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SourceRow({
+  platform,
+  bucket,
+}: {
+  platform: string;
+  bucket: AnalyticsPlatformBucket;
+}) {
+  const badgeVariant =
+    bucket.metrics_source === "real"
+      ? "success"
+      : bucket.metrics_source === "mixed"
+        ? "warning"
+        : bucket.metrics_source === "unavailable"
+          ? "danger"
+          : "outline";
+  const label =
+    bucket.metrics_source === "real"
+      ? "Real"
+      : bucket.metrics_source === "mixed"
+        ? "Mixed"
+        : bucket.metrics_source === "unavailable"
+          ? "Unavailable"
+          : "Synthetic";
+  const breakdown = Object.entries(bucket.source_breakdown)
+    .map(([source, count]) => `${source} ${count}`)
+    .join(" · ");
+
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] font-medium capitalize text-[var(--fg)]">{platform}</span>
+          <Badge variant={badgeVariant}>{label}</Badge>
+        </div>
+        <span className="text-[11px] text-[var(--fg-subtle)]">{bucket.posts} post</span>
+      </div>
+      <p className="mt-2 text-[12px] text-[var(--fg-muted)]">
+        {bucket.metrics_note ?? "Snapshot shu platforma uchun bir xil manbadan yig'ildi."}
+      </p>
+      <p className="mt-1 text-[11px] text-[var(--fg-subtle)]">{breakdown}</p>
     </div>
   );
 }

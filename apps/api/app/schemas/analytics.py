@@ -9,6 +9,9 @@ class PlatformBucket(BaseModel):
     likes: int
     comments: int
     shares: int
+    metrics_source: str
+    metrics_note: str | None = None
+    source_breakdown: dict[str, int]
 
 
 class AnalyticsOverview(BaseModel):

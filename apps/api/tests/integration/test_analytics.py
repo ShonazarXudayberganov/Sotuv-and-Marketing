@@ -116,6 +116,8 @@ async def test_snapshot_then_overview_aggregates(
     assert overview["engagement_rate"] > 0
     assert "telegram" in overview["by_platform"]
     assert overview["by_platform"]["telegram"]["posts"] == 3
+    assert overview["by_platform"]["telegram"]["metrics_source"] == "synthetic"
+    assert overview["by_platform"]["telegram"]["source_breakdown"] == {"synthetic": 3}
 
 
 async def test_snapshot_keeps_telegram_metrics_zero_without_mock(
@@ -145,6 +147,9 @@ async def test_snapshot_keeps_telegram_metrics_zero_without_mock(
         "likes": 0,
         "comments": 0,
         "shares": 0,
+        "metrics_source": "unavailable",
+        "metrics_note": "Telegram Bot API hozircha channel post view/readback bermaydi.",
+        "source_breakdown": {"unavailable": 1},
     }
 
 
@@ -233,6 +238,8 @@ async def test_snapshot_prefers_meta_metrics_when_available(
     assert overview["total_views"] == 1234
     assert overview["total_likes"] == 77
     assert overview["total_comments"] == 9
+    assert overview["by_platform"]["instagram"]["metrics_source"] == "real"
+    assert overview["by_platform"]["instagram"]["source_breakdown"] == {"real": 1}
 
 
 async def test_snapshot_prefers_youtube_video_stats_when_available(
@@ -288,6 +295,8 @@ async def test_snapshot_prefers_youtube_video_stats_when_available(
     assert overview["total_views"] == 4321
     assert overview["total_likes"] == 222
     assert overview["total_comments"] == 18
+    assert overview["by_platform"]["youtube"]["metrics_source"] == "mixed"
+    assert overview["by_platform"]["youtube"]["source_breakdown"] == {"mixed": 1}
 
 
 async def test_timeseries_rejects_bad_days(client: AsyncClient, sample_register_payload: dict):

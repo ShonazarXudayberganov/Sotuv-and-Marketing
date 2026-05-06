@@ -121,6 +121,8 @@
   - [x] YouTube video stats pull (`views`, `likes`, `comments`) snapshot pipeline’ga ulanadi.
   - [x] Telegram production snapshot synthetic metrics to‘qimaydi; `TELEGRAM_MOCK=false`
         bo‘lsa Bot API cheklovi sabab nol metric qaytaradi.
+  - [x] Analytics UI/platform overview’da metric source holati (`real/mixed/synthetic/unavailable`)
+        ko‘rsatiladi.
   - [ ] Telegram real metrics/readback ingestion (Bot API yetarli emas; MTProto yoki tashqi analytics import kerak).
 
 ### CRM / Inbox Qarzlari

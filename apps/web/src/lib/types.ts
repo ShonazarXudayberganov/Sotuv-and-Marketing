@@ -819,6 +819,9 @@ export interface AnalyticsPlatformBucket {
   likes: number;
   comments: number;
   shares: number;
+  metrics_source: string;
+  metrics_note: string | null;
+  source_breakdown: Record<string, number>;
 }
 
 export interface AnalyticsOverview {

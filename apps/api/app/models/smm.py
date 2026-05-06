@@ -257,6 +257,8 @@ class PostMetrics(Base, UUIDPKMixin, TimestampMixin):
     comments: Mapped[int] = mapped_column(default=0, nullable=False)
     shares: Mapped[int] = mapped_column(default=0, nullable=False)
     reach: Mapped[int] = mapped_column(default=0, nullable=False)
+    metrics_source: Mapped[str] = mapped_column(String(20), default="synthetic", nullable=False)
+    metrics_note: Mapped[str | None] = mapped_column(String(500))
 
 
 __all__ = [

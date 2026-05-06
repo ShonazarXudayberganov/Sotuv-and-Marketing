@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -26,6 +27,7 @@ from app.models.smm import BrandSocialAccount, Post, PostMetrics, PostPublicatio
 from app.services import meta_service, youtube_service
 
 logger = logging.getLogger(__name__)
+DISPLAY_METRIC_KEYS = ("views", "likes", "comments", "shares")
 
 
 # ─────────── Mock metrics seeding (deterministic) ───────────
@@ -45,6 +47,32 @@ def _synth_metrics(seed: str, *, base_views: int = 1200) -> dict[str, int]:
         "shares": shares,
         "reach": reach,
     }
+
+
+@dataclass
+class ResolvedMetrics:
+    metrics: dict[str, int]
+    source: str
+    note: str | None = None
+
+
+def _summarize_source(
+    origins: dict[str, str], *, note: str | None = None
+) -> tuple[str, str | None]:
+    counts = Counter(origins.get(key, "synthetic") for key in DISPLAY_METRIC_KEYS)
+    if counts.get("unavailable", 0) == len(DISPLAY_METRIC_KEYS):
+        return "unavailable", note
+    if counts.get("real", 0) == len(DISPLAY_METRIC_KEYS):
+        return "real", note
+    if counts.get("real", 0) > 0 and (
+        counts.get("synthetic", 0) > 0 or counts.get("unavailable", 0) > 0
+    ):
+        return "mixed", note or "Bu snapshotda real va fallback metriclar aralash."
+    if counts.get("synthetic", 0) == len(DISPLAY_METRIC_KEYS):
+        return "synthetic", note
+    if counts.get("unavailable", 0) > 0:
+        return "unavailable", note
+    return "synthetic", note
 
 
 async def _published_publications(
@@ -67,27 +95,43 @@ async def _resolve_metrics(
     publication: PostPublication,
     post: Post,
     sampled_at: datetime,
-) -> dict[str, int]:
+) -> ResolvedMetrics:
     seed = f"{publication.id}:{publication.external_post_id or ''}:{sampled_at.date().isoformat()}"
     metrics = _synth_metrics(seed)
+    origins = {key: "synthetic" for key in ("views", "likes", "comments", "shares", "reach")}
 
     if publication.provider == "telegram":
         if os.getenv("TELEGRAM_MOCK", "false").lower() in {"1", "true", "yes"}:
-            return metrics
+            return ResolvedMetrics(
+                metrics=metrics,
+                source="synthetic",
+                note="TELEGRAM_MOCK yoqilganligi uchun synthetic snapshot ishlatildi.",
+            )
         # Telegram Bot API doesn't expose channel post view counters/engagement
         # through the HTTP bot methods we use, so production snapshots stay
         # honest instead of inventing values.
-        return {
-            "views": 0,
-            "likes": 0,
-            "comments": 0,
-            "shares": 0,
-            "reach": 0,
-        }
+        return ResolvedMetrics(
+            metrics={
+                "views": 0,
+                "likes": 0,
+                "comments": 0,
+                "shares": 0,
+                "reach": 0,
+            },
+            source="unavailable",
+            note="Telegram Bot API hozircha channel post view/readback bermaydi.",
+        )
 
     if publication.provider == "youtube":
         if not publication.external_post_id:
-            return metrics
+            return ResolvedMetrics(
+                metrics=metrics,
+                source="synthetic",
+                note=(
+                    "YouTube publication external video ID'siz qoldi, "
+                    "fallback snapshot ishlatildi."
+                ),
+            )
         try:
             pulled = await youtube_service.get_video_stats(
                 db,
@@ -99,21 +143,44 @@ async def _resolve_metrics(
                 publication.id,
                 exc,
             )
-            return metrics
+            return ResolvedMetrics(
+                metrics=metrics,
+                source="synthetic",
+                note="YouTube stats pull muvaffaqiyatsiz bo'ldi, fallback snapshot ishlatildi.",
+            )
         metrics["views"] = max(0, int(pulled.get("view_count") or metrics["views"]))
         metrics["likes"] = max(0, int(pulled.get("like_count") or metrics["likes"]))
         metrics["comments"] = max(0, int(pulled.get("comment_count") or metrics["comments"]))
-        return metrics
+        metrics["shares"] = 0
+        metrics["reach"] = 0
+        origins["views"] = "real"
+        origins["likes"] = "real"
+        origins["comments"] = "real"
+        origins["shares"] = "unavailable"
+        origins["reach"] = "unavailable"
+        source, note = _summarize_source(
+            origins,
+            note="YouTube API views/likes/comments berdi; shares va reach mavjud emas.",
+        )
+        return ResolvedMetrics(metrics=metrics, source=source, note=note)
 
     if publication.provider not in {"facebook", "instagram"}:
-        return metrics
+        return ResolvedMetrics(metrics=metrics, source="synthetic")
     if not publication.external_post_id:
-        return metrics
+        return ResolvedMetrics(
+            metrics=metrics,
+            source="synthetic",
+            note="External post ID topilmadi, fallback snapshot ishlatildi.",
+        )
 
     account = await db.get(BrandSocialAccount, publication.social_account_id)
     token = str(((account.metadata_ or {}) if account else {}).get("page_token") or "").strip()
     if not token:
-        return metrics
+        return ResolvedMetrics(
+            metrics=metrics,
+            source="synthetic",
+            note="Page token yo'q, provider metrics olinmadi.",
+        )
 
     try:
         pulled = await meta_service.get_post_metrics(
@@ -129,11 +196,16 @@ async def _resolve_metrics(
             publication.id,
             exc,
         )
-        return metrics
+        return ResolvedMetrics(
+            metrics=metrics,
+            source="synthetic",
+            note="Meta engagement metrics olinmadi, fallback snapshot ishlatildi.",
+        )
 
     for key, value in pulled.items():
         if key in metrics:
             metrics[key] = max(0, int(value))
+            origins[key] = "real"
 
     try:
         insights = await meta_service.get_post_insights(
@@ -150,12 +222,21 @@ async def _resolve_metrics(
             publication.id,
             exc,
         )
-        return metrics
+        source, note = _summarize_source(
+            origins,
+            note=(
+                "Meta insights to'liq kelmadi; mavjud metriclar saqlanib, "
+                "qolganlari fallback bo'lib qoldi."
+            ),
+        )
+        return ResolvedMetrics(metrics=metrics, source=source, note=note)
 
     for key, value in insights.items():
         if key in metrics:
             metrics[key] = max(0, int(value))
-    return metrics
+            origins[key] = "real"
+    source, note = _summarize_source(origins)
+    return ResolvedMetrics(metrics=metrics, source=source, note=note)
 
 
 async def record_snapshot(db: AsyncSession, *, brand_id: UUID | None = None) -> int:
@@ -170,14 +251,16 @@ async def record_snapshot(db: AsyncSession, *, brand_id: UUID | None = None) -> 
     now = datetime.now(UTC)
     inserted = 0
     for pub, post in pairs:
-        metrics = await _resolve_metrics(db, publication=pub, post=post, sampled_at=now)
+        resolved = await _resolve_metrics(db, publication=pub, post=post, sampled_at=now)
         db.add(
             PostMetrics(
                 publication_id=pub.id,
                 brand_id=post.brand_id,
                 provider=pub.provider,
                 sampled_at=now,
-                **metrics,
+                metrics_source=resolved.source,
+                metrics_note=resolved.note,
+                **resolved.metrics,
             )
         )
         inserted += 1
@@ -242,17 +325,46 @@ async def overview(db: AsyncSession, *, brand_id: UUID | None = None) -> dict[st
     total_comments = sum(i.metrics.comments for i in items)
     total_shares = sum(i.metrics.shares for i in items)
     engagement = total_likes + total_comments + total_shares
-    by_platform: dict[str, dict[str, int]] = {}
+    by_platform: dict[str, dict[str, Any]] = {}
     for i in items:
         prov = i.metrics.provider
         slot = by_platform.setdefault(
-            prov, {"posts": 0, "views": 0, "likes": 0, "comments": 0, "shares": 0}
+            prov,
+            {
+                "posts": 0,
+                "views": 0,
+                "likes": 0,
+                "comments": 0,
+                "shares": 0,
+                "metrics_source": "synthetic",
+                "metrics_note": None,
+                "source_breakdown": {},
+                "_notes": [],
+            },
         )
         slot["posts"] += 1
         slot["views"] += i.metrics.views
         slot["likes"] += i.metrics.likes
         slot["comments"] += i.metrics.comments
         slot["shares"] += i.metrics.shares
+        source = i.metrics.metrics_source or "synthetic"
+        slot["source_breakdown"][source] = slot["source_breakdown"].get(source, 0) + 1
+        note = (i.metrics.metrics_note or "").strip()
+        if note and note not in slot["_notes"]:
+            slot["_notes"].append(note)
+    for slot in by_platform.values():
+        source_breakdown = slot["source_breakdown"]
+        if len(source_breakdown) == 1:
+            slot["metrics_source"] = next(iter(source_breakdown))
+        else:
+            slot["metrics_source"] = "mixed"
+        notes: list[str] = slot.pop("_notes")
+        if slot["metrics_source"] == "mixed":
+            slot["metrics_note"] = "Bu platformada real va fallback snapshotlar aralash."
+        elif len(notes) == 1:
+            slot["metrics_note"] = notes[0]
+        elif len(notes) > 1:
+            slot["metrics_note"] = notes[0]
     return {
         "total_posts": total_posts,
         "total_views": total_views,

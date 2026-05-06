@@ -563,9 +563,19 @@ TENANT_DDL: tuple[str, ...] = (
         comments        integer NOT NULL DEFAULT 0,
         shares          integer NOT NULL DEFAULT 0,
         reach           integer NOT NULL DEFAULT 0,
+        metrics_source  varchar(20) NOT NULL DEFAULT 'synthetic',
+        metrics_note    varchar(500),
         created_at      timestamptz NOT NULL DEFAULT now(),
         updated_at      timestamptz NOT NULL DEFAULT now()
     )
+    """,
+    """
+    ALTER TABLE post_metrics
+        ADD COLUMN IF NOT EXISTS metrics_source varchar(20) NOT NULL DEFAULT 'synthetic'
+    """,
+    """
+    ALTER TABLE post_metrics
+        ADD COLUMN IF NOT EXISTS metrics_note varchar(500)
     """,
     """
     CREATE INDEX IF NOT EXISTS ix_post_metrics_publication
